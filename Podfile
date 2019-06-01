@@ -37,7 +37,7 @@ target 'rnfbdemo' do
   #pod 'Firebase/DynamicLinks', '~> 5.20.2'
   #pod 'Firebase/Firestore', '~> 5.20.2'
   #pod 'Firebase/Invites', '~> 5.20.2'
-  #pod 'Firebase/Messaging', '~> 5.20.2'
+  pod 'Firebase/Messaging', '~> 5.20.2'
   #pod 'Firebase/RemoteConfig', '~> 5.20.2'
   #pod 'Firebase/Storage', '~> 5.20.2'
   #pod 'Firebase/Performance', '~> 5.20.2'
@@ -88,5 +88,7 @@ post_install do |installer|
 #      target.remove_from_project
 #    end
 #  end
+
+  # This fixes the problems with headers not found
   system("mkdir -p Pods/Headers/Public/FirebaseCore && cp Pods/FirebaseCore/Firebase/Core/Public/* Pods/Headers/Public/FirebaseCore/")
 end

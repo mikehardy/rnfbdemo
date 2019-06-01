@@ -29,6 +29,8 @@ To test remote notifications while offline, you'll have to do a lot of Apple set
 
 ## Current status
 
-Currently this repo mostly demonstrates various failure modes
+Currently this repo demonstrates:
 
-1. iOS does not build correctly out of the box with errors about header files not found
+1. How to correctly install and link the core module in a react-native-firebase project
+
+...and that's it for now. None of the other parts are configured or demonstrated yet
