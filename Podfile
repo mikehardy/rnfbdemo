@@ -30,7 +30,7 @@ target 'rnfbdemo' do
 
   # [OPTIONAL PODS] - comment out pods for firebase products you won't be using.
   #pod 'GoogleIDFASupport', '~> 3.14.0'
-  #pod 'Firebase/AdMob', '~> 5.20.2'
+  pod 'Firebase/AdMob', '~> 5.20.2'
   #pod 'Firebase/Auth', '~> 5.20.2'
   #pod 'Firebase/Database', '~> 5.20.2'
   #pod 'Firebase/Functions', '~> 5.20.2'
