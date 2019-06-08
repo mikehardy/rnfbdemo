@@ -62,6 +62,15 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
+# Set up AdMob Java stuff
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-ads:15.0.1"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/RNFirebasePackage;/admob.RNFirebaseAdMobPackage;\\\nimport io.invertase.firebase.RNFirebasePackage;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+sed -i -e $'s/new RNFirebasePackage()/new RNFirebasePackage(),\\\n          new RNFirebaseAdMobPackage()/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+
+
 # Set up an AdMob ID (this is the official "sample id")
 sed -i -e $'s/NSAppTransportSecurity/GADApplicationIdentifier<\/key>\\\n	<string>ca-app-pub-3940256099942544~1458002511<\/string>\\\n        <key>NSAppTransportSecurity/' ios/rnfbdemo/Info.plist
 rm -f ios/rnfbdemo/Info.plist??
