@@ -18,6 +18,18 @@ rm -f ios/rnfbdemo/AppDelegate.m??
 sed -i -e $'s/RCTBridge \*bridge/[FIRApp configure];\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
 
+# Minimal integration on Android
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.2.0"/' android/build.gradle
+rm -f android/build.gradle??
+echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.android.gms:play-services-base:16.1.0"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-core:16.0.9"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+echo "-keep class io.invertase.firebase.** { *; }" >> android/app/proguard-rules.pro
+echo "-dontwarn io.invertase.firebase.**" >> android/app/proguard-rules.pro
+
+
 # Copy the Firebase config files in
 cp ../GoogleService-Info.plist ios/rnfbdemo/
 cp ../google-services.json android/app/
@@ -49,6 +61,15 @@ sed -i -e $'s/import android.app.Application;/import android.support.multidex.Mu
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+
+# Set up an AdMob ID (this is the official "sample id")
+sed -i -e $'s/NSAppTransportSecurity/GADApplicationIdentifier<\/key>\\\n	<string>ca-app-pub-3940256099942544~1458002511<\/string>\\\n        <key>NSAppTransportSecurity/' ios/rnfbdemo/Info.plist
+rm -f ios/rnfbdemo/Info.plist??
+sed -i -e $'s/<\/application>/  <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="YOUR_ADMOB_APP_ID"\/>\\\n    <\/application>/' android/app/src/main/AndroidManifest.xml
+rm -f android/app/src/main/AndroidManifest.xml??
+
+# Copy in our demonstrator App.js
+rm ./App.js && cp ../App.js .
 
 # Run the thing for iOS
 react-native run-ios
