@@ -26,29 +26,28 @@ target 'rnfbdemo' do
   #pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
   # Required by RNFirebase
-  pod 'Firebase/Core', '~> 5.20.2'
+  pod 'Firebase/Core', '~> 6.3.0'
 
   # [OPTIONAL PODS] - comment out pods for firebase products you won't be using.
-  #pod 'GoogleIDFASupport', '~> 3.14.0'
-  pod 'Firebase/AdMob', '~> 5.20.2'
-  #pod 'Firebase/Auth', '~> 5.20.2'
-  #pod 'Firebase/Database', '~> 5.20.2'
-  #pod 'Firebase/Functions', '~> 5.20.2'
-  #pod 'Firebase/DynamicLinks', '~> 5.20.2'
-  #pod 'Firebase/Firestore', '~> 5.20.2'
-  #pod 'Firebase/Invites', '~> 5.20.2'
-  pod 'Firebase/Messaging', '~> 5.20.2'
-  #pod 'Firebase/RemoteConfig', '~> 5.20.2'
-  #pod 'Firebase/Storage', '~> 5.20.2'
-  #pod 'Firebase/Performance', '~> 5.20.2'
-  #pod 'Fabric', '~> 1.10.0'
-  #pod 'Crashlytics', '~> 3.13.0'
+  pod 'GoogleIDFASupport', '~> 3.14.0'
+  pod 'Firebase/AdMob', '~> 6.3.0'
+  pod 'Firebase/Auth', '~> 6.3.0'
+  pod 'Firebase/Database', '~> 6.3.0'
+  pod 'Firebase/Functions', '~> 6.3.0'
+  pod 'Firebase/DynamicLinks', '~> 6.3.0'
+  pod 'Firebase/Firestore', '~> 6.3.0'
+  pod 'Firebase/Messaging', '~> 6.3.0'
+  pod 'Firebase/RemoteConfig', '~> 6.3.0'
+  pod 'Firebase/Storage', '~> 6.3.0'
+  pod 'Firebase/Performance', '~> 6.3.0'
+  pod 'Fabric', '~> 1.10.0'
+  pod 'Crashlytics', '~> 3.13.0'
 
-  #pod 'Firebase/MLVision', '~> 5.20.2'
-  #pod 'Firebase/MLVisionLabelModel', '~> 5.20.2'
-  #pod 'Firebase/MLVisionBarcodeModel', '~> 5.20.2'
-  #pod 'Firebase/MLVisionTextModel', '~> 5.20.2'
-  #pod 'Firebase/MLVisionFaceModel', '~> 5.20.2'
+  #pod 'Firebase/MLVision', '~> 6.3.0'
+  #pod 'Firebase/MLVisionLabelModel', '~> 6.3.0'
+  #pod 'Firebase/MLVisionBarcodeModel', '~> 6.3.0'
+  #pod 'Firebase/MLVisionTextModel', '~> 6.3.0'
+  #pod 'Firebase/MLVisionFaceModel', '~> 6.3.0'
 
   target 'rnfbdemoTests' do
     inherit! :search_paths
