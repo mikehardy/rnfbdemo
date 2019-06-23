@@ -6,11 +6,11 @@ set -e
 react-native init rnfbdemo
 cd rnfbdemo
 npm i react-native-firebase
+react-native link react-native-firebase
 cd ios
 cp ../../Podfile .
 pod install
 cd ..
-react-native link react-native-firebase
 
 # Perform the minimal edit to integrate it on iOS
 sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import "Firebase.h"/' ios/rnfbdemo/AppDelegate.m
