@@ -40,8 +40,8 @@ target 'rnfbdemo' do
   pod 'Firebase/RemoteConfig', '~> 6.3.0'
   pod 'Firebase/Storage', '~> 6.3.0'
   pod 'Firebase/Performance', '~> 6.3.0'
-  pod 'Fabric', '~> 1.10.0'
-  pod 'Crashlytics', '~> 3.13.0'
+  pod 'Fabric', '~> 1.10.2'
+  pod 'Crashlytics', '~> 3.13.2'
 
   #pod 'Firebase/MLVision', '~> 6.3.0'
   #pod 'Firebase/MLVisionLabelModel', '~> 6.3.0'
