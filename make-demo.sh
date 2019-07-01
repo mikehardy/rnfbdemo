@@ -3,8 +3,20 @@ set -e
 
 # Basic template create, rnfb install, link
 \rm -fr rnfbdemo
-react-native init rnfbdemo
+
+# Which version of react-native to demo?
+if [ "${RNVERSION}" == "60" ]; then
+  JETIFY=true
+  echo "Testing react-native 0.60"
+  react-native init rnfbdemo --version react-native@0.60.0-rc.3
+else
+  # In the absence of overrides, we will work on RNVersion 59
+  RNVERSION=59
+  echo "Testing react-native 0.59"
+  react-native init rnfbdemo --version react-native@0.59.9
+fi
 cd rnfbdemo
+
 npm i react-native-firebase
 react-native link react-native-firebase
 cd ios
@@ -55,12 +67,18 @@ sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "me.leolin:Sho
 rm -f android/app/build.gradle??
 
 # Set the Java application up for multidex (needed for API<21 w/Firebase)
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.android.support:multidex:1.0.3"/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/import android.app.Application;/import android.support.multidex.MultiDexApplication;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+#if [ "${JETIFY}" == "TRUE" ]; then
+#  sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "androidx.multidex:multidex:2.0.1"/' android/app/build.gradle
+#  sed -i -e $'s/import android.app.Application;/import androidx.multidex.MultiDexApplication;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+#else
+#  sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.android.support:multidex:1.0.3"/' android/app/build.gradle
+#  sed -i -e $'s/import android.app.Application;/import android.support.multidex.MultiDexApplication;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+#fi
+
+#rm -f android/app/build.gradle??
+#rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+#sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+#rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
 # Set up AdMob Java stuff
 sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-ads:15.0.1"/' android/app/build.gradle
@@ -80,8 +98,19 @@ rm -f android/app/src/main/AndroidManifest.xml??
 # Copy in our demonstrator App.js
 rm ./App.js && cp ../App.js .
 
+# Test out AndroidX via jetify
+# Assuming your code uses AndroidX, this is all the AndroidStudio AndroidX migration does besides transform
+# your app source and app libraries
+if [ "${JETIFY}" == "true" ]; then
+  echo "android.useAndroidX=true" >> android/gradle.properties
+  echo "android.enableJetifier=true" >> android/gradle.properties
+  npm i jetifier
+  npm i --save-dev node-pre-gyp
+  npx jetify
+fi
+
 # Run the thing for iOS
-react-native run-ios
+#react-native run-ios
 
 # Run it for Android (assumes you have an android emulator running)
 USER=`whoami`
