@@ -8,12 +8,12 @@ set -e
 if [ "${RNVERSION}" == "60" ]; then
   JETIFY=true
   echo "Testing react-native 0.60"
-  react-native init rnfbdemo --version react-native@0.60.0-rc.3
+  react-native init rnfbdemo
 else
   # In the absence of overrides, we will work on RNVersion 59
   RNVERSION=59
   echo "Testing react-native 0.59"
-  react-native init rnfbdemo --version react-native@0.59.9
+  react-native init rnfbdemo --version react-native@0.59.10
 fi
 cd rnfbdemo
 
