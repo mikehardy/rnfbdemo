@@ -1,93 +1,71 @@
 # Uncomment the next line to define a global platform for your project
 platform :ios, '9.0'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
 target 'rnfbdemo' do
-  # Comment the next line if you don't want to use dynamic frameworks
-  use_frameworks!
 
-  # Pods for rnfbdemo
-  #pod 'React', :path => '../node_modules/react-native', :subspecs => [
-  #  'Core',
-  #  'CxxBridge', # Include this for RN >= 0.47
-  #  'DevSupport', # Include this to enable In-App Devmenu if RN >= 0.43
-  #  'RCTText',
-  #  'RCTNetwork',
-  #  'RCTWebSocket', # Needed for debugging
-  #  'RCTAnimation', # Needed for FlatList and animations running on native UI thread
-    # Add any other subspecs you want to use in your project
-  #]
+  pod 'React', :path => '../node_modules/react-native/'
+  pod 'React-Core', :path => '../node_modules/react-native/React'
+  pod 'React-DevSupport', :path => '../node_modules/react-native/React'
+  pod 'React-fishhook', :path => '../node_modules/react-native/Libraries/fishhook'
+  pod 'React-RCTActionSheet', :path => '../node_modules/react-native/Libraries/ActionSheetIOS'
+  pod 'React-RCTAnimation', :path => '../node_modules/react-native/Libraries/NativeAnimation'
+  pod 'React-RCTBlob', :path => '../node_modules/react-native/Libraries/Blob'
+  pod 'React-RCTImage', :path => '../node_modules/react-native/Libraries/Image'
+  pod 'React-RCTLinking', :path => '../node_modules/react-native/Libraries/LinkingIOS'
+  pod 'React-RCTNetwork', :path => '../node_modules/react-native/Libraries/Network'
+  pod 'React-RCTSettings', :path => '../node_modules/react-native/Libraries/Settings'
+  pod 'React-RCTText', :path => '../node_modules/react-native/Libraries/Text'
+  pod 'React-RCTVibration', :path => '../node_modules/react-native/Libraries/Vibration'
+  pod 'React-RCTWebSocket', :path => '../node_modules/react-native/Libraries/WebSocket'
 
-  # Explicitly include Yoga if you are using RN >= 0.42.0
-  #pod 'yoga', :path => '../node_modules/react-native/ReactCommon/yoga'
+  pod 'React-cxxreact', :path => '../node_modules/react-native/ReactCommon/cxxreact'
+  pod 'React-jsi', :path => '../node_modules/react-native/ReactCommon/jsi'
+  pod 'React-jsiexecutor', :path => '../node_modules/react-native/ReactCommon/jsiexecutor'
+  pod 'React-jsinspector', :path => '../node_modules/react-native/ReactCommon/jsinspector'
+  pod 'yoga', :path => '../node_modules/react-native/ReactCommon/yoga'
 
-  # Third party deps podspec link
-  #pod 'DoubleConversion', :podspec => '../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec'
-  #pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
-  #pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
+  pod 'DoubleConversion', :podspec => '../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec'
+  pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
+  pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
   # Required by RNFirebase
-  pod 'Firebase/Core', '~> 6.3.0'
+  pod 'Firebase/Core', '~> 6.5.0'
 
   # [OPTIONAL PODS] - comment out pods for firebase products you won't be using.
   pod 'GoogleIDFASupport', '~> 3.14.0'
-  pod 'Firebase/AdMob', '~> 6.3.0'
-  pod 'Firebase/Auth', '~> 6.3.0'
-  pod 'Firebase/Database', '~> 6.3.0'
-  pod 'Firebase/Functions', '~> 6.3.0'
-  pod 'Firebase/DynamicLinks', '~> 6.3.0'
-  pod 'Firebase/Firestore', '~> 6.3.0'
-  pod 'Firebase/Messaging', '~> 6.3.0'
-  pod 'Firebase/RemoteConfig', '~> 6.3.0'
-  pod 'Firebase/Storage', '~> 6.3.0'
-  pod 'Firebase/Performance', '~> 6.3.0'
+  #pod 'Firebase/AdMob', '~> 6.5.0'
+  pod 'Firebase/Auth', '~> 6.5.0'
+  #pod 'Firebase/Database', '~> 6.5.0'
+  #pod 'Firebase/Functions', '~> 6.5.0'
+  pod 'Firebase/DynamicLinks', '~> 6.5.0'
+  pod 'Firebase/Firestore', '~> 6.5.0'
+  # pod 'Firebase/Invites', '~> 6.5.0'
+  pod 'Firebase/Messaging', '~> 6.5.0'
+  pod 'Firebase/RemoteConfig', '~> 6.5.0'
+  #pod 'Firebase/Storage', '~> 6.5.0'
+  pod 'Firebase/Performance', '~> 6.5.0'
   pod 'Fabric', '~> 1.10.2'
-  pod 'Crashlytics', '~> 3.13.2'
+  pod 'Crashlytics', '~> 3.13.3'
 
-  #pod 'Firebase/MLVision', '~> 6.3.0'
-  #pod 'Firebase/MLVisionLabelModel', '~> 6.3.0'
-  #pod 'Firebase/MLVisionBarcodeModel', '~> 6.3.0'
-  #pod 'Firebase/MLVisionTextModel', '~> 6.3.0'
-  #pod 'Firebase/MLVisionFaceModel', '~> 6.3.0'
+  #pod 'Firebase/MLVision', '~> 6.5.0'
+  #pod 'Firebase/MLVisionLabelModel', '~> 6.5.0'
+  #pod 'Firebase/MLVisionBarcodeModel', '~> 6.5.0'
+  #pod 'Firebase/MLVisionTextModel', '~> 6.5.0'
+  #pod 'Firebase/MLVisionFaceModel', '~> 6.5.0'
 
   target 'rnfbdemoTests' do
     inherit! :search_paths
     # Pods for testing
   end
 
+  use_native_modules!
 end
 
 target 'rnfbdemo-tvOS' do
-  # Comment the next line if you don't want to use dynamic frameworks
-  use_frameworks!
-
-  # Pods for rnfbdemo-tvOS
-
   target 'rnfbdemo-tvOSTests' do
     inherit! :search_paths
     # Pods for testing
   end
 
-end
-
-# React-Native is not great about React double-including from the Podfile
-post_install do |installer|
-#  installer.pods_project.targets.each do |target|
-#    if target.name == "React"
-#      target.remove_from_project
-#    end
-
-    # The following is needed to ensure the "archive" step works in XCode.
-    # It removes React & Yoga from the Pods project, as it is already included in the main project.
-    # Without this, you'd see errors when you archive like:
-    # "Multiple commands produce ... libReact.a"
-    # "Multiple commands produce ... libyoga.a"
-    # FIXME real fix is like so: https://stackoverflow.com/a/55328241/9910298 (remove duplicate refs)
-#    targets_to_ignore = %w(React yoga)
-#    if targets_to_ignore.include? target.name
-#      target.remove_from_project
-#    end
-#  end
-
-  # This fixes the problems with headers not found
-  system("mkdir -p Pods/Headers/Public/FirebaseCore && cp Pods/FirebaseCore/Firebase/Core/Public/* Pods/Headers/Public/FirebaseCore/")
 end
