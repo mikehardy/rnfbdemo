@@ -123,6 +123,10 @@ rm -f ios/rnfbdemo/Info.plist??
 sed -i -e $'s/<\/application>/  <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"\/>\\\n    <\/application>/' android/app/src/main/AndroidManifest.xml
 rm -f android/app/src/main/AndroidManifest.xml??
 
+# AdMob has a specific error in react-native-firebase with regard to modern Firebase iOS SDKs, the path moved
+sed -i -e $'s/Google-Mobile-Ads-SDK\/Frameworks\/frameworks/Google-Mobile-Ads-SDK\/Frameworks\/GoogleMobileAdsFramework-Current/' node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj
+rm -f node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj??
+
 # Set the Java application up for multidex (needed for API<21 w/Firebase)
 echo "Configuring MultiDex for API<21 support"
 sed -i -e $'s/defaultConfig {/defaultConfig {\\\n        multiDexEnabled true/' android/app/build.gradle
