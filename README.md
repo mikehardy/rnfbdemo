@@ -5,7 +5,8 @@ Demonstrator App for react-native-firebase
 ## Install / use
 
 1. Fork and clone the repo
-1. run `make-demo.sh` on a mac, that has react-native-cli installed as a global package
+1. Do the various Config section steps below
+1. run `make-demo.sh` (or `make-demo-rn59.sh` if you want to show react-native@0.59 vs 0.60) on a mac, that has react-native-cli installed as a global package
 
 ### Firebase Config
 
@@ -13,8 +14,8 @@ Go to the Firebase Console, create a new project, and set up demo apps
 
 1. Android package name must be 'com.rnfbdemo'
 1. iOS bundle name must be 'com.rnfbdemo'
-1. Download / install the google-services.json for your new rnfbdemo android app to `android/app/google-services.json`
-1. Drop the Google-services.plist file into `ios/rnfbdemo/Google-services.plist`
+1. Download / install the google-services.json for your new rnfbdemo android app to the root of this repo (it will be copied into place)
+1. Drop the Google-services.plist file the root of this repo (it will be copied in to place)
 
 ### Apple Developer Config
 
@@ -31,6 +32,7 @@ To test remote notifications while offline, you'll have to do a lot of Apple set
 
 Currently this repo demonstrates:
 
-1. How to correctly install and link the core module in a react-native-firebase project
+1. How to correctly install and link the most popular modules in a react-native-firebase project
+1. Has a very basic App.js that just shows they were installed correctly so you can see the app boots and loads native modules
 
-...and that's it for now. None of the other parts are configured or demonstrated yet
+...and that's it for now, but it's enough to show the basics on what you need to do to integrate react-native-firebase with your project
