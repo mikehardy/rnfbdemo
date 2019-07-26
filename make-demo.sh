@@ -4,45 +4,34 @@ set -e
 # Basic template create, rnfb install, link
 \rm -fr rnfbdemo
 
-# Which version of react-native to demo?
-if [ "${RNVERSION}" == "60" ]; then
-  JETIFY=true
-  echo "Testing react-native 0.60"
-  react-native init rnfbdemo
-else
-  # In the absence of overrides, we will work on RNVersion 59
-  RNVERSION=59
-  echo "Testing react-native 0.59"
-  react-native init rnfbdemo --version react-native@0.59.10
-fi
+echo "Testing react-native 0.60 + react-native-firebase v5.current + Firebase SDKs current"
+react-native init rnfbdemo
 cd rnfbdemo
 
+echo "Adding react-native-firebase dependency"
 npm i react-native-firebase
-react-native link react-native-firebase
-cd ios
-cp ../../Podfile .
-pod install
-cd ..
 
 # Perform the minimal edit to integrate it on iOS
+echo "Adding initialization code in iOS"
 sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import "Firebase.h"/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
 sed -i -e $'s/RCTBridge \*bridge/[FIRApp configure];\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
 
-# Minimal integration on Android
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.2.0"/' android/build.gradle
+# Minimal integration on Android is just the JSON, base+core, progaurd
+echo "Adding basic java integration"
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.0"/' android/build.gradle
 rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.android.gms:play-services-base:16.1.0"/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.android.gms:play-services-base:17.0.0"/' android/app/build.gradle
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-core:16.0.9"/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-core:17.0.1"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 echo "-keep class io.invertase.firebase.** { *; }" >> android/app/proguard-rules.pro
 echo "-dontwarn io.invertase.firebase.**" >> android/app/proguard-rules.pro
 
-
-# Copy the Firebase config files in
+# Copy the Firebase config files in - you must supply them
+echo "Copying in Firebase app definition files"
 cp ../GoogleService-Info.plist ios/rnfbdemo/
 cp ../google-services.json android/app/
 
@@ -57,62 +46,115 @@ cp ../google-services.json android/app/
 rm -f ios/rnfbdemo.xcodeproj/project.pbxproj
 cp ../project.pbxproj ios/rnfbdemo.xcodeproj/
 
-# Add our messaging dependency for Java
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-messaging:18.0.0"/' android/app/build.gradle
+# Crashlytics - repo, classpath, plugin, dependency, import, init
+echo "Setting crashlytics up in Java"
+sed -i -e $'s/google()/maven { url "https:\/\/maven.fabric.io\/public" }\\\n        google()/' android/build.gradle
+rm -f android/build.gradle??
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.28.1"/' android/build.gradle
+rm -f android/build.gradle??
+sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"/' android/app/build.gradle
 rm -f android/app/build.gradle??
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation("com.crashlytics.sdk.android:crashlytics:2.9.9@aar") { transitive=true } /' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/public class/import io.invertase.firebase.fabric.crashlytics.RNFirebaseCrashlyticsPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+sed -i -e $'s/return packages;/packages.add(new RNFirebaseCrashlyticsPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
-# Add shortcut badging for Java, because people like it even though shortcut badging on Android is discouraged and is terrible and basically unsupportable
+# Performance - classpath, plugin, dependency, import, init
+echo "Setting up Performance module in Java"
+rm -f android/app/build.gradle??
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.0"/' android/build.gradle
+rm -f android/build.gradle??
+sed -i -e $'s/"com.android.application" {/"com.android.application"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-perf:18.0.1"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/public class/import io.invertase.firebase.perf.RNFirebasePerformancePackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+sed -i -e $'s/return packages;/packages.add(new RNFirebasePerformancePackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+
+# Analytics - dependency, import, init
+echo "Setting up Analytics in Java"
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-analytics:17.0.1"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/public class/import io.invertase.firebase.analytics.RNFirebaseAnalyticsPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+sed -i -e $'s/return packages;/packages.add(new RNFirebaseAnalyticsPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+
+# Firestore - dependency, import, init
+echo "Setting up Firestore in Java"
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-firestore:20.2.0"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/public class/import io.invertase.firebase.firestore.RNFirebaseFirestorePackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+sed -i -e $'s/return packages;/packages.add(new RNFirebaseFirestorePackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+
+# I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
+# You've got to read the docs and test *EVERYTHING* one feature at a time.
+# But you have to do a *lot* of work in the AndroidManifest.xml, and make sure your MainActivity *is* the launch intent receiver
+
+# I am not going to demonstrate shortcut badging. Shortcut badging on Android is a terrible idea to rely on.
+# Only use it if the feature is "nice to have" but you're okay with it being terrible. It's an Android thing, not a react-native-firebase thing.
 # (Pixel Launcher won't do it, launchers have to grant permissions, it is vendor specific, Material Design says no, etc etc)
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "me.leolin:ShortcutBadger:1.1.22@aar"/' android/app/build.gradle
+
+# Set up AdMob Java stuff - dependency, import, init
+echo "Setting up AdMob"
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-ads:18.1.1"/' android/app/build.gradle
 rm -f android/app/build.gradle??
-
-# Set the Java application up for multidex (needed for API<21 w/Firebase)
-#if [ "${JETIFY}" == "TRUE" ]; then
-#  sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "androidx.multidex:multidex:2.0.1"/' android/app/build.gradle
-#  sed -i -e $'s/import android.app.Application;/import androidx.multidex.MultiDexApplication;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-#else
-#  sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.android.support:multidex:1.0.3"/' android/app/build.gradle
-#  sed -i -e $'s/import android.app.Application;/import android.support.multidex.MultiDexApplication;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-#fi
-
-#rm -f android/app/build.gradle??
-#rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-#sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-#rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-
-# Set up AdMob Java stuff
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-ads:15.0.1"/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/RNFirebasePackage;/admob.RNFirebaseAdMobPackage;\\\nimport io.invertase.firebase.RNFirebasePackage;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+sed -i -e $'s/public class/import io.invertase.firebase.admob.RNFirebaseAdMobPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-sed -i -e $'s/new RNFirebasePackage()/new RNFirebasePackage(),\\\n          new RNFirebaseAdMobPackage()/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+sed -i -e $'s/return packages;/packages.add(new RNFirebaseAdMobPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-
 
 # Set up an AdMob ID (this is the official "sample id")
 sed -i -e $'s/NSAppTransportSecurity/GADApplicationIdentifier<\/key>\\\n	<string>ca-app-pub-3940256099942544~1458002511<\/string>\\\n        <key>NSAppTransportSecurity/' ios/rnfbdemo/Info.plist
 rm -f ios/rnfbdemo/Info.plist??
-sed -i -e $'s/<\/application>/  <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="YOUR_ADMOB_APP_ID"\/>\\\n    <\/application>/' android/app/src/main/AndroidManifest.xml
+sed -i -e $'s/<\/application>/  <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"\/>\\\n    <\/application>/' android/app/src/main/AndroidManifest.xml
 rm -f android/app/src/main/AndroidManifest.xml??
+
+# AdMob has a specific error in react-native-firebase with regard to modern Firebase iOS SDKs, the path moved
+sed -i -e $'s/Google-Mobile-Ads-SDK\/Frameworks\/frameworks/Google-Mobile-Ads-SDK\/Frameworks\/GoogleMobileAdsFramework-Current/' node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj
+rm -f node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj??
+
+# Set the Java application up for multidex (needed for API<21 w/Firebase)
+echo "Configuring MultiDex for API<21 support"
+sed -i -e $'s/defaultConfig {/defaultConfig {\\\n        multiDexEnabled true/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "androidx.multidex:multidex:2.0.1"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/import android.app.Application;/import androidx.multidex.MultiDexApplication;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
 # Copy in our demonstrator App.js
 rm ./App.js && cp ../App.js .
 
-# Test out AndroidX via jetify
-# Assuming your code uses AndroidX, this is all the AndroidStudio AndroidX migration does besides transform
-# your app source and app libraries
-if [ "${JETIFY}" == "true" ]; then
-  echo "android.useAndroidX=true" >> android/gradle.properties
-  echo "android.enableJetifier=true" >> android/gradle.properties
-  npm i jetifier
-  npm i --save-dev node-pre-gyp
-  npx jetify
-fi
+# AndroidX via jetify
+# Java Jetifier: this is all the AndroidStudio AndroidX migration does besides one initial transform
+echo "Setting up Jetifier (Java and Javascript versions) for AndroidX support"
+echo "android.useAndroidX=true" >> android/gradle.properties
+echo "android.enableJetifier=true" >> android/gradle.properties
+# Javascript Jetifier: this makes sure Java code in npm-managed modules are transformed all the time
+# It is used automatically now, built in to the @react-native-community/cli process by default
+
+# Copy in our Podfile (it isn't built dynamically, sorry)
+cp ../Podfile ./ios/Podfile
 
 # Run the thing for iOS
-#react-native run-ios
+if [ "$(uname)" == "Darwin" ]; then
+  echo "Installing pods and running iOS app"
+  cd ios && pod install && cd ..
+  react-native run-ios
+  # workaround for poorly setup Android SDK environments
+  USER=`whoami`
+  echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
+fi
 
 # Run it for Android (assumes you have an android emulator running)
-USER=`whoami`
-echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
-npx react-native run-android
+echo "Running android app"
+#react-native run-android
