@@ -134,11 +134,6 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 # Copy in our demonstrator App.js
 rm ./App.js && cp ../App.js .
 
-# AndroidX via jetify
-# Java Jetifier: this is all the AndroidStudio AndroidX migration does besides one initial transform
-echo "Setting up Jetifier (Java and Javascript versions) for AndroidX support"
-echo "android.useAndroidX=true" >> android/gradle.properties
-echo "android.enableJetifier=true" >> android/gradle.properties
 # Javascript Jetifier: this makes sure Java code in npm-managed modules are transformed all the time
 # It is used automatically now, built in to the @react-native-community/cli process by default
 
@@ -157,4 +152,9 @@ fi
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
+npx jetify
+cd android && ./gradlew assembleRelease # prove it works
+cd ..
+# only commenting this out because I frequently don't have an emulator available
+# I run it manually in testing when I have one, uncomment if you like
 #react-native run-android
