@@ -9,7 +9,7 @@ react-native init rnfbdemo
 cd rnfbdemo
 
 echo "Adding react-native-firebase dependency"
-npm i react-native-firebase
+yarn add "https://github.com/invertase/react-native-firebase.git#v5.x.x"
 
 # Perform the minimal edit to integrate it on iOS
 echo "Adding initialization code in iOS"
