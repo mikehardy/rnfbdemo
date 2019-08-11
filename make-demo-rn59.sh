@@ -9,13 +9,10 @@ react-native init rnfbdemo --version react-native@0.59.10
 cd rnfbdemo
 
 echo "Adding react-native-firebase dependency"
-yarn add react-native-firebase@5.5.4  # Use 5.5.4 because 5.5.5 has a link problem https://github.com/invertase/react-native-firebase/commit/9bf0a09aa5856ef1d82d584e0e590cb2b892c636
+yarn add react-native-firebase
 
 # Note! THe ios/Podfile is *NOT PRESENT* yet, so this links directly into the iOS Project. Recommended For RN59
 react-native link react-native-firebase
-
-# Now that we are linked corectly, move to current
-yarn add react-native-firebase@5
 
 # Perform the minimal edit to integrate it on iOS
 echo "Adding initialization code in iOS"
