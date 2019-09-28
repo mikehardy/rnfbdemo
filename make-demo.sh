@@ -16,7 +16,7 @@ set -e
 # Basic template create, rnfb install, link
 \rm -fr rnfbdemo
 
-echo "Testing react-native 0.60 + react-native-firebase v5.current + Firebase SDKs current"
+echo "Testing react-native >= 0.60 + react-native-firebase v5.current + Firebase SDKs current"
 react-native init rnfbdemo
 cd rnfbdemo
 
