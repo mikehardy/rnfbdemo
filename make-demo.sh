@@ -193,7 +193,7 @@ fi
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
-npx jetify
+npx jetifier
 cd android && ./gradlew assembleRelease # prove it works
 cd ..
 # only commenting this out because I frequently don't have an emulator available
