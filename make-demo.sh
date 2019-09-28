@@ -137,8 +137,37 @@ rm ./App.js && cp ../App.js .
 # Javascript Jetifier: this makes sure Java code in npm-managed modules are transformed all the time
 # It is used automatically now, built in to the @react-native-community/cli process by default
 
-# Copy in our Podfile (it isn't built dynamically, sorry)
-cp ../Podfile ./ios/Podfile
+# Slice the Pods we want to demonstrate into the Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Core\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Analytics\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  # optional, requires careful consideration, but enables demographics\\\n  pod \'GoogleIDFASupport\', \'~> 3.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/AdMob\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Auth\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Database\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/DynamicLinks\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Firestore\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Functions\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/RemoteConfig\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Storage\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Crashlytics\', \'~> 3.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Fabric\', \'~> 1.10.2\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+
+# Just for an extra aesthetic newline
+sed -i -e $'s/  target \'rnfbdemoTests\' do/\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
