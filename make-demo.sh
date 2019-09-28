@@ -32,12 +32,13 @@ rm -f ios/rnfbdemo/AppDelegate.m??
 
 # Minimal integration on Android is just the JSON, base+core, progaurd
 echo "Adding basic java integration"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.0"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.2"/' android/build.gradle
 rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.android.gms:play-services-base:17.0.0"/' android/app/build.gradle
+# Use the 'bom' (Bill Of Materials) versioning style now, it is so much easier to maintain.
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation platform("com.google.firebase:firebase-bom:22.2.1")/' android/app/build.gradle
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-core:17.0.1"/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-core"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 echo "-keep class io.invertase.firebase.** { *; }" >> android/app/proguard-rules.pro
 echo "-dontwarn io.invertase.firebase.**" >> android/app/proguard-rules.pro
@@ -76,11 +77,11 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 # Performance - classpath, plugin, dependency, import, init
 echo "Setting up Performance module in Java"
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.0"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.1"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.android.application" {/"com.android.application"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-perf:18.0.1"/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 sed -i -e $'s/public class/import io.invertase.firebase.perf.RNFirebasePerformancePackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
@@ -89,7 +90,7 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
 # Analytics - dependency, import, init
 echo "Setting up Analytics in Java"
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-analytics:17.0.1"/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-analytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 sed -i -e $'s/public class/import io.invertase.firebase.analytics.RNFirebaseAnalyticsPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
@@ -98,7 +99,7 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
 # Firestore - dependency, import, init
 echo "Setting up Firestore in Java"
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-firestore:20.2.0"/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-firestore"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 sed -i -e $'s/public class/import io.invertase.firebase.firestore.RNFirebaseFirestorePackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
@@ -115,7 +116,7 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
 # Set up AdMob Java stuff - dependency, import, init
 echo "Setting up AdMob"
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-ads:18.1.1"/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-ads"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 sed -i -e $'s/public class/import io.invertase.firebase.admob.RNFirebaseAdMobPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
@@ -184,8 +185,8 @@ rm -f ios/Podfile??
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
-  cd ios && pod install --repo-update && cd ..
-  react-native run-ios
+  #cd ios && pod install --repo-update && cd ..
+  #react-native run-ios
   # workaround for poorly setup Android SDK environments
   USER=`whoami`
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
