@@ -1,6 +1,18 @@
 #!/bin/bash
 set -e 
 
+###############################################
+##
+##
+##  PLEASE READ THE COMMENTS IN THIS FILE
+##
+##  In the comments I explain what the script
+##  does, for each major part of functionality
+##
+##
+###############################################
+
+
 # Basic template create, rnfb install, link
 \rm -fr rnfbdemo
 
