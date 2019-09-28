@@ -143,7 +143,7 @@ cp ../Podfile ./ios/Podfile
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
-  cd ios && pod install && cd ..
+  cd ios && pod install --repo-update && cd ..
   react-native run-ios
   # workaround for poorly setup Android SDK environments
   USER=`whoami`
