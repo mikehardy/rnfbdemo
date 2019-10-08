@@ -5,14 +5,14 @@ set -e
 \rm -fr rnfbdemo
 
 echo "Testing react-native 0.59 + react-native-firebase v5.current + Firebase SDKs current"
-react-native init rnfbdemo --version react-native@0.59.10
+npx react-native-cli@^1 init rnfbdemo --version="0.59.10"
 cd rnfbdemo
 
 echo "Adding react-native-firebase dependency"
 yarn add react-native-firebase
 
 # Note! THe ios/Podfile is *NOT PRESENT* yet, so this links directly into the iOS Project. Recommended For RN59
-react-native link react-native-firebase
+npx react-native link react-native-firebase
 
 # Perform the minimal edit to integrate it on iOS
 echo "Adding initialization code in iOS"
@@ -155,7 +155,7 @@ cp ../PodfileRN59 ./ios/Podfile
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
   cd ios && pod install && cd ..
-  react-native run-ios
+  npx react-native run-ios
   # workaround for poorly setup Android SDK environments
   USER=`whoami`
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
@@ -163,4 +163,4 @@ fi
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
-#react-native run-android
+#npx react-native run-android
