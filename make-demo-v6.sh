@@ -4,8 +4,8 @@ set -e
 # Basic template create, rnfb install, link
 \rm -fr rnfbdemo
 
-echo "Testing react-native 0.60 + react-native-firebase v5.current + Firebase SDKs current"
-react-native init rnfbdemo
+echo "Testing react-native current + react-native-firebase v6.current + Firebase SDKs current"
+npx react-native init rnfbdemo
 cd rnfbdemo
 
 echo "Adding react-native-firebase dependencies"
@@ -45,47 +45,44 @@ cp ../google-services.json android/app/
 rm -f ios/rnfbdemo.xcodeproj/project.pbxproj
 cp ../project.pbxproj ios/rnfbdemo.xcodeproj/
 
+# Analytics - 
+echo "Setting up Analytics"
+yarn add "@react-native-firebase/analytics"
+
 # Crashlytics - repo, classpath, plugin, dependency, import, init
-# echo "Setting crashlytics up in Java"
-# sed -i -e $'s/google()/maven { url "https:\/\/maven.fabric.io\/public" }\\\n        google()/' android/build.gradle
-# rm -f android/build.gradle??
-# sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.28.1"/' android/build.gradle
-# rm -f android/build.gradle??
-# sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"/' android/app/build.gradle
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/dependencies {/dependencies {\\\n    implementation("com.crashlytics.sdk.android:crashlytics:2.9.9@aar") { transitive=true } /' android/app/build.gradle
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/public class/import io.invertase.firebase.fabric.crashlytics.RNFirebaseCrashlyticsPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-# sed -i -e $'s/return packages;/packages.add(new RNFirebaseCrashlyticsPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+echo "Setting up Crashlytics"
+yarn add "@react-native-firebase/crashlytics"
+sed -i -e $'s/google()/maven { url "https:\/\/maven.fabric.io\/public" }\\\n        google()/' android/build.gradle
+rm -f android/build.gradle??
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.28.1"/' android/build.gradle
+rm -f android/build.gradle??
+sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"\\\ncrashlytics { enableNdk true }/' android/app/build.gradle
+rm -f android/app/build.gradle??
 
-# Performance - classpath, plugin, dependency, import, init
-# echo "Setting up Performance module in Java"
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.0"/' android/build.gradle
-# rm -f android/build.gradle??
-# sed -i -e $'s/"com.android.application" {/"com.android.application"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-perf:18.0.1"/' android/app/build.gradle
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/public class/import io.invertase.firebase.perf.RNFirebasePerformancePackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-# sed -i -e $'s/return packages;/packages.add(new RNFirebasePerformancePackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-
-# Analytics - dependency, import, init
-# echo "Setting up Analytics in Java"
-# sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-analytics:17.0.1"/' android/app/build.gradle
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/public class/import io.invertase.firebase.analytics.RNFirebaseAnalyticsPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-# sed -i -e $'s/return packages;/packages.add(new RNFirebaseAnalyticsPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+# Database
+echo "Setting up Database"
+yarn add "@react-native-firebase/database"
 
 # Firestore
 echo "Setting up Firestore"
 yarn add "@react-native-firebase/firestore"
+
+# Functions
+echo "Setting up Functions"
+yarn add "@react-native-firebase/functions"
+
+# Performance - classpath, plugin, dependency, import, init
+echo "Setting up Performance"
+yarn add "@react-native-firebase/perf"
+rm -f android/app/build.gradle??
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.1"/' android/build.gradle
+rm -f android/build.gradle??
+sed -i -e $'s/"com.android.application" {/"com.android.application"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
+rm -f android/app/build.gradle??
+
+# Storage
+echo "Setting up Storage"
+yarn add "@react-native-firebase/storage"
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
@@ -95,22 +92,15 @@ yarn add "@react-native-firebase/firestore"
 # Only use it if the feature is "nice to have" but you're okay with it being terrible. It's an Android thing, not a react-native-firebase thing.
 # (Pixel Launcher won't do it, launchers have to grant permissions, it is vendor specific, Material Design says no, etc etc)
 
-# Set up AdMob Java stuff - dependency, import, init
-# echo "Setting up AdMob"
-# sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-ads:18.1.1"/' android/app/build.gradle
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/public class/import io.invertase.firebase.admob.RNFirebaseAdMobPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-# sed -i -e $'s/return packages;/packages.add(new RNFirebaseAdMobPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-
+# Set up AdMob
+echo "Setting up AdMob"
+yarn add "@react-native-firebase/admob"
 # Set up an AdMob ID (this is the official "sample id")
-# sed -i -e $'s/NSAppTransportSecurity/GADApplicationIdentifier<\/key>\\\n	<string>ca-app-pub-3940256099942544~1458002511<\/string>\\\n        <key>NSAppTransportSecurity/' ios/rnfbdemo/Info.plist
-# rm -f ios/rnfbdemo/Info.plist??
-# sed -i -e $'s/<\/application>/  <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"\/>\\\n    <\/application>/' android/app/src/main/AndroidManifest.xml
-# rm -f android/app/src/main/AndroidManifest.xml??
+# Note this can be done in firebase.json as well: https://invertase.io/oss/react-native-firebase/v6/admob/quick-start#important:-adding-your-admob-app-id
+printf "{\n  \"react-native\": {\n    \"admob_android_app_id\": \"ca-app-pub-3940256099942544~3347511713\",\n    \"admob_ios_app_id\": \"ca-app-pub-3940256099942544~1458002511\"\n  }\n}" > firebase.json
 
 # AdMob has a specific error in react-native-firebase with regard to modern Firebase iOS SDKs, the path moved
+# I think this is not needed for react-native-firebase v6 though
 # sed -i -e $'s/Google-Mobile-Ads-SDK\/Frameworks\/frameworks/Google-Mobile-Ads-SDK\/Frameworks\/GoogleMobileAdsFramework-Current/' node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj
 # rm -f node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj??
 
@@ -124,6 +114,10 @@ sed -i -e $'s/import android.app.Application;/import androidx.multidex.MultiDexA
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+
+# Another Java build tweak - or gradle runs out of memory during the build
+echo "Increasing memory available to gradle for android java build"
+echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
 
 # Copy in our demonstrator App.js
 rm ./App.js && cp ../AppV6.js ./App.js
@@ -148,4 +142,4 @@ cd android && ./gradlew assembleRelease # prove it works
 cd ..
 # only commenting this out because I frequently don't have an emulator available
 # I run it manually in testing when I have one, uncomment if you like
-#react-native run-android
+npx react-native run-android
