@@ -25,6 +25,10 @@ sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms
 rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 
+# Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'24.1.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.13.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+
 # Copy the Firebase config files in - you must supply them
 echo "Copying in Firebase app definition files"
 cp ../GoogleService-Info.plist ios/rnfbdemo/
@@ -126,9 +130,6 @@ rm ./App.js && cp ../AppV6.js ./App.js
 
 # Javascript Jetifier: this makes sure Java code in npm-managed modules are transformed all the time
 # It is used automatically now, built in to the @react-native-community/cli process by default
-
-# Copy in our Podfile (it isn't built dynamically, sorry)
-cp ../PodfileV6 ./ios/Podfile
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
