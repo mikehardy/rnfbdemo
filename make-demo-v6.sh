@@ -14,9 +14,9 @@ yarn add "@react-native-firebase/auth"
 
 # Perform the minimal edit to integrate it on iOS
 echo "Adding initialization code in iOS"
-sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n@import "Firebase"/' ios/rnfbdemo/AppDelegate.m
+sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n@import Firebase;/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
-sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure] };\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
+sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
 
 # Minimal integration on Android is just the JSON, base+core, progaurd
