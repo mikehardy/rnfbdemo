@@ -35,6 +35,8 @@ cp ../GoogleService-Info.plist ios/rnfbdemo/
 cp ../google-services.json android/app/
 
 # Copy in a project file that is pre-constructed - no way to patch it cleanly that I've found
+# There is already a pre-constructed project file here. 
+# Normal users may skip these steps unless you are maintaining this repository and need to generate a new project
 # To build it do this:
 # 1.  stop this script here (by uncommenting the exit line)
 # 2.  open the .xcworkspace created by running the script to this point
