@@ -26,8 +26,8 @@ rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'24.1.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.13.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'24.4.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 
 # Copy the Firebase config files in - you must supply them
 echo "Copying in Firebase app definition files"
@@ -56,7 +56,7 @@ echo "Setting up Crashlytics"
 yarn add "@react-native-firebase/crashlytics"
 sed -i -e $'s/google()/maven { url "https:\/\/maven.fabric.io\/public" }\\\n        google()/' android/build.gradle
 rm -f android/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.28.1"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.31.2"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"\\\ncrashlytics { enableNdk true }/' android/app/build.gradle
 rm -f android/app/build.gradle??
@@ -131,7 +131,7 @@ rm ./App.js && cp ../AppV6.js ./App.js
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
   cd ios && pod install && cd ..
-  react-native run-ios
+  npx react-native run-ios
   # workaround for poorly setup Android SDK environments
   USER=`whoami`
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
