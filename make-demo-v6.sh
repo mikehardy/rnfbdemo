@@ -26,8 +26,8 @@ rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'24.4.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'24.6.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.17.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 
 # Copy the Firebase config files in - you must supply them
 echo "Copying in Firebase app definition files"
