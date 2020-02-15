@@ -98,13 +98,7 @@ yarn add "@react-native-firebase/storage"
 echo "Setting up AdMob"
 yarn add "@react-native-firebase/admob"
 # Set up an AdMob ID (this is the official "sample id")
-# Note this can be done in firebase.json as well: https://invertase.io/oss/react-native-firebase/v6/admob/quick-start#important:-adding-your-admob-app-id
 printf "{\n  \"react-native\": {\n    \"admob_android_app_id\": \"ca-app-pub-3940256099942544~3347511713\",\n    \"admob_ios_app_id\": \"ca-app-pub-3940256099942544~1458002511\"\n  }\n}" > firebase.json
-
-# AdMob has a specific error in react-native-firebase with regard to modern Firebase iOS SDKs, the path moved
-# I think this is not needed for react-native-firebase v6 though
-# sed -i -e $'s/Google-Mobile-Ads-SDK\/Frameworks\/frameworks/Google-Mobile-Ads-SDK\/Frameworks\/GoogleMobileAdsFramework-Current/' node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj
-# rm -f node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj??
 
 # Set the Java application up for multidex (needed for API<21 w/Firebase)
 echo "Configuring MultiDex for API<21 support"
@@ -124,9 +118,6 @@ echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemo
 # Copy in our demonstrator App.js
 rm ./App.js && cp ../AppV6.js ./App.js
 
-# Javascript Jetifier: this makes sure Java code in npm-managed modules are transformed all the time
-# It is used automatically now, built in to the @react-native-community/cli process by default
-
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
@@ -142,6 +133,6 @@ echo "Running android app"
 npx jetify
 cd android && ./gradlew assembleRelease # prove it works
 cd ..
-# only commenting this out because I frequently don't have an emulator available
-# I run it manually in testing when I have one, uncomment if you like
+# may or may not be commented out, depending on if have an emulator available
+# I run it manually in testing when I have one, comment if you like
 npx react-native run-android
