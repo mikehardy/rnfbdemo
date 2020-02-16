@@ -8,6 +8,9 @@ echo "Testing react-native current + react-native-firebase v6.current + Firebase
 npx react-native init rnfbdemo
 cd rnfbdemo
 
+echo "Temporary workaround for CLI issue"
+yarn add @react-native-community/cli-platform-android@3.0.3
+
 echo "Adding react-native-firebase dependencies"
 yarn add "@react-native-firebase/app"
 yarn add "@react-native-firebase/auth"
