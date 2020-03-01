@@ -185,9 +185,10 @@ rm -f ios/Podfile??
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
-  #cd ios && pod install --repo-update && cd ..
-  #react-native run-ios
-  # workaround for poorly setup Android SDK environments
+  cd ios && pod install --repo-update && cd ..
+  react-native run-ios
+
+  # workaround for poorly setup Android SDK environments on macOS
   USER=`whoami`
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
 fi
@@ -197,6 +198,5 @@ echo "Running android app"
 npx jetifier
 cd android && ./gradlew assembleRelease # prove it works
 cd ..
-# only commenting this out because I frequently don't have an emulator available
-# I run it manually in testing when I have one, uncomment if you like
-#react-native run-android
+# this may or may not be commented out because I frequently don't have an emulator running
+react-native run-android
