@@ -8,12 +8,12 @@ echo "Testing react-native current + react-native-firebase v6.current + Firebase
 npx react-native init rnfbdemo
 cd rnfbdemo
 
-echo "Temporary workaround for CLI issue"
-yarn add @react-native-community/cli-platform-android@3.0.3
+# echo "Temporary workaround for CLI issue"
+# yarn add @react-native-community/cli-platform-android@3.0.3
 
+# This is the most basic integration
 echo "Adding react-native-firebase dependencies"
 yarn add "@react-native-firebase/app"
-yarn add "@react-native-firebase/auth"
 
 # Perform the minimal edit to integrate it on iOS
 echo "Adding initialization code in iOS"
@@ -29,8 +29,9 @@ rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'24.6.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.17.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'24.7.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.18.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
 
 # Copy the Firebase config files in - you must supply them
 echo "Copying in Firebase app definition files"
@@ -50,9 +51,20 @@ cp ../google-services.json android/app/
 rm -f ios/rnfbdemo.xcodeproj/project.pbxproj
 cp ../project.pbxproj ios/rnfbdemo.xcodeproj/
 
-# Analytics - 
-echo "Setting up Analytics"
-yarn add "@react-native-firebase/analytics"
+# From this point on we are adding optional modules
+# First set up all the modules that need no further config for the demo 
+echo "Setting up Analytics, Auth, Database, Dynamic Links, Firestore, Functions, Instance-ID, In App Messaging, Remote Config, Storage"
+yarn add \
+  @react-native-firebase/analytics \
+  @react-native-firebase/auth \
+  @react-native-firebase/database \
+  @react-native-firebase/dynamic-links \
+  @react-native-firebase/firestore \
+  @react-native-firebase/functions \
+  @react-native-firebase/iid \
+  @react-native-firebase/in-app-messaging \
+  @react-native-firebase/remote-config \
+  @react-native-firebase/storage
 
 # Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics"
@@ -64,18 +76,6 @@ rm -f android/build.gradle??
 sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"\\\ncrashlytics { enableNdk true }/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
-# Database
-echo "Setting up Database"
-yarn add "@react-native-firebase/database"
-
-# Firestore
-echo "Setting up Firestore"
-yarn add "@react-native-firebase/firestore"
-
-# Functions
-echo "Setting up Functions"
-yarn add "@react-native-firebase/functions"
-
 # Performance - classpath, plugin, dependency, import, init
 echo "Setting up Performance"
 yarn add "@react-native-firebase/perf"
@@ -84,10 +84,6 @@ sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.fir
 rm -f android/build.gradle??
 sed -i -e $'s/"com.android.application" {/"com.android.application"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
-
-# Storage
-echo "Setting up Storage"
-yarn add "@react-native-firebase/storage"
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
@@ -102,6 +98,28 @@ echo "Setting up AdMob"
 yarn add "@react-native-firebase/admob"
 # Set up an AdMob ID (this is the official "sample id")
 printf "{\n  \"react-native\": {\n    \"admob_android_app_id\": \"ca-app-pub-3940256099942544~3347511713\",\n    \"admob_ios_app_id\": \"ca-app-pub-3940256099942544~1458002511\"\n  }\n}" > firebase.json
+
+
+# Add in the ML Kits and configure them
+echo "Setting up ML Vision"
+yarn add "@react-native-firebase/ml-vision"
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_face_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_ocr_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_barcode_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_label_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_image_label_model": true,/' firebase.json
+rm -f firebase.json??
+
+echo "Setting up ML Natural Language"
+yarn add "@react-native-firebase/ml-natural-language"
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_id_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_smart_reply_model": true,/' firebase.json
+rm -f firebase.json??
 
 # Set the Java application up for multidex (needed for API<21 w/Firebase)
 echo "Configuring MultiDex for API<21 support"
@@ -124,6 +142,12 @@ rm ./App.js && cp ../AppV6.js ./App.js
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
+
+  # Temporary compile fix for iOS In App Messaging - the Firebase iOS SDK changed the Pod name react-native-firebase uses
+  # https://github.com/invertase/react-native-firebase/pull/3264
+  sed -i -e $'s/InAppMessagingDisplay/InAppMessaging/' node_modules/@react-native-firebase/in-app-messaging/RNFBInAppMessaging.podspec
+  rm -f node_modules/@react-native-firebase/in-app-messaging/RNFBInAppMessaging.podspec??
+
   cd ios && pod install --repo-update && cd ..
   npx react-native run-ios
   # workaround for poorly setup Android SDK environments
