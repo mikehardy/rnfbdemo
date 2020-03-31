@@ -17,7 +17,7 @@ set -e
 \rm -fr rnfbdemo
 
 echo "Testing react-native >= 0.60 + react-native-firebase v5.current + Firebase SDKs current"
-react-native init rnfbdemo
+npx react-native init rnfbdemo
 cd rnfbdemo
 
 echo "Adding react-native-firebase dependency"
@@ -32,13 +32,11 @@ rm -f ios/rnfbdemo/AppDelegate.m??
 
 # Minimal integration on Android is just the JSON, base+core, progaurd
 echo "Adding basic java integration"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.2"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.3"/' android/build.gradle
 rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 # Use the 'bom' (Bill Of Materials) versioning style now, it is so much easier to maintain.
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation platform("com.google.firebase:firebase-bom:22.2.1")/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-core"/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation platform("com.google.firebase:firebase-bom:25.2.0")/' android/app/build.gradle
 rm -f android/app/build.gradle??
 echo "-keep class io.invertase.firebase.** { *; }" >> android/app/proguard-rules.pro
 echo "-dontwarn io.invertase.firebase.**" >> android/app/proguard-rules.pro
@@ -63,11 +61,11 @@ cp ../project.pbxproj ios/rnfbdemo.xcodeproj/
 echo "Setting crashlytics up in Java"
 sed -i -e $'s/google()/maven { url "https:\/\/maven.fabric.io\/public" }\\\n        google()/' android/build.gradle
 rm -f android/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.28.1"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.31.2"/' android/build.gradle
 rm -f android/build.gradle??
-sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"/' android/app/build.gradle
+sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"\\\ncrashlytics { enableNdk true }/' android/app/build.gradle
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation("com.crashlytics.sdk.android:crashlytics:2.9.9@aar") { transitive=true } /' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation("com.crashlytics.sdk.android:crashlytics")/' android/app/build.gradle
 rm -f android/app/build.gradle??
 sed -i -e $'s/public class/import io.invertase.firebase.fabric.crashlytics.RNFirebaseCrashlyticsPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
@@ -151,27 +149,27 @@ rm ./App.js && cp ../App.js .
 # It is used automatically now, built in to the @react-native-community/cli process by default
 
 # Slice the Pods we want to demonstrate into the Podfile
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Core\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Core\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Analytics\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Analytics\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 sed -i -e $'s/  target \'rnfbdemoTests\' do/  # optional, requires careful consideration, but enables demographics\\\n  pod \'GoogleIDFASupport\', \'~> 3.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/AdMob\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/AdMob\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Auth\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Auth\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Database\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Database\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/DynamicLinks\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/DynamicLinks\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Firestore\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Firestore\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Functions\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Functions\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/RemoteConfig\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/RemoteConfig\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Storage\', \'~> 6.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Storage\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Crashlytics\', \'~> 3.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
@@ -186,7 +184,7 @@ rm -f ios/Podfile??
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
   cd ios && pod install --repo-update && cd ..
-  react-native run-ios
+  npx react-native run-ios
 
   # workaround for poorly setup Android SDK environments on macOS
   USER=`whoami`
@@ -199,4 +197,4 @@ npx jetifier
 cd android && ./gradlew assembleRelease # prove it works
 cd ..
 # this may or may not be commented out because I frequently don't have an emulator running
-react-native run-android
+npx react-native run-android
