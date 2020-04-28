@@ -29,8 +29,8 @@ rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'25.2.2'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.22.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'25.3.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.23.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # Copy the Firebase config files in - you must supply them
@@ -142,12 +142,6 @@ rm ./App.js && cp ../AppV6.js ./App.js
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
-
-  # Temporary compile fix for iOS In App Messaging - the Firebase iOS SDK changed the Pod name react-native-firebase uses
-  # https://github.com/invertase/react-native-firebase/pull/3264
-  sed -i -e $'s/InAppMessagingDisplay/InAppMessaging/' node_modules/@react-native-firebase/in-app-messaging/RNFBInAppMessaging.podspec
-  rm -f node_modules/@react-native-firebase/in-app-messaging/RNFBInAppMessaging.podspec??
-
   cd ios && pod install --repo-update && cd ..
   npx react-native run-ios
   # workaround for poorly setup Android SDK environments
