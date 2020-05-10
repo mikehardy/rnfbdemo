@@ -8,8 +8,9 @@ echo "Testing react-native current + react-native-firebase v6.current + Firebase
 npx react-native init rnfbdemo
 cd rnfbdemo
 
-# echo "Temporary workaround for CLI issue"
-# yarn add @react-native-community/cli-platform-android@3.0.3
+# I have problems in my country with the cocoapods CDN sometimes, use github directly
+sed -i -e $'s/def add_flipper_pods/source \'https:\/\/github.com\/CocoaPods\/Specs.git\'\\\n\\\ndef add_flipper_pods/' ios/Podfile
+rm -f ios/Podfile.??
 
 # This is the most basic integration
 echo "Adding react-native-firebase dependencies"
@@ -29,8 +30,8 @@ rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'25.3.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.23.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'25.3.1'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # Copy the Firebase config files in - you must supply them

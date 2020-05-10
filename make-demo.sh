@@ -20,6 +20,10 @@ echo "Testing react-native >= 0.60 + react-native-firebase v5.current + Firebase
 npx react-native init rnfbdemo
 cd rnfbdemo
 
+# I have problems in my country with the cocoapods CDN sometimes, use github directly
+sed -i -e $'s/def add_flipper_pods/source \'https:\/\/github.com\/CocoaPods\/Specs.git\'\\\n\\\ndef add_flipper_pods/' ios/Podfile
+rm -f ios/Podfile.??
+
 echo "Adding react-native-firebase dependency"
 yarn add "https://github.com/invertase/react-native-firebase.git#v5.x.x"
 
@@ -36,7 +40,7 @@ sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms
 rm -f android/build.gradle??
 echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 # Use the 'bom' (Bill Of Materials) versioning style now, it is so much easier to maintain.
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation platform("com.google.firebase:firebase-bom:25.2.0")/' android/app/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n    implementation platform("com.google.firebase:firebase-bom:25.3.1")/' android/app/build.gradle
 rm -f android/app/build.gradle??
 echo "-keep class io.invertase.firebase.** { *; }" >> android/app/proguard-rules.pro
 echo "-dontwarn io.invertase.firebase.**" >> android/app/proguard-rules.pro
@@ -149,27 +153,27 @@ rm ./App.js && cp ../App.js .
 # It is used automatically now, built in to the @react-native-community/cli process by default
 
 # Slice the Pods we want to demonstrate into the Podfile
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Core\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Core\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Analytics\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Analytics\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 sed -i -e $'s/  target \'rnfbdemoTests\' do/  # optional, requires careful consideration, but enables demographics\\\n  pod \'GoogleIDFASupport\', \'~> 3.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/AdMob\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/AdMob\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Auth\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Auth\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Database\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Database\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/DynamicLinks\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/DynamicLinks\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Firestore\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Firestore\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Functions\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Functions\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/RemoteConfig\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/RemoteConfig\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Storage\', \'~> 6.21.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Storage\', \'~> 6.24.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Crashlytics\', \'~> 3.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
