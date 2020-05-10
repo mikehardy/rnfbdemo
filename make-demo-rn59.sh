@@ -8,10 +8,6 @@ echo "Testing react-native 0.59 + react-native-firebase v5.current + Firebase SD
 npx react-native-cli@^1 init rnfbdemo --version="0.59.10"
 cd rnfbdemo
 
-# I have problems in my country with the cocoapods CDN sometimes, use github directly
-sed -i -e $'s/def add_flipper_pods/source \'https:\/\/github.com\/CocoaPods\/Specs.git\'\\\n\\\ndef add_flipper_pods/' ios/Podfile
-rm -f ios/Podfile.??
-
 echo "Adding react-native-firebase dependency"
 yarn add react-native-firebase
 
