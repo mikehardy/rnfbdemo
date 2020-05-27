@@ -6,7 +6,7 @@ Demonstrator App for react-native-firebase
 
 1. Fork and clone the repo
 1. Do the various Config section steps below
-1. run `make-demo.sh` (or `make-demo-rn59.sh` if you want to show react-native@0.59 vs 0.60) on a mac, that has react-native-cli installed as a global package
+1. run `make-demo-v6.sh` for react-native-firebase v6+, `make-demo.sh` for react-native-firebase v5.x (or `make-demo-rn59.sh` if you want to show react-native-firebase v5 + react-native@0.59 vs 0.60) on a mac, that has react-native-cli installed as a global package
 
 ### Firebase Config
 
