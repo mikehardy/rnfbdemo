@@ -16,8 +16,10 @@ set -e
 # Basic template create, rnfb install, link
 \rm -fr rnfbdemo
 
-echo "Testing react-native >= 0.60 + react-native-firebase v5.current + Firebase SDKs current"
-npx react-native init rnfbdemo
+# I will not be updating this past react-native 0.62.2. It should continue working
+# but you need to use react-native-firebase current now, not v5
+echo "Testing react-native 0.62.2 + react-native-firebase v5.6.x + Firebase SDKs 6.27.0 (iOS) / 25.x (android)"
+npx react-native init rnfbdemo --version="0.62.2"
 cd rnfbdemo
 
 # I have problems in my country with the cocoapods CDN sometimes, use github directly
