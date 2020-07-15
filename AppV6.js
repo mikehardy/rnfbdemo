@@ -19,6 +19,7 @@ import firestore from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import in_app_messaging from '@react-native-firebase/in-app-messaging';
 import iid from '@react-native-firebase/iid';
+import messaging from '@react-native-firebase/messaging';
 import ml_natural_language from '@react-native-firebase/ml-natural-language';
 import ml_vision from '@react-native-firebase/ml-vision';
 import perf from '@react-native-firebase/perf';
@@ -52,6 +53,7 @@ export default class App extends Component<Props> {
         {functions().native && <Text style={styles.module}>functions()</Text>}
         {iid().native && <Text style={styles.module}>instance-id()</Text>}
         {in_app_messaging().native && <Text style={styles.module}>in-app-messaging()</Text>}
+        {messaging().native && <Text style={styles.module}>messaging()</Text>}
         {ml_natural_language().native && <Text style={styles.module}>ml-natural-language()</Text>}
         {ml_vision().native && <Text style={styles.module}>ml-vision()</Text>}
         {perf().native && <Text style={styles.module}>perf()</Text>}

@@ -27,11 +27,16 @@ rm -f ios/rnfbdemo/AppDelegate.m??
 echo "Adding basic java integration"
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.3"/' android/build.gradle
 rm -f android/build.gradle??
-echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+sed -i -e $'s/apply plugin: "com.android.application"/apply plugin: "com.android.application"\\\napply plugin: "com.google.gms.google-services"/' android/app/build.gradle
+rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'25.4.1'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'25.6.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.28.1\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+
+# This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # Copy the Firebase config files in - you must supply them
@@ -46,8 +51,8 @@ cp ../google-services.json android/app/
 # 1.  stop this script here (by uncommenting the exit line)
 # 2.  open the .xcworkspace created by running the script to this point
 # 3.  alter the bundleID to com.rnfbdemo
-# 4.  alter the target to 'both' instead of iPhone only
-# 5.  "add files to " project and select rnfbdemo/GoogleService-Info.plist for rnfbdemo and rnfbdemo-tvOS
+# 4.  alter the target to iPhone and iPad instead of iPhone only (Mac is not supported yet, but feel free to try...)
+# 5.  right-click on rnfbdemo, "add files to rnfbdemo" select rnfbdemo/GoogleService-Info.plist for rnfbdemo and rnfbdemo-tvOS
 #exit 1
 rm -f ios/rnfbdemo.xcodeproj/project.pbxproj
 cp ../project.pbxproj ios/rnfbdemo.xcodeproj/
@@ -64,6 +69,7 @@ yarn add \
   @react-native-firebase/functions \
   @react-native-firebase/iid \
   @react-native-firebase/in-app-messaging \
+  @react-native-firebase/messaging \
   @react-native-firebase/remote-config \
   @react-native-firebase/storage
 
@@ -72,9 +78,9 @@ echo "Setting up Crashlytics"
 yarn add "@react-native-firebase/crashlytics"
 sed -i -e $'s/google()/maven { url "https:\/\/maven.fabric.io\/public" }\\\n        google()/' android/build.gradle
 rm -f android/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.31.2"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.2.0"/' android/build.gradle
 rm -f android/build.gradle??
-sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"\\\ncrashlytics { enableNdk true }/' android/app/build.gradle
+sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
 # Performance - classpath, plugin, dependency, import, init
@@ -89,6 +95,7 @@ rm -f android/app/build.gradle??
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
 # But you have to do a *lot* of work in the AndroidManifest.xml, and make sure your MainActivity *is* the launch intent receiver
+# I include it for compile testing only.
 
 # I am not going to demonstrate shortcut badging. Shortcut badging on Android is a terrible idea to rely on.
 # Only use it if the feature is "nice to have" but you're okay with it being terrible. It's an Android thing, not a react-native-firebase thing.
