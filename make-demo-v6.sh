@@ -144,6 +144,10 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 echo "Increasing memory available to gradle for android java build"
 echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
 
+# In case we have any patches
+cp -rv ../patches .
+npx patch-package
+
 # Copy in our demonstrator App.js
 rm ./App.js && cp ../AppV6.js ./App.js
 

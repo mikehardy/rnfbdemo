@@ -1,0 +1,13 @@
+diff --git a/node_modules/@react-native-firebase/iid/android/build.gradle b/node_modules/@react-native-firebase/iid/android/build.gradle
+index ffdb35a..80404c1 100644
+--- a/node_modules/@react-native-firebase/iid/android/build.gradle
++++ b/node_modules/@react-native-firebase/iid/android/build.gradle
+@@ -87,7 +87,7 @@ repositories {
+ dependencies {
+   api appProject
+   implementation platform("com.google.firebase:firebase-bom:${ReactNative.ext.getVersion("firebase", "bom")}")
+-  implementation "com.google.firebase:firebase-iid"
++  implementation "com.google.firebase:firebase-iid:20.2.3"
+ }
+ 
+ ReactNative.shared.applyPackageVersion()
