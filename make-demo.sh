@@ -1,144 +1,150 @@
 #!/bin/bash
 set -e 
 
-###############################################
-##
-##
-##  PLEASE READ THE COMMENTS IN THIS FILE
-##
-##  In the comments I explain what the script
-##  does, for each major part of functionality
-##
-##
-###############################################
-
-
 # Basic template create, rnfb install, link
 \rm -fr rnfbdemo
 
-# I will not be updating this past react-native 0.62.2. It should continue working
-# but you need to use react-native-firebase current now, not v5
-echo "Testing react-native 0.62.2 + react-native-firebase v5.6.x + Firebase SDKs 6.27.0 (iOS) / 25.x (android)"
-npx react-native init rnfbdemo --version="0.62.2"
+echo "Testing react-native current + react-native-firebase current + Firebase SDKs current"
+npx react-native init rnfbdemo
 cd rnfbdemo
 
 # I have problems in my country with the cocoapods CDN sometimes, use github directly
 sed -i -e $'s/def add_flipper_pods/source \'https:\/\/github.com\/CocoaPods\/Specs.git\'\\\n\\\ndef add_flipper_pods/' ios/Podfile
 rm -f ios/Podfile.??
 
-echo "Adding react-native-firebase dependency"
-yarn add "https://github.com/invertase/react-native-firebase.git#v5.x.x"
-
-# Perform the minimal edit to integrate it on iOS
-echo "Adding initialization code in iOS"
-sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import "Firebase.h"/' ios/rnfbdemo/AppDelegate.m
+# This is the most basic integration
+echo "Adding react-native-firebase core app package"
+yarn add "@react-native-firebase/app"
+echo "Adding basic iOS integtration - AppDelegate import and config call"
+sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n@import Firebase;/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
-sed -i -e $'s/RCTBridge \*bridge/[FIRApp configure];\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
+sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
-
-# Minimal integration on Android is just the JSON, base+core, progaurd
-echo "Adding basic java integration"
+echo "Adding basic java integration - gradle plugin dependency and call"
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.3"/' android/build.gradle
 rm -f android/build.gradle??
-echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-# Use the 'bom' (Bill Of Materials) versioning style now, it is so much easier to maintain.
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation platform("com.google.firebase:firebase-bom:25.4.1")/' android/app/build.gradle
+sed -i -e $'s/apply plugin: "com.android.application"/apply plugin: "com.android.application"\\\napply plugin: "com.google.gms.google-services"/' android/app/build.gradle
 rm -f android/app/build.gradle??
-echo "-keep class io.invertase.firebase.** { *; }" >> android/app/proguard-rules.pro
-echo "-dontwarn io.invertase.firebase.**" >> android/app/proguard-rules.pro
+
+# Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
+echo "Adding upstream SDK overrides for precise version control"
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'25.7.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.29.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
+
+
+#################################################################################
+#################################################################################
+# This is (hopefully temporarily) disabled as it caused duplicate symbol errors:
+#################################################################################
+# ▸ Linking rnfbdemo
+# ❌  duplicate symbol '_OBJC_CLASS_$_PodsDummy_leveldb_library' in
+# > libleveldb-library.a(leveldb-library-dummy.o)
+# > leveldb-library(leveldb-library-dummy.o)
+# ❌  duplicate symbol '_OBJC_METACLASS_$_PodsDummy_leveldb_library' in
+# > libleveldb-library.a(leveldb-library-dummy.o)
+# > leveldb-library(leveldb-library-dummy.o)
+# ❌  ld: 2 duplicate symbols for architecture x86_64
+# ❌  clang: error: linker command failed with exit code 1 (use -v to see invocation)
+# This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
+# sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+# rm -f ios/Podfile??
+#################################################################################
+#################################################################################
 
 # Copy the Firebase config files in - you must supply them
-echo "Copying in Firebase app definition files"
+echo "Copying in Firebase android json and iOS plist app definition files downloaded from console"
 cp ../GoogleService-Info.plist ios/rnfbdemo/
 cp ../google-services.json android/app/
 
 # Copy in a project file that is pre-constructed - no way to patch it cleanly that I've found
+# There is already a pre-constructed project file here. 
+# Normal users may skip these steps unless you are maintaining this repository and need to generate a new project
 # To build it do this:
 # 1.  stop this script here (by uncommenting the exit line)
 # 2.  open the .xcworkspace created by running the script to this point
 # 3.  alter the bundleID to com.rnfbdemo
-# 4.  alter the target to 'both' instead of iPhone only
-# 5.  "add files to " project and select rnfbdemo/GoogleService-Info.plist for rnfbdemo and rnfbdemo-tvOS
+# 4.  alter the target to iPhone and iPad instead of iPhone only (Mac is not supported yet, but feel free to try...)
+# 5.  right-click on rnfbdemo, "add files to rnfbdemo" select rnfbdemo/GoogleService-Info.plist for rnfbdemo and rnfbdemo-tvOS
+# 6.  copy the rnfbdemo.xcodeproj and rnfbdemo.xcworkspace folders over the existing ones saved in the root directory
 #exit 1
-rm -f ios/rnfbdemo.xcodeproj/project.pbxproj
-cp ../project.pbxproj ios/rnfbdemo.xcodeproj/
+rm -rf ios/rnfbdemo.xcodeproj ios/rnfbdemo.xcworkspace
+cp -r ../rnfbdemo.xcodeproj ios/
+cp -r ../rnfbdemo.xcworkspace ios/
+
+# From this point on we are adding optional modules
+# First set up all the modules that need no further config for the demo 
+echo "Adding packages: Analytics, Auth, Database, Dynamic Links, Firestore, Functions, Instance-ID, In App Messaging, Remote Config, Storage"
+yarn add \
+  @react-native-firebase/analytics \
+  @react-native-firebase/auth \
+  @react-native-firebase/database \
+  @react-native-firebase/dynamic-links \
+  @react-native-firebase/firestore \
+  @react-native-firebase/functions \
+  @react-native-firebase/iid \
+  @react-native-firebase/in-app-messaging \
+  @react-native-firebase/messaging \
+  @react-native-firebase/remote-config \
+  @react-native-firebase/storage
 
 # Crashlytics - repo, classpath, plugin, dependency, import, init
-echo "Setting crashlytics up in Java"
-sed -i -e $'s/google()/maven { url "https:\/\/maven.fabric.io\/public" }\\\n        google()/' android/build.gradle
+echo "Setting up Crashlytics - package, gradle plugin"
+yarn add "@react-native-firebase/crashlytics"
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.2.0"/' android/build.gradle
 rm -f android/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "io.fabric.tools:gradle:1.31.2"/' android/build.gradle
-rm -f android/build.gradle??
-sed -i -e $'s/"com.android.application"/"com.android.application"\\\napply plugin: "io.fabric"\\\ncrashlytics { enableNdk true }/' android/app/build.gradle
+sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation("com.crashlytics.sdk.android:crashlytics")/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/public class/import io.invertase.firebase.fabric.crashlytics.RNFirebaseCrashlyticsPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-sed -i -e $'s/return packages;/packages.add(new RNFirebaseCrashlyticsPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
 # Performance - classpath, plugin, dependency, import, init
-echo "Setting up Performance module in Java"
+echo "Setting up Performance - package, gradle plugin"
+yarn add "@react-native-firebase/perf"
 rm -f android/app/build.gradle??
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.1"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.android.application" {/"com.android.application"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-perf"/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/public class/import io.invertase.firebase.perf.RNFirebasePerformancePackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-sed -i -e $'s/return packages;/packages.add(new RNFirebasePerformancePackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-
-# Analytics - dependency, import, init
-echo "Setting up Analytics in Java"
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-analytics"/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/public class/import io.invertase.firebase.analytics.RNFirebaseAnalyticsPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-sed -i -e $'s/return packages;/packages.add(new RNFirebaseAnalyticsPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-
-# Firestore - dependency, import, init
-echo "Setting up Firestore in Java"
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-firestore"/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/public class/import io.invertase.firebase.firestore.RNFirebaseFirestorePackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-sed -i -e $'s/return packages;/packages.add(new RNFirebaseFirestorePackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
 # But you have to do a *lot* of work in the AndroidManifest.xml, and make sure your MainActivity *is* the launch intent receiver
+# I include it for compile testing only.
 
 # I am not going to demonstrate shortcut badging. Shortcut badging on Android is a terrible idea to rely on.
 # Only use it if the feature is "nice to have" but you're okay with it being terrible. It's an Android thing, not a react-native-firebase thing.
 # (Pixel Launcher won't do it, launchers have to grant permissions, it is vendor specific, Material Design says no, etc etc)
 
-# Set up AdMob Java stuff - dependency, import, init
-echo "Setting up AdMob"
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "com.google.firebase:firebase-ads"/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/public class/import io.invertase.firebase.admob.RNFirebaseAdMobPackage;\\\n\\\npublic class/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-sed -i -e $'s/return packages;/packages.add(new RNFirebaseAdMobPackage());\\\n      return packages;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-
+# Set up AdMob
+echo "Creating default empty firebase.json"
+echo "Setting up AdMob - package and test AdMob app ids in firebase.json"
+yarn add "@react-native-firebase/admob"
 # Set up an AdMob ID (this is the official "sample id")
-sed -i -e $'s/NSAppTransportSecurity/GADApplicationIdentifier<\/key>\\\n	<string>ca-app-pub-3940256099942544~1458002511<\/string>\\\n        <key>NSAppTransportSecurity/' ios/rnfbdemo/Info.plist
-rm -f ios/rnfbdemo/Info.plist??
-sed -i -e $'s/<\/application>/  <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"\/>\\\n    <\/application>/' android/app/src/main/AndroidManifest.xml
-rm -f android/app/src/main/AndroidManifest.xml??
+printf "{\n  \"react-native\": {\n    \"admob_android_app_id\": \"ca-app-pub-3940256099942544~3347511713\",\n    \"admob_ios_app_id\": \"ca-app-pub-3940256099942544~1458002511\"\n  }\n}" > firebase.json
 
-# AdMob has a specific error in react-native-firebase with regard to modern Firebase iOS SDKs, the path moved
-sed -i -e $'s/Google-Mobile-Ads-SDK\/Frameworks\/frameworks/Google-Mobile-Ads-SDK\/Frameworks\/GoogleMobileAdsFramework-Current/' node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj
-rm -f node_modules/react-native-firebase/ios/RNFirebase.xcodeproj/project.pbxproj??
+
+# Add in the ML Kits and configure them
+echo "Setting up ML Vision - package and firebase.json model toggles in firebase.json"
+yarn add "@react-native-firebase/ml-vision"
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_face_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_ocr_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_barcode_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_label_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_image_label_model": true,/' firebase.json
+rm -f firebase.json??
+
+echo "Setting up ML Natural Language - package and firebase.json model toggles in firebase.json"
+yarn add "@react-native-firebase/ml-natural-language"
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_id_model": true,/' firebase.json
+rm -f firebase.json??
+sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_smart_reply_model": true,/' firebase.json
+rm -f firebase.json??
 
 # Set the Java application up for multidex (needed for API<21 w/Firebase)
-echo "Configuring MultiDex for API<21 support"
+echo "Configuring Android MultiDex for API<21 support - gradle toggle, library dependency, Application object inheritance"
 sed -i -e $'s/defaultConfig {/defaultConfig {\\\n        multiDexEnabled true/' android/app/build.gradle
 rm -f android/app/build.gradle??
 sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "androidx.multidex:multidex:2.0.1"/' android/app/build.gradle
@@ -148,59 +154,34 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
 rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
 
+# Another Java build tweak - or gradle runs out of memory during the build
+echo "Increasing memory available to gradle for android java build"
+echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
+
+# In case we have any patches
+echo "Running any patches necessary to compile successfully"
+cp -rv ../patches .
+npx patch-package
+
 # Copy in our demonstrator App.js
-rm ./App.js && cp ../App.js .
-
-# Javascript Jetifier: this makes sure Java code in npm-managed modules are transformed all the time
-# It is used automatically now, built in to the @react-native-community/cli process by default
-
-# Slice the Pods we want to demonstrate into the Podfile
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Core\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Analytics\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  # optional, requires careful consideration, but enables demographics\\\n  pod \'GoogleIDFASupport\', \'~> 3.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/AdMob\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Auth\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Database\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/DynamicLinks\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Firestore\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Functions\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/RemoteConfig\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Firebase\/Storage\', \'~> 6.27.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Crashlytics\', \'~> 3.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'Fabric\', \'~> 1.10.2\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
-
-# Just for an extra aesthetic newline
-sed -i -e $'s/  target \'rnfbdemoTests\' do/\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
+echo "Copying demonstrator App.js"
+rm ./App.js && cp ../App.js ./App.js
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
   cd ios && pod install --repo-update && cd ..
   npx react-native run-ios
-
-  # workaround for poorly setup Android SDK environments on macOS
+  # workaround for poorly setup Android SDK environments
   USER=`whoami`
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
 fi
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
-npx jetifier
+npx jetify
 cd android && ./gradlew assembleRelease # prove it works
 cd ..
-# this may or may not be commented out because I frequently don't have an emulator running
+# may or may not be commented out, depending on if have an emulator available
+# I run it manually in testing when I have one, comment if you like
 npx react-native run-android
