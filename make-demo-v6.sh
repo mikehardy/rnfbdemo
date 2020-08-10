@@ -53,9 +53,11 @@ cp ../google-services.json android/app/
 # 3.  alter the bundleID to com.rnfbdemo
 # 4.  alter the target to iPhone and iPad instead of iPhone only (Mac is not supported yet, but feel free to try...)
 # 5.  right-click on rnfbdemo, "add files to rnfbdemo" select rnfbdemo/GoogleService-Info.plist for rnfbdemo and rnfbdemo-tvOS
+# 6.  copy the rnfbdemo.xcodeproj and rnfbdemo.xcworkspace folders over the existing ones saved in the root directory
 #exit 1
-rm -f ios/rnfbdemo.xcodeproj/project.pbxproj
-cp ../project.pbxproj ios/rnfbdemo.xcodeproj/
+rm -rf ios/rnfbdemo.xcodeproj ios/rnfbdemo.xcworkspace
+cp -r ../rnfbdemo.xcodeproj ios/
+cp -r ../rnfbdemo.xcworkspace ios/
 
 # From this point on we are adding optional modules
 # First set up all the modules that need no further config for the demo 
