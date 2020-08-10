@@ -177,11 +177,24 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
 fi
 
+echo "Configuring Android release build for ABI splits and code shrinking"
+sed -i -e $'s/def enableSeparateBuildPerCPUArchitecture = false/def enableSeparateBuildPerCPUArchitecture = true/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/def enableProguardInReleaseBuilds = false/def enableProguardInReleaseBuilds = true/' android/app/build.gradle
+rm -f android/app/build.gradle??
+sed -i -e $'s/universalApk false/universalApk true/' android/app/build.gradle
+rm -f android/app/build.gradle??
+
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
-npx jetify
-cd android && ./gradlew assembleRelease # prove it works
-cd ..
+npx react-native run-android --variant release
+
+# Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
+sleep 10
+pushd android
+./gradlew uninstallRelease
+popd
+
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
 npx react-native run-android
