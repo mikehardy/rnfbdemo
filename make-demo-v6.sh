@@ -76,11 +76,9 @@ yarn add \
 # Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics"
 yarn add "@react-native-firebase/crashlytics"
-sed -i -e $'s/google()/maven { url "https:\/\/maven.fabric.io\/public" }\\\n        google()/' android/build.gradle
-rm -f android/build.gradle??
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.2.0"/' android/build.gradle
 rm -f android/build.gradle??
-sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
+sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
 # Performance - classpath, plugin, dependency, import, init
