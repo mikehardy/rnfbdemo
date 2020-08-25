@@ -1,5 +1,5 @@
 diff --git a/node_modules/@react-native-firebase/app/android/build.gradle b/node_modules/@react-native-firebase/app/android/build.gradle
-index 097bfe3..5c277fd 100644
+index 8281302..2bcf891 100644
 --- a/node_modules/@react-native-firebase/app/android/build.gradle
 +++ b/node_modules/@react-native-firebase/app/android/build.gradle
 @@ -42,6 +42,11 @@ project.ext {
