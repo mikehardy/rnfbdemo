@@ -5,6 +5,14 @@ set -e
 \rm -fr rnfbdemo
 
 echo "Testing react-native current + react-native-firebase current + Firebase SDKs current"
+
+# Perhaps we want to try building without IDFA at all?
+NOIDFA="false"
+if [ "$1" == "--no-idfa" ]; then
+  echo "Testing without Analytics and AdMob (proves IDFA avoidance on iOS)"
+  NOIDFA="true"
+fi
+
 npx react-native init rnfbdemo
 cd rnfbdemo
 
@@ -76,7 +84,6 @@ cp -r ../rnfbdemo.xcworkspace ios/
 # First set up all the modules that need no further config for the demo 
 echo "Adding packages: Analytics, Auth, Database, Dynamic Links, Firestore, Functions, Instance-ID, In App Messaging, Remote Config, Storage"
 yarn add \
-  @react-native-firebase/analytics \
   @react-native-firebase/auth \
   @react-native-firebase/database \
   @react-native-firebase/dynamic-links \
@@ -114,13 +121,39 @@ rm -f android/app/build.gradle??
 # Only use it if the feature is "nice to have" but you're okay with it being terrible. It's an Android thing, not a react-native-firebase thing.
 # (Pixel Launcher won't do it, launchers have to grant permissions, it is vendor specific, Material Design says no, etc etc)
 
-# Set up AdMob
-echo "Creating default empty firebase.json"
-echo "Setting up AdMob - package and test AdMob app ids in firebase.json"
-yarn add "@react-native-firebase/admob"
-# Set up an AdMob ID (this is the official "sample id")
-printf "{\n  \"react-native\": {\n    \"admob_android_app_id\": \"ca-app-pub-3940256099942544~3347511713\",\n    \"admob_ios_app_id\": \"ca-app-pub-3940256099942544~1458002511\"\n  }\n}" > firebase.json
+echo "Creating default firebase.json (with settings that allow iOS crashlytics to report crashes even in debug mode)"
+printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": true,\n    \"crashlytics_debug_enabled\": true\n  }\n}" > firebase.json
 
+# Copy in our demonstrator App.js
+echo "Copying demonstrator App.js"
+rm ./App.js && cp ../App.js ./App.js
+
+
+if [ "$NOIDFA" == "false" ]; then
+  echo "Adding IDFA-containing packages: Analytics, AdMob"
+  yarn add \
+    @react-native-firebase/analytics \
+    @react-native-firebase/admob
+
+  # Set up AdMob
+  echo "Configuring up AdMob - adding test AdMob IDs in firebase.json"
+  # Set up an AdMob ID (this is the official "sample id")
+  sed -i -e $'s/"react-native": {/"react-native": {\\\n    "admob_android_app_id": \"ca-app-pub-3940256099942544~3347511713\",/' firebase.json
+  rm -f firebase.json??
+  sed -i -e $'s/"react-native": {/"react-native": {\\\n    "admob_ios_app_id": \"ca-app-pub-3940256099942544~1458002511\",/' firebase.json
+  rm -f firebase.json??
+
+  # Add AdMob and Analytics to the example
+  echo "Adding Analytics and AdMob to example App.js"
+  sed -i -e $'s/import auth/import analytics from \'@react-native-firebase\/analytics\';\\\nimport auth/' App.js
+  rm -f App.js??
+  sed -i -e $'s/import auth/import admob from \'@react-native-firebase\/admob\';\\\nimport auth/' App.js
+  rm -f App.js??
+  sed -i -e $'s/{auth()\.native/{analytics\(\)\.native \&\& <Text style={styles\.module}>analytics\(\)<\/Text>}\\\n        {auth\(\)\.native/' App.js
+  rm -f App.js??
+  sed -i -e $'s/{auth()\.native/{admob\(\)\.native \&\& <Text style={styles\.module}>admob\(\)<\/Text>}\\\n        {auth\(\)\.native/' App.js
+  rm -f App.js??
+fi
 
 # Add in the ML Kits and configure them
 echo "Setting up ML Vision - package and firebase.json model toggles in firebase.json"
@@ -162,10 +195,6 @@ echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemo
 echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
 npx patch-package
-
-# Copy in our demonstrator App.js
-echo "Copying demonstrator App.js"
-rm ./App.js && cp ../App.js ./App.js
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then

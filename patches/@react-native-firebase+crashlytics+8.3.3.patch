@@ -1,0 +1,12 @@
+diff --git a/node_modules/@react-native-firebase/crashlytics/RNFBCrashlytics.podspec b/node_modules/@react-native-firebase/crashlytics/RNFBCrashlytics.podspec
+index f7c67a9..d5ea5b0 100644
+--- a/node_modules/@react-native-firebase/crashlytics/RNFBCrashlytics.podspec
++++ b/node_modules/@react-native-firebase/crashlytics/RNFBCrashlytics.podspec
+@@ -39,7 +39,6 @@ Pod::Spec.new do |s|
+   end
+ 
+   # Firebase dependencies
+-  s.dependency          'Firebase/Core', firebase_sdk_version
+   s.dependency          'Firebase/Crashlytics', firebase_sdk_version
+ 
+   if defined?($RNFirebaseAsStaticFramework)
