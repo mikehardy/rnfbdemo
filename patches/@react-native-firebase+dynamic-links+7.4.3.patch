@@ -1,0 +1,12 @@
+diff --git a/node_modules/@react-native-firebase/dynamic-links/RNFBDynamicLinks.podspec b/node_modules/@react-native-firebase/dynamic-links/RNFBDynamicLinks.podspec
+index 7146f15..e3c7bbb 100644
+--- a/node_modules/@react-native-firebase/dynamic-links/RNFBDynamicLinks.podspec
++++ b/node_modules/@react-native-firebase/dynamic-links/RNFBDynamicLinks.podspec
+@@ -39,6 +39,7 @@ Pod::Spec.new do |s|
+ 
+   # Firebase dependencies
+   s.dependency          'Firebase/DynamicLinks', firebase_sdk_version
++  s.dependency          'GoogleUtilities/AppDelegateSwizzler'
+ 
+   if defined?($RNFirebaseAsStaticFramework)
+     Pod::UI.puts "#{s.name}: Using overridden static_framework value of '#{$RNFirebaseAsStaticFramework}'"
