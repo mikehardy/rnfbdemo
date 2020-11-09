@@ -9,6 +9,7 @@
 import React, { Component } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import firebase from '@react-native-firebase/app';
+import analytics from '@react-native-firebase/analytics';
 import auth from '@react-native-firebase/auth';
 import crashlytics from '@react-native-firebase/crashlytics';
 import database from '@react-native-firebase/database';
@@ -40,6 +41,7 @@ export default class App extends Component {
         <Text style={styles.instructions}>{instructions}</Text>
         <Text>The following modules are installed natively and working:</Text>
         {firebase.apps.length && <Text style={styles.module}>app()</Text>}
+        {analytics().native && <Text style={styles.module}>analytics()</Text>}
         {auth().native && <Text style={styles.module}>auth()</Text>}
         {crashlytics().native && <Text style={styles.module}>crashlytics()</Text>}
         {database().native && <Text style={styles.module}>database()</Text>}

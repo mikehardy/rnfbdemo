@@ -9,7 +9,7 @@ echo "Testing react-native current + react-native-firebase current + Firebase SD
 # Perhaps we want to try building without IDFA at all?
 NOIDFA="false"
 if [ "$1" == "--no-idfa" ]; then
-  echo "Testing without Analytics and AdMob (proves IDFA avoidance on iOS)"
+  echo "Testing without AdMob (proves IDFA avoidance on iOS) - analytics should be fine"
   NOIDFA="true"
 fi
 
@@ -84,6 +84,7 @@ cp -r ../rnfbdemo.xcworkspace ios/
 # First set up all the modules that need no further config for the demo 
 echo "Adding packages: Analytics, Auth, Database, Dynamic Links, Firestore, Functions, Instance-ID, In App Messaging, Remote Config, Storage"
 yarn add \
+  @react-native-firebase/analytics \
   @react-native-firebase/auth \
   @react-native-firebase/database \
   @react-native-firebase/dynamic-links \
@@ -130,10 +131,8 @@ rm ./App.js && cp ../App.js ./App.js
 
 
 if [ "$NOIDFA" == "false" ]; then
-  echo "Adding IDFA-containing packages: Analytics, AdMob"
-  yarn add \
-    @react-native-firebase/analytics \
-    @react-native-firebase/admob
+  echo "Adding IDFA-containing packages: AdMob"
+  yarn add @react-native-firebase/admob
 
   # Set up AdMob
   echo "Configuring up AdMob - adding test AdMob IDs in firebase.json"
@@ -144,12 +143,8 @@ if [ "$NOIDFA" == "false" ]; then
   rm -f firebase.json??
 
   # Add AdMob and Analytics to the example
-  echo "Adding Analytics and AdMob to example App.js"
-  sed -i -e $'s/import auth/import analytics from \'@react-native-firebase\/analytics\';\\\nimport auth/' App.js
-  rm -f App.js??
+  echo "Adding AdMob to example App.js"
   sed -i -e $'s/import auth/import admob from \'@react-native-firebase\/admob\';\\\nimport auth/' App.js
-  rm -f App.js??
-  sed -i -e $'s/{auth()\.native/{analytics\(\)\.native \&\& <Text style={styles\.module}>analytics\(\)<\/Text>}\\\n        {auth\(\)\.native/' App.js
   rm -f App.js??
   sed -i -e $'s/{auth()\.native/{admob\(\)\.native \&\& <Text style={styles\.module}>admob\(\)<\/Text>}\\\n        {auth\(\)\.native/' App.js
   rm -f App.js??
