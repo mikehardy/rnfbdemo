@@ -155,26 +155,26 @@ if [ "$NOIDFA" == "false" ]; then
   rm -f App.js??
 fi
 
-# Add in the ML Kits and configure them
-echo "Setting up ML Vision - package and firebase.json model toggles in firebase.json"
-yarn add "@react-native-firebase/ml-vision"
-sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_face_model": true,/' firebase.json
-rm -f firebase.json??
-sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_ocr_model": true,/' firebase.json
-rm -f firebase.json??
-sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_barcode_model": true,/' firebase.json
-rm -f firebase.json??
-sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_label_model": true,/' firebase.json
-rm -f firebase.json??
-sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_image_label_model": true,/' firebase.json
-rm -f firebase.json??
+# Add in the ML Kits and configure them - DISABLED: moving to react-native-mlkit, and transitive dependencies broken upstream
+# echo "Setting up ML Vision - package and firebase.json model toggles in firebase.json"
+# yarn add "@react-native-firebase/ml-vision"
+# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_face_model": true,/' firebase.json
+# rm -f firebase.json??
+# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_ocr_model": true,/' firebase.json
+# rm -f firebase.json??
+# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_barcode_model": true,/' firebase.json
+# rm -f firebase.json??
+# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_label_model": true,/' firebase.json
+# rm -f firebase.json??
+# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_image_label_model": true,/' firebase.json
+# rm -f firebase.json??
 
-echo "Setting up ML Natural Language - package and firebase.json model toggles in firebase.json"
-yarn add "@react-native-firebase/ml-natural-language"
-sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_id_model": true,/' firebase.json
-rm -f firebase.json??
-sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_smart_reply_model": true,/' firebase.json
-rm -f firebase.json??
+# echo "Setting up ML Natural Language - package and firebase.json model toggles in firebase.json"
+# yarn add "@react-native-firebase/ml-natural-language"
+# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_id_model": true,/' firebase.json
+# rm -f firebase.json??
+# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_smart_reply_model": true,/' firebase.json
+# rm -f firebase.json??
 
 # Set the Java application up for multidex (needed for API<21 w/Firebase)
 echo "Configuring Android MultiDex for API<21 support - gradle toggle, library dependency, Application object inheritance"
