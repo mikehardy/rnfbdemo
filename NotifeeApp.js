@@ -6,63 +6,62 @@
  * @flow
  */
 
-import React, {Component} from 'react';
-import {Button, Platform, StyleSheet, Text, View} from 'react-native';
+import React, { Component } from "react";
+import { Button, Platform, StyleSheet, Text, View } from "react-native";
 import notifee, {
   AndroidLaunchActivityFlag,
   IOSAuthorizationStatus,
   IOSNotificationPermissions,
-} from '@notifee/react-native';
+} from "@notifee/react-native";
 
 async function onDisplayNotification() {
   // Create a channel
   try {
     const channelId = await notifee.createChannel({
-      id: 'default',
-      name: 'Default Channel',
+      id: "default",
+      name: "Default Channel",
     });
 
     const settings = await notifee.requestPermission();
 
     if (settings.authorizationStatus === IOSAuthorizationStatus.DENIED) {
-      console.log('User denied permissions request');
+      console.log("User denied permissions request");
     } else if (
       settings.authorizationStatus === IOSAuthorizationStatus.AUTHORIZED
     ) {
-      console.log('User granted permissions request');
+      console.log("User granted permissions request");
     } else if (
       settings.authorizationStatus === IOSAuthorizationStatus.PROVISIONAL
     ) {
-      console.log('User provisionally granted permissions request');
+      console.log("User provisionally granted permissions request");
     }
 
     // Display a notification
     await notifee.displayNotification({
-      title: 'Notification Title',
-      body: 'Main body content of the notification',
+      title: "Notification Title",
+      body: "Main body content of the notification",
       android: {
         channelId,
         pressAction: {
-          id: 'default',
-          launchActivity: 'default',
+          id: "default",
+          launchActivity: "default",
           launchActivityFlags: [AndroidLaunchActivityFlag.SINGLE_TOP],
         },
       },
     });
   } catch (e) {
-    console.log('Failed to display notification?', e);
+    console.log("Failed to display notification?", e);
   }
 }
 
 const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
+  ios: "Press Cmd+R to reload,\n" + "Cmd+D or shake for dev menu",
   android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
+    "Double tap R on your keyboard to reload,\n" +
+    "Shake or press menu button for dev menu",
 });
 
-type Props = {};
-export default class App extends Component<Props> {
+export default class App extends Component {
   render() {
     return (
       <View style={styles.container}>
@@ -81,18 +80,18 @@ export default class App extends Component<Props> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5FCFF",
   },
   welcome: {
     fontSize: 20,
-    textAlign: 'center',
+    textAlign: "center",
     margin: 10,
   },
   instructions: {
-    textAlign: 'center',
-    color: '#333333',
+    textAlign: "center",
+    color: "#333333",
     marginBottom: 5,
   },
 });
