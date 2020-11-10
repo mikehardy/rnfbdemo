@@ -36,8 +36,8 @@ rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'25.13.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'6.34.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'26.0.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'7.0.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 
@@ -82,7 +82,7 @@ cp -r ../rnfbdemo.xcworkspace ios/
 
 # From this point on we are adding optional modules
 # First set up all the modules that need no further config for the demo 
-echo "Adding packages: Analytics, Auth, Database, Dynamic Links, Firestore, Functions, Instance-ID, In App Messaging, Remote Config, Storage"
+echo "Adding packages: Analytics, Auth, Database, Dynamic Links, Firestore, Functions, Instance-ID, In App Messaging, Messaging, ML, Remote Config, Storage"
 yarn add \
   @react-native-firebase/analytics \
   @react-native-firebase/auth \
@@ -93,6 +93,7 @@ yarn add \
   @react-native-firebase/iid \
   @react-native-firebase/in-app-messaging \
   @react-native-firebase/messaging \
+  @react-native-firebase/ml \
   @react-native-firebase/remote-config \
   @react-native-firebase/storage
 
@@ -150,27 +151,6 @@ if [ "$NOIDFA" == "false" ]; then
   rm -f App.js??
 fi
 
-# Add in the ML Kits and configure them - DISABLED: moving to react-native-mlkit, and transitive dependencies broken upstream
-# echo "Setting up ML Vision - package and firebase.json model toggles in firebase.json"
-# yarn add "@react-native-firebase/ml-vision"
-# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_face_model": true,/' firebase.json
-# rm -f firebase.json??
-# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_ocr_model": true,/' firebase.json
-# rm -f firebase.json??
-# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_barcode_model": true,/' firebase.json
-# rm -f firebase.json??
-# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_label_model": true,/' firebase.json
-# rm -f firebase.json??
-# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_vision_image_label_model": true,/' firebase.json
-# rm -f firebase.json??
-
-# echo "Setting up ML Natural Language - package and firebase.json model toggles in firebase.json"
-# yarn add "@react-native-firebase/ml-natural-language"
-# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_id_model": true,/' firebase.json
-# rm -f firebase.json??
-# sed -i -e $'s/"react-native": {/"react-native": {\\\n    "ml_natural_language_smart_reply_model": true,/' firebase.json
-# rm -f firebase.json??
-
 # Set the Java application up for multidex (needed for API<21 w/Firebase)
 echo "Configuring Android MultiDex for API<21 support - gradle toggle, library dependency, Application object inheritance"
 sed -i -e $'s/defaultConfig {/defaultConfig {\\\n        multiDexEnabled true/' android/app/build.gradle
@@ -197,7 +177,7 @@ if [ "$(uname)" == "Darwin" ]; then
   cd ios && pod install --repo-update && cd ..
   npx react-native run-ios
   # workaround for poorly setup Android SDK environments
-  USER=`whoami`
+  USER=$(whoami)
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
 fi
 
