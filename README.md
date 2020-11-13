@@ -4,9 +4,23 @@ Demonstrator App for react-native-firebase - reasonably up to date with current 
 
 ## Install / use
 
+### Windows pre-install steps
+
+Maintaining the script for both a Unix-style and non-Unix-style is not feasible with time available.
+So the way to run this on Windows is to make Windows behave more Unix-style.
+
+1. Install "WSL" - the Windows Subsystem For Linux (Ubuntu 20LTS flavor)
+1. Open your Ubuntu WSL shell and install the [Node Version Manager / "nvm"](https://github.com/nvm-sh/nvm/blob/master/README.md#installing-and-updating)
+  1. `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.0/install.sh | bash`
+
+### macOS / Linux (developed on Ubuntu 20) / Windows WSL steps
+
 1. Fork and clone the repo
+1. Make sure yarn is installed (`npm i -g yarn`)
 1. Do the various Config section steps below
 1. run `make-demo.sh`
+
+## One-time Configuration steps
 
 ### Firebase Config
 

@@ -23,7 +23,7 @@ rm -f ios/Podfile.??
 # This is the most basic integration
 echo "Adding react-native-firebase core app package"
 yarn add "@react-native-firebase/app"
-echo "Adding basic iOS integtration - AppDelegate import and config call"
+echo "Adding basic iOS integration - AppDelegate import and config call"
 sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n@import Firebase;/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
 sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
@@ -62,7 +62,9 @@ rm -f ios/Podfile??
 
 # Copy the Firebase config files in - you must supply them
 echo "Copying in Firebase android json and iOS plist app definition files downloaded from console"
-cp ../GoogleService-Info.plist ios/rnfbdemo/
+if [ "$(uname)" == "Darwin" ]; then
+  cp ../GoogleService-Info.plist ios/rnfbdemo/
+fi
 cp ../google-services.json android/app/
 
 # Copy in a project file that is pre-constructed - no way to patch it cleanly that I've found
@@ -188,6 +190,20 @@ sed -i -e $'s/def enableProguardInReleaseBuilds = false/def enableProguardInRele
 rm -f android/app/build.gradle??
 sed -i -e $'s/universalApk false/universalApk true/' android/app/build.gradle
 rm -f android/app/build.gradle??
+
+# If we are on WSL the user needs to now run it from the Windows side
+# Getting it to run from WSL is a real mess (it is possible, but not recommended)
+# So we will stop now that we've done all the installation and file editing
+if [ "$(uname -a | grep Linux | grep microsoft | wc -l)" == "1" ]; then
+  echo "Detected Windows Subsystem for Linux. Stopping now."
+
+  # Clear out the unix-y node_modules
+  \rm -fr node_modules
+  echo "To run the app use Windows Powershell in the rnfbdemo directory with these commands:"
+  echo "npm i"
+  echo "npx react-native run-android"
+  exit
+fi
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
