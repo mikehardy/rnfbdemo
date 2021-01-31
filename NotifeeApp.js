@@ -157,7 +157,7 @@ export default function App() {
         title="Display Notification"
         onPress={() => onDisplayNotification()}
       />
-        <Button
+      <Button
         title="Display Notification With Actions"
         onPress={() => onDisplayNotificationWithActions()}
       />
