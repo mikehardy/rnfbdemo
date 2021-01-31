@@ -9,7 +9,14 @@ npx react-native init notifeedemo
 cd notifeedemo
 
 # I have problems in my country with the cocoapods CDN sometimes, use github directly
-sed -i -e $'s/def add_flipper_pods/source \'https:\/\/github.com\/CocoaPods\/Specs.git\'\\\n\\\ndef add_flipper_pods/' ios/Podfile
+if [ "$(uname -m)" == "arm64" ]; then
+  echo "arm64 detected, disabling flipper"
+  sed -i -e 's/use_flipper/#&/' ios/Podfile
+  sed -i -e 's/flipper_post_install/#&/' ios/Podfile
+else
+  sed -i -e $'s/def add_flipper_pods/source \'https:\/\/github.com\/CocoaPods\/Specs.git\'\\\n\\\ndef add_flipper_pods/' ios/Podfile
+fi
+
 rm -f ios/Podfile.??
 
 # This is the most basic integration
@@ -43,7 +50,12 @@ rm ./App.js && cp ../NotifeeApp.js ./App.js
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
-  cd ios && pod install --repo-update && cd ..
+  if [ "$(uname -m)" == "arm64" ]; then
+    echo "Installing pods with prefix arch -arch x86_64"
+    cd ios && arch -arch x86_64 pod install && cd ..
+  else
+    cd ios && pod install --repo-update && cd ..
+  fi
   npx react-native run-ios
   # workaround for poorly setup Android SDK environments
   USER=`whoami`
