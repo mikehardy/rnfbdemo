@@ -16,8 +16,10 @@ fi
 npx react-native init rnfbdemo
 cd rnfbdemo
 
-# I have problems in my country with the cocoapods CDN sometimes, use github directly
-sed -i -e $'s/def add_flipper_pods/source \'https:\/\/github.com\/CocoaPods\/Specs.git\'\\\n\\\ndef add_flipper_pods/' ios/Podfile
+# Flipper is not needed for a demo and causes compile errors sometimes, disable it
+sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
+rm -f ios/Podfile.??
+sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
 rm -f ios/Podfile.??
 
 # This is the most basic integration
