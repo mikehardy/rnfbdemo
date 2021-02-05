@@ -194,7 +194,7 @@ rm -f android/app/build.gradle??
 # If we are on WSL the user needs to now run it from the Windows side
 # Getting it to run from WSL is a real mess (it is possible, but not recommended)
 # So we will stop now that we've done all the installation and file editing
-if [ "$(uname -a | grep Linux | grep microsoft | wc -l)" == "1" ]; then
+if [ "$(uname -a | grep Linux | grep -c microsoft)" == "1" ]; then
   echo "Detected Windows Subsystem for Linux. Stopping now."
 
   # Clear out the unix-y node_modules
