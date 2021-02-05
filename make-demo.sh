@@ -115,7 +115,7 @@ yarn add "@react-native-firebase/perf"
 rm -f android/app/build.gradle??
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.4"/' android/build.gradle
 rm -f android/build.gradle??
-sed -i -e $'s/"com.android.application" {/"com.android.application"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
+sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
