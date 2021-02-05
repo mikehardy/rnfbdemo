@@ -118,6 +118,10 @@ rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
+# In-App Messaging will not compile with react-native 0.63.x default gradle plugin (3.5.3) - bump to 3.5.4
+sed -i -e $'s/com.android.tools.build:gradle:3.5.3/com.android.tools.build:gradle:3.5.4/' android/build.gradle
+rm -f android/build.gradle??
+
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
 # But you have to do a *lot* of work in the AndroidManifest.xml, and make sure your MainActivity *is* the launch intent receiver
