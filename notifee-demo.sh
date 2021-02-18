@@ -8,15 +8,11 @@ echo "Testing react-native current + notifee current"
 npx react-native init notifeedemo
 cd notifeedemo
 
-# I have problems in my country with the cocoapods CDN sometimes, use github directly
-if [ "$(uname -m)" == "arm64" ]; then
-  echo "arm64 detected, disabling flipper"
-  sed -i -e 's/use_flipper/#&/' ios/Podfile
-  sed -i -e 's/flipper_post_install/#&/' ios/Podfile
-else
-  sed -i -e $'s/def add_flipper_pods/source \'https:\/\/github.com\/CocoaPods\/Specs.git\'\\\n\\\ndef add_flipper_pods/' ios/Podfile
-fi
-
+# I frequently have Flipper-related problems and they are nothing but a distraction from the point of this script.
+# Disable flipper.
+echo "Disabling flipper"
+sed -i -e 's/use_flipper/#&/' ios/Podfile
+sed -i -e 's/flipper_post_install/#&/' ios/Podfile
 rm -f ios/Podfile.??
 
 # This is the most basic integration
