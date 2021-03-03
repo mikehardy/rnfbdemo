@@ -113,14 +113,19 @@ rm -f android/app/build.gradle??
 echo "Setting up Performance - package, gradle plugin"
 yarn add "@react-native-firebase/perf"
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.4"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.5"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
-# In-App Messaging will not compile with react-native 0.63.x default gradle plugin (3.5.3) - bump to 3.5.4
-sed -i -e $'s/com.android.tools.build:gradle:3.5.3/com.android.tools.build:gradle:3.5.4/' android/build.gradle
+# In-App Messaging will not compile with react-native 0.63.x default gradle plugin (3.5.3) - bump to current stable
+sed -i -e $'s/com.android.tools.build:gradle:3.5.3/com.android.tools.build:gradle:4.1.2/' android/build.gradle
 rm -f android/build.gradle??
+
+# Latest firebase gradle plugins require gradle >= 6.5, bump it to current stable
+sed -i -e $'s/gradle-.*-all.zip/gradle-6.8.3-bin.zip/' android/gradle/wrapper/gradle-wrapper.properties
+rm -f android/gradle/wrapper/gradle-wrapper.properties??
+
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
