@@ -195,6 +195,13 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
   cd ios && pod install --repo-update && cd ..
   npx react-native run-ios
+
+  # This is how you configure for static frameworks:
+  sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+  rm -f ios/Podfile.??
+  cd ios && pod install && cd ..
+  npx react-native run-ios
+
   # workaround for poorly setup Android SDK environments
   USER=$(whoami)
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
