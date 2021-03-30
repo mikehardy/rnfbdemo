@@ -181,6 +181,10 @@ if [ "$(uname)" == "Darwin" ]; then
 
   # This is how you configure for static frameworks:
   sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+
+  # Workaround needed for static framework build only, regular build is fine.
+  # https://github.com/facebook/react-native/issues/31149#issuecomment-800841668
+  sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
   rm -f ios/Podfile.??
   cd ios && pod install && cd ..
   npx react-native run-ios
