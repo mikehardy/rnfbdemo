@@ -164,23 +164,6 @@ if [ "$NOIDFA" == "false" ]; then
   rm -f App.js??
 fi
 
-# Set the Java application up for multidex (needed for API<21 w/Firebase) - disabled as upcoming react-native 0.64 no longer supports API<21
-# echo "Configuring Android MultiDex for API<21 support - gradle toggle, library dependency, Application object inheritance"
-# sed -i -e $'s/defaultConfig {/defaultConfig {\\\n        multiDexEnabled true/' android/app/build.gradle
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "androidx.multidex:multidex:2.0.1"/' android/app/build.gradle
-# rm -f android/app/build.gradle??
-# sed -i -e $'s/import android.app.Application;/import androidx.multidex.MultiDexApplication;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-# sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-# rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
-
-# Instead of showing MultiDex which is needed for API<21, bump minSdkVersion to react-native 0.64+ minimum
-sed -i -e $'s/minSdkVersion = .*$/minSdkVersion = 21/' android/build.gradle
-rm -f android/build.gradle??
-
-
-
 # Another Java build tweak - or gradle runs out of memory during the build
 echo "Increasing memory available to gradle for android java build"
 echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
