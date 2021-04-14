@@ -39,28 +39,13 @@ rm -f android/app/build.gradle??
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
 echo "project.ext{set('react-native',[versions:[firebase:[bom:'26.8.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'7.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'7.10.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
-
-#################################################################################
-#################################################################################
-# This is (hopefully temporarily) disabled as it caused duplicate symbol errors:
-#################################################################################
-# ▸ Linking rnfbdemo
-# ❌  duplicate symbol '_OBJC_CLASS_$_PodsDummy_leveldb_library' in
-# > libleveldb-library.a(leveldb-library-dummy.o)
-# > leveldb-library(leveldb-library-dummy.o)
-# ❌  duplicate symbol '_OBJC_METACLASS_$_PodsDummy_leveldb_library' in
-# > libleveldb-library.a(leveldb-library-dummy.o)
-# > leveldb-library(leveldb-library-dummy.o)
-# ❌  ld: 2 duplicate symbols for architecture x86_64
-# ❌  clang: error: linker command failed with exit code 1 (use -v to see invocation)
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
-# sed -i -e $'s/  target \'rnfbdemoTests\' do/  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-# rm -f ios/Podfile??
-#################################################################################
-#################################################################################
+# If you are using firestore and database you *may* end up with duplicate symbol build errors referencing "leveldb", the FirebaseFirestoreExcludeLeveldb boolean fixes that.
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseFirestoreExcludeLeveldb = true\\\n  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+rm -f ios/Podfile??
 
 # Copy the Firebase config files in - you must supply them
 echo "Copying in Firebase android json and iOS plist app definition files downloaded from console"
