@@ -94,7 +94,7 @@ rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
-# Move gradle from react-native 0.64.0 default to current stable on that minor version
+# Move gradle from react-native 0.64.x default to current stable on that minor version
 sed -i -e $'s/com.android.tools.build:gradle:4.1.0/com.android.tools.build:gradle:4.1.3/' android/build.gradle
 rm -f android/build.gradle??
 
@@ -102,10 +102,6 @@ rm -f android/build.gradle??
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
 # But you have to do a *lot* of work in the AndroidManifest.xml, and make sure your MainActivity *is* the launch intent receiver
 # I include it for compile testing only.
-
-# I am not going to demonstrate shortcut badging. Shortcut badging on Android is a terrible idea to rely on.
-# Only use it if the feature is "nice to have" but you're okay with it being terrible. It's an Android thing, not a react-native-firebase thing.
-# (Pixel Launcher won't do it, launchers have to grant permissions, it is vendor specific, Material Design says no, etc etc)
 
 echo "Creating default firebase.json (with settings that allow iOS crashlytics to report crashes even in debug mode)"
 printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": true,\n    \"crashlytics_debug_enabled\": true\n  }\n}" > firebase.json
