@@ -6,13 +6,6 @@ set -e
 
 echo "Testing react-native current + react-native-firebase current + Firebase SDKs current"
 
-# Perhaps we want to try building without IDFA at all?
-NOIDFA="false"
-if [ "$1" == "--no-idfa" ]; then
-  echo "Testing without AdMob (proves IDFA avoidance on iOS) - analytics should be fine"
-  NOIDFA="true"
-fi
-
 npx react-native init rnfbdemo
 cd rnfbdemo
 
@@ -31,15 +24,15 @@ rm -f ios/rnfbdemo/AppDelegate.m??
 sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
 echo "Adding basic java integration - gradle plugin dependency and call"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.5"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.8"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/apply plugin: "com.android.application"/apply plugin: "com.android.application"\\\napply plugin: "com.google.gms.google-services"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'26.8.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'7.10.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'28.0.1'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.0.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
@@ -71,7 +64,7 @@ cp -r ../rnfbdemo.xcworkspace ios/
 
 # From this point on we are adding optional modules
 # First set up all the modules that need no further config for the demo 
-echo "Adding packages: Analytics, Auth, Database, Dynamic Links, Firestore, Functions, Instance-ID, In App Messaging, Messaging, ML, Remote Config, Storage"
+echo "Adding packages: Analytics, Auth, Database, Dynamic Links, Firestore, Functions, In App Messaging, Messaging, ML, Remote Config, Storage"
 yarn add \
   @react-native-firebase/analytics \
   @react-native-firebase/auth \
@@ -79,17 +72,15 @@ yarn add \
   @react-native-firebase/dynamic-links \
   @react-native-firebase/firestore \
   @react-native-firebase/functions \
-  @react-native-firebase/iid \
   @react-native-firebase/in-app-messaging \
   @react-native-firebase/messaging \
-  @react-native-firebase/ml \
   @react-native-firebase/remote-config \
   @react-native-firebase/storage
 
 # Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
 yarn add "@react-native-firebase/crashlytics"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.5.2"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.6.1"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
@@ -98,19 +89,14 @@ rm -f android/app/build.gradle??
 echo "Setting up Performance - package, gradle plugin"
 yarn add "@react-native-firebase/perf"
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.3.5"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.4.0"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
-# In-App Messaging will not compile with react-native 0.63.x default gradle plugin (3.5.3) - bump to current stable
-sed -i -e $'s/com.android.tools.build:gradle:3.5.3/com.android.tools.build:gradle:4.1.3/' android/build.gradle
+# Move gradle from react-native 0.64.0 default to current stable on that minor version
+sed -i -e $'s/com.android.tools.build:gradle:4.1.0/com.android.tools.build:gradle:4.1.3/' android/build.gradle
 rm -f android/build.gradle??
-
-# Latest firebase gradle plugins require gradle >= 6.5, bump it to current stable
-sed -i -e $'s/gradle-.*-all.zip/gradle-6.8.3-bin.zip/' android/gradle/wrapper/gradle-wrapper.properties
-rm -f android/gradle/wrapper/gradle-wrapper.properties??
-
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
@@ -127,27 +113,6 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 # Copy in our demonstrator App.js
 echo "Copying demonstrator App.js"
 rm ./App.js && cp ../App.js ./App.js
-
-
-if [ "$NOIDFA" == "false" ]; then
-  echo "Adding IDFA-containing packages: AdMob"
-  yarn add @react-native-firebase/admob
-
-  # Set up AdMob
-  echo "Configuring up AdMob - adding test AdMob IDs in firebase.json"
-  # Set up an AdMob ID (this is the official "sample id")
-  sed -i -e $'s/"react-native": {/"react-native": {\\\n    "admob_android_app_id": \"ca-app-pub-3940256099942544~3347511713\",/' firebase.json
-  rm -f firebase.json??
-  sed -i -e $'s/"react-native": {/"react-native": {\\\n    "admob_ios_app_id": \"ca-app-pub-3940256099942544~1458002511\",/' firebase.json
-  rm -f firebase.json??
-
-  # Add AdMob and Analytics to the example
-  echo "Adding AdMob to example App.js"
-  sed -i -e $'s/import auth/import admob from \'@react-native-firebase\/admob\';\\\nimport auth/' App.js
-  rm -f App.js??
-  sed -i -e $'s/{auth()\.native/{admob\(\)\.native \&\& <Text style={styles\.module}>admob\(\)<\/Text>}\\\n        {auth\(\)\.native/' App.js
-  rm -f App.js??
-fi
 
 # Another Java build tweak - or gradle runs out of memory during the build
 echo "Increasing memory available to gradle for android java build"
