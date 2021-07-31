@@ -110,6 +110,11 @@ rm -f android/app/build.gradle??
 sed -i -e $'s/hermes_enabled => false/hermes_enabled => true/' ios/Podfile
 rm -f ios/Podfile??
 
+# Apple Silicon builds require a library path tweak for Swift library discovery
+# This is an alternative to adding a bridging header etc
+sed -i -e $'s/react_native_post_install(installer)/\\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end\\\n    react_native_post_install(installer)/' ios/Podfile
+rm -f ios/Podfile.??
+
 # In case we have any patches
 echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
