@@ -6,7 +6,7 @@ set -e
 
 echo "Testing react-native current + react-native-firebase current + Firebase SDKs current"
 
-npx react-native init rnfbdemo --version=0.65.0-rc.3
+npx react-native init rnfbdemo --version=0.65.1
 cd rnfbdemo
 
 # This is the most basic integration
@@ -18,15 +18,15 @@ rm -f ios/rnfbdemo/AppDelegate.m??
 sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m
 rm -f ios/rnfbdemo/AppDelegate.m??
 echo "Adding basic java integration - gradle plugin dependency and call"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.8"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.10"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/apply plugin: "com.android.application"/apply plugin: "com.android.application"\\\napply plugin: "com.google.gms.google-services"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'28.3.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.4.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'28.3.1'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.6.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
@@ -58,15 +58,18 @@ cp -r ../rnfbdemo.xcworkspace ios/
 
 # From this point on we are adding optional modules
 # First set up all the modules that need no further config for the demo 
-echo "Adding packages: Analytics, Auth, Database, Dynamic Links, Firestore, Functions, In App Messaging, Messaging, ML, Remote Config, Storage"
+echo "Adding packages: Analytics, App Check, App Distribution, Auth, Database, Dynamic Links, Firestore, Functions, In App Messaging, Installations, Messaging, ML, Remote Config, Storage"
 yarn add \
   @react-native-firebase/analytics \
+  @react-native-firebase/app-check \
+  @react-native-firebase/app-distribution \
   @react-native-firebase/auth \
   @react-native-firebase/database \
   @react-native-firebase/dynamic-links \
   @react-native-firebase/firestore \
   @react-native-firebase/functions \
   @react-native-firebase/in-app-messaging \
+  @react-native-firebase/installations \
   @react-native-firebase/messaging \
   @react-native-firebase/remote-config \
   @react-native-firebase/storage
@@ -110,9 +113,19 @@ rm -f android/app/build.gradle??
 sed -i -e $'s/hermes_enabled => false/hermes_enabled => true/' ios/Podfile
 rm -f ios/Podfile??
 
-# Apple Silicon builds require a library path tweak for Swift library discovery
+# Apple Silicon builds require a library path tweak for Swift library discovery or "symbol not found" for swift things
 # This is an alternative to adding a bridging header etc
-sed -i -e $'s/react_native_post_install(installer)/\\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end\\\n    react_native_post_install(installer)/' ios/Podfile
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
+rm -f ios/Podfile.??
+
+# Flipper requires a crude patch to bump up iOS deployment target, or "error: thread-local storage is not supported for the current target"
+# I'm not aware of any other way to fix this one other than bumping iOS deployment target to match react-native (iOS 11 now)
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'11.0\'\\\n      end\\\n    end/' ios/Podfile
+rm -f ios/Podfile.??
+
+# ...but if you bump iOS deployment target, Flipper barfs again "Time.h:52:17: error: typedef redefinition with different types"
+# So we just hack in a different test in the header, so the symbol is not redefined.
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    \`sed -i -e  \$\'s\/__IPHONE_10_0\/__IPHONE_12_0\/\' Pods\/RCT-Folly\/folly\/portability\/Time.h\`/' ios/Podfile
 rm -f ios/Podfile.??
 
 # In case we have any patches
@@ -124,11 +137,6 @@ npx patch-package
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
   cd ios && pod install --repo-update && cd ..
-
-  npx react-native run-ios || true
-
-  # For some reason (codegen related), I had to run this a second time after first build fails for it to work?
-  cd ios && pod install && cd ..
 
   # Check iOS debug mode compile
   npx react-native run-ios
@@ -189,7 +197,7 @@ fi
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
-npx react-native run-android --variant release
+npx react-native run-android --variant release --no-jetifier
 
 # Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
 sleep 10
@@ -199,4 +207,4 @@ popd
 
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
-npx react-native run-android
+npx react-native run-android --no-jetifier
