@@ -6,7 +6,7 @@ set -e
 
 echo "Testing react-native current + react-native-firebase current + Firebase SDKs current"
 
-npx react-native init rnfbdemo --version=0.65.1
+npx react-native init rnfbdemo --version=0.66.0-rc.1
 cd rnfbdemo
 
 # This is the most basic integration
@@ -25,14 +25,14 @@ rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'28.3.1'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.6.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'28.4.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.6.1\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
 # If you are using firestore and database you *may* end up with duplicate symbol build errors referencing "leveldb", the FirebaseFirestoreExcludeLeveldb boolean fixes that.
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseFirestoreExcludeLeveldb = true\\\n  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
-rm -f ios/Podfile??
+#sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseFirestoreExcludeLeveldb = true\\\n  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+#rm -f ios/Podfile??
 
 # Copy the Firebase config files in - you must supply them
 echo "Copying in Firebase android json and iOS plist app definition files downloaded from console"
@@ -115,18 +115,18 @@ rm -f ios/Podfile??
 
 # Apple Silicon builds require a library path tweak for Swift library discovery or "symbol not found" for swift things
 # This is an alternative to adding a bridging header etc
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
-rm -f ios/Podfile.??
+#sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
+#rm -f ios/Podfile.??
 
 # Flipper requires a crude patch to bump up iOS deployment target, or "error: thread-local storage is not supported for the current target"
 # I'm not aware of any other way to fix this one other than bumping iOS deployment target to match react-native (iOS 11 now)
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'11.0\'\\\n      end\\\n    end/' ios/Podfile
-rm -f ios/Podfile.??
+#sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'11.0\'\\\n      end\\\n    end/' ios/Podfile
+#rm -f ios/Podfile.??
 
 # ...but if you bump iOS deployment target, Flipper barfs again "Time.h:52:17: error: typedef redefinition with different types"
 # So we just hack in a different test in the header, so the symbol is not redefined.
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    \`sed -i -e  \$\'s\/__IPHONE_10_0\/__IPHONE_12_0\/\' Pods\/RCT-Folly\/folly\/portability\/Time.h\`/' ios/Podfile
-rm -f ios/Podfile.??
+#sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    \`sed -i -e  \$\'s\/__IPHONE_10_0\/__IPHONE_12_0\/\' Pods\/RCT-Folly\/folly\/portability\/Time.h\`/' ios/Podfile
+#rm -f ios/Podfile.??
 
 # In case we have any patches
 echo "Running any patches necessary to compile successfully"
