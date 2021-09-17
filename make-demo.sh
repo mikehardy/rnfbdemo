@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e 
 
+# Previous compiles may confound future compiles, erase...
+\rm -fr "$HOME/Library/Developer/Xcode/DerivedData/rnfbdemo*"
+
 # Basic template create, rnfb install, link
 \rm -fr rnfbdemo
 
