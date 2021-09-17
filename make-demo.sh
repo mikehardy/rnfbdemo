@@ -9,7 +9,7 @@ set -e
 
 echo "Testing react-native current + react-native-firebase current + Firebase SDKs current"
 
-npx react-native init rnfbdemo --version=0.66.0-rc.1
+npx react-native init rnfbdemo --version=0.66.0-rc.3
 cd rnfbdemo
 
 # This is the most basic integration
