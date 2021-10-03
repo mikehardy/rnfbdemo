@@ -9,7 +9,12 @@ set -e
 
 echo "Testing react-native current + react-native-firebase current + Firebase SDKs current"
 
-npx react-native init rnfbdemo --version=0.66.0-rc.3
+if ! which yarn > /dev/null 2>&1; then
+  echo "This script uses yarn, please install yarn (for example \`npm i yarn -g\` and re-try"
+  exit 1
+fi
+
+npx react-native init rnfbdemo --version=0.66.0
 cd rnfbdemo
 
 # This is the most basic integration
@@ -29,7 +34,7 @@ rm -f android/app/build.gradle??
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
 echo "project.ext{set('react-native',[versions:[firebase:[bom:'28.4.1'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.7.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.8.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
@@ -38,11 +43,26 @@ rm -f ios/Podfile??
 #rm -f ios/Podfile??
 
 # Copy the Firebase config files in - you must supply them
+echo "For this demo to work, you must create an \`rnfbdemo\` project in your firebase console,"
+echo "then download the android json and iOS plist app definition files to the root directory"
+echo "of this repository"
+
 echo "Copying in Firebase android json and iOS plist app definition files downloaded from console"
+
 if [ "$(uname)" == "Darwin" ]; then
-  cp ../GoogleService-Info.plist ios/rnfbdemo/
+  if [ -f "../GoogleService-Info.plist" ]; then
+    cp ../GoogleService-Info.plist ios/rnfbdemo/
+  else
+    echo "Unable to locate the file 'GoogleServices-Info.plist', did you create the firebase project and download the iOS file?"
+    exit 1
+  fi
 fi
-cp ../google-services.json android/app/
+if [ -f "../google-services.json" ]; then
+  cp ../google-services.json android/app/
+else
+  echo "Unable to locate the file 'google-services.json', did you create the firebase project and download the android file?"
+  exit 1
+fi
 
 # Copy in a project file that is pre-constructed - no way to patch it cleanly that I've found
 # There is already a pre-constructed project file here. 
@@ -116,22 +136,34 @@ rm -f android/app/build.gradle??
 sed -i -e $'s/hermes_enabled => false/hermes_enabled => true/' ios/Podfile
 rm -f ios/Podfile??
 
+# Apple builds in general have a problem with architectures on Apple Silicon and Intel, and doing some exclusions should help
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
+rm -f ios/Podfile.??
+
+
+##############################
+# These workarounds are no longer needed from fresh react-native 0.66 templates and newer, except the Swift path one for M1
+#
 # Apple Silicon builds require a library path tweak for Swift library discovery or "symbol not found" for swift things
 # This is an alternative to adding a bridging header etc
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
 rm -f ios/Podfile.??
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
-rm -f ios/Podfile.??
-
+#
 # Flipper requires a crude patch to bump up iOS deployment target, or "error: thread-local storage is not supported for the current target"
 # I'm not aware of any other way to fix this one other than bumping iOS deployment target to match react-native (iOS 11 now)
 #sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'11.0\'\\\n      end\\\n    end/' ios/Podfile
 #rm -f ios/Podfile.??
-
+#
 # ...but if you bump iOS deployment target, Flipper barfs again "Time.h:52:17: error: typedef redefinition with different types"
 # So we just hack in a different test in the header, so the symbol is not redefined.
 #sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    \`sed -i -e  \$\'s\/__IPHONE_10_0\/__IPHONE_12_0\/\' Pods\/RCT-Folly\/folly\/portability\/Time.h\`/' ios/Podfile
 #rm -f ios/Podfile.??
+################################
+
+# This is just a speed optimization, very optional, but asks xcodebuild to use clang and clang++ without the fully-qualified path
+# That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
+# In that way you can install ccache or buildcache and get much faster compiles...
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end/' ios/Podfile
 
 # In case we have any patches
 echo "Running any patches necessary to compile successfully"
