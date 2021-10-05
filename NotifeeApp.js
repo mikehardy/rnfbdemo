@@ -16,24 +16,26 @@ import notifee, {
 
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
-  console.log(`[onBackgroundEvent] notification id: ${notification.id},  event type: ${EventType[type]}, press action: ${pressAction?.id}`);
-  // Check if the user pressed the "Mark as read" action
-  if (type === EventType.ACTION_PRESS && pressAction.id === 'mark-as-read') {
-    console.log('[onBackgroundEvent] ACTION_PRESS: mark-as-read');
-
-    // Remove the notification
-    await notifee.cancelNotification(notification.id);
-  }
+  console.log(
+    `[onBackgroundEvent] notification id: ${notification.id},  event type: ${EventType[type]}, press action: ${pressAction?.id}`
+  );
 });
 
-async function onDisplayNotification() {
-  // Create a channel
+async function createChannel() {
+  const channelId = "default";
   try {
-    const channelId = await notifee.createChannel({
+    channelId = await notifee.createChannel({
       id: "default",
       name: "Default Channel",
     });
+  } catch (e) {
+    console.log("Unable to create a channel: ", JSON.stringify(e));
+  }
+  return channelId;
+}
 
+async function requestPermissions() {
+  try {
     const settings = await notifee.requestPermission();
 
     if (settings.authorizationStatus === IOSAuthorizationStatus.DENIED) {
@@ -47,6 +49,15 @@ async function onDisplayNotification() {
     ) {
       console.log("User provisionally granted permissions request");
     }
+  } catch (e) {
+    console.log("Unable to request permissions: ", JSON.stringify(e));
+  }
+}
+
+async function onDisplayNotification() {
+  try {
+    const channelId = await createChannel();
+    await requestPermissions();
 
     // Display a notification
     await notifee.displayNotification({
@@ -69,15 +80,15 @@ async function onDisplayNotification() {
 async function setCategories() {
   await notifee.setNotificationCategories([
     {
-      id: 'post',
+      id: "post",
       actions: [
         {
-          id: 'like',
-          title: 'Like Post',
+          id: "like",
+          title: "Like Post",
         },
         {
-          id: 'dislike',
-          title: 'Dislike Post',
+          id: "dislike",
+          title: "Dislike Post",
         },
       ],
     },
@@ -87,31 +98,41 @@ async function setCategories() {
 async function onDisplayNotificationWithActions() {
   // Create a channel
   try {
-    const channelId = await notifee.createChannel({
-      id: "default",
-      name: "Default Channel",
-    });
-
-    const settings = await notifee.requestPermission();
-
-    if (settings.authorizationStatus === IOSAuthorizationStatus.DENIED) {
-      console.log("User denied permissions request");
-    } else if (
-      settings.authorizationStatus === IOSAuthorizationStatus.AUTHORIZED
-    ) {
-      console.log("User granted permissions request");
-    } else if (
-      settings.authorizationStatus === IOSAuthorizationStatus.PROVISIONAL
-    ) {
-      console.log("User provisionally granted permissions request");
-    }
+    const channelId = await createChannel();
+    await requestPermissions();
 
     // Display a notification
     await notifee.displayNotification({
-      title: 'New post from John',
-      body: 'Hey everyone! Check out my new blog post on my website.',
+      title: "New post from John",
+      body: "Hey everyone! Check out my new blog post on my website.",
       ios: {
-        categoryId: 'post',
+        categoryId: "post",
+      },
+      android: {
+        channelId,
+        actions: [
+          {
+            title: "Like",
+            pressAction: {
+              id: "like",
+              launchActivity: "default",
+              launchActivityFlags: [AndroidLaunchActivityFlag.SINGLE_TOP],
+            },
+          },
+          {
+            title: "Dislike",
+            pressAction: {
+              id: "dislike",
+              launchActivity: "default",
+              launchActivityFlags: [AndroidLaunchActivityFlag.SINGLE_TOP],
+            },
+          },
+        ],
+        pressAction: {
+          id: "default",
+          launchActivity: "default",
+          launchActivityFlags: [AndroidLaunchActivityFlag.SINGLE_TOP],
+        },
       },
     });
   } catch (e) {
@@ -131,18 +152,37 @@ export default function App() {
     setCategories();
     return notifee.onForegroundEvent(({ type, detail }) => {
       const { notification, pressAction } = detail;
-      const pressActionLabel = pressAction ? `, press action: ${pressAction?.id}` : '';
-      console.log(`[onForegroundEvent] notification id: ${notification.id},  event type: ${EventType[type]}${pressActionLabel}`);
+      const pressActionLabel = pressAction
+        ? `, press action: ${pressAction?.id}`
+        : "";
+      console.log(
+        `[onForegroundEvent] notification id: ${notification.id},  event type: ${EventType[type]}${pressActionLabel}`
+      );
 
       switch (type) {
         case EventType.DISMISSED:
-          console.log('[onForegroundEvent] User dismissed notification', notification);
+          console.log(
+            "[onForegroundEvent] User dismissed notification",
+            notification
+          );
           break;
         case EventType.PRESS:
-          console.log('[onForegroundEvent] User pressed notification', notification);
+          console.log(
+            "[onForegroundEvent] User pressed notification",
+            notification
+          );
           break;
         case EventType.ACTION_PRESS:
-          console.log('[onForegroundEvent] User pressed an action', notification, detail.pressAction);
+          console.log(
+            "[onForegroundEvent] User pressed an action",
+            notification,
+            detail.pressAction
+          );
+          // On Android the notification does not dismiss automatically if it was an interaction press, so we dismiss it ourselves
+          console.log(
+            "[onBackgroundEvent] ACTION_PRESS: cancelling notification"
+          );
+          notifee.cancelNotification(notification.id);
           break;
       }
     });
