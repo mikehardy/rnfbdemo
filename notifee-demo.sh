@@ -8,33 +8,17 @@ echo "Testing react-native current + notifee current"
 npx react-native init notifeedemo
 cd notifeedemo
 
-# I frequently have Flipper-related problems and they are nothing but a distraction from the point of this script.
-# Disable flipper.
-echo "Disabling flipper"
-sed -i -e 's/use_flipper/#&/' ios/Podfile
-sed -i -e 's/flipper_post_install/#&/' ios/Podfile
-rm -f ios/Podfile.??
-
-# This is the most basic integration
+# This is the most basic integration - adding the package, adding the necessary Android local repository
 echo "Adding Notifee app package"
 yarn add "@notifee/react-native"
+sed -i -e $'s/mavenLocal()/mavenLocal()\\\n        maven \{ url "$rootDir\/..\/node_modules\/@notifee\/react-native\/android\/libs" \}/' android/build.gradle
+rm -f android/build.gradle??
 
-# Set the Java application up for multidex (needed for API<21 w/Firebase)
-echo "Configuring Android MultiDex for API<21 support - gradle toggle, library dependency, Application object inheritance"
-sed -i -e $'s/defaultConfig {/defaultConfig {\\\n        multiDexEnabled true/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n    implementation "androidx.multidex:multidex:2.0.1"/' android/app/build.gradle
-rm -f android/app/build.gradle??
-sed -i -e $'s/import android.app.Application;/import androidx.multidex.MultiDexApplication;/' android/app/src/main/java/com/notifeedemo/MainApplication.java
-rm -f android/app/src/main/java/com/notifeedemo/MainApplication.java??
-sed -i -e $'s/extends Application/extends MultiDexApplication/' android/app/src/main/java/com/notifeedemo/MainApplication.java
-rm -f android/app/src/main/java/com/notifeedemo/MainApplication.java??
-
-# Another Java build tweak - or gradle runs out of memory during the build in big projects
+# A general react-native Java build tweak - or gradle runs out of memory sometimes
 echo "Increasing memory available to gradle for android java build"
 echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
 
-# In case we have any patches
+# A quirk of this example, sometimes we have local example-specific patches
 echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
 npx patch-package
@@ -43,21 +27,25 @@ npx patch-package
 echo "Copying demonstrator App.js"
 rm ./App.js && cp ../NotifeeApp.js ./App.js
 
+# This is just a speed optimization, very optional, but asks xcodebuild to use clang and clang++ without the fully-qualified path
+# That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
+# In that way you can install ccache or buildcache and get much faster compiles...
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end/' ios/Podfile
+rm -f ios/Podfile??
+
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app"
-  if [ "$(uname -m)" == "arm64" ]; then
-    echo "Installing pods with prefix arch -arch x86_64"
-    cd ios && arch -arch x86_64 pod install && cd ..
-  else
-    cd ios && pod install --repo-update && cd ..
-  fi
+  npx pod-install
+
   npx react-native run-ios
-  # workaround for poorly setup Android SDK environments
+
+  # Example-specific path workaround for poorly setup Android SDK environments
   USER=`whoami`
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
 fi
 
+# Example-specific build tweaks so we really exercise the module in release mode
 echo "Configuring Android release build for ABI splits and code shrinking"
 sed -i -e $'s/def enableSeparateBuildPerCPUArchitecture = false/def enableSeparateBuildPerCPUArchitecture = true/' android/app/build.gradle
 rm -f android/app/build.gradle??
