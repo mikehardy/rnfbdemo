@@ -14,7 +14,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npx react-native init rnfbdemo --version=0.66.0
+npx react-native init rnfbdemo --version=0.67.0-rc.2
 cd rnfbdemo
 
 # This is the most basic integration
@@ -33,7 +33,7 @@ rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'28.4.1'],],])}" >> android/build.gradle
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'28.4.2'],],])}" >> android/build.gradle
 sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.8.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
@@ -139,26 +139,6 @@ rm -f ios/Podfile??
 # Apple builds in general have a problem with architectures on Apple Silicon and Intel, and doing some exclusions should help
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
 rm -f ios/Podfile.??
-
-
-##############################
-# These workarounds are no longer needed from fresh react-native 0.66 templates and newer, except the Swift path one for M1
-#
-# Apple Silicon builds require a library path tweak for Swift library discovery or "symbol not found" for swift things
-# This is an alternative to adding a bridging header etc
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
-rm -f ios/Podfile.??
-#
-# Flipper requires a crude patch to bump up iOS deployment target, or "error: thread-local storage is not supported for the current target"
-# I'm not aware of any other way to fix this one other than bumping iOS deployment target to match react-native (iOS 11 now)
-#sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'11.0\'\\\n      end\\\n    end/' ios/Podfile
-#rm -f ios/Podfile.??
-#
-# ...but if you bump iOS deployment target, Flipper barfs again "Time.h:52:17: error: typedef redefinition with different types"
-# So we just hack in a different test in the header, so the symbol is not redefined.
-#sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    \`sed -i -e  \$\'s\/__IPHONE_10_0\/__IPHONE_12_0\/\' Pods\/RCT-Folly\/folly\/portability\/Time.h\`/' ios/Podfile
-#rm -f ios/Podfile.??
-################################
 
 # This is just a speed optimization, very optional, but asks xcodebuild to use clang and clang++ without the fully-qualified path
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
