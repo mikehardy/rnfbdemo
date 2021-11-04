@@ -14,11 +14,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-<<<<<<< HEAD
-npx react-native init rnfbdemo --version=0.67.0-rc.3
-=======
 npx react-native init rnfbdemo --version=0.67.0-rc.2
->>>>>>> dd3b955 (feat: bump to react-native 0.67 for testing)
 cd rnfbdemo
 
 # This is the most basic integration
