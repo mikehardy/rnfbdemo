@@ -220,6 +220,11 @@ if [ "$(uname -a | grep Linux | grep -c microsoft)" == "1" ]; then
   exit
 fi
 
+# uninstall it (just in case, otherwise ABI-split-generated version codes will prevent debug from installing)
+pushd android
+./gradlew uninstallRelease
+popd
+
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
 npx react-native run-android --variant release --no-jetifier
