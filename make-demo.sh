@@ -153,6 +153,9 @@ rm -f ios/Podfile.??
 # In that way you can install ccache or buildcache and get much faster compiles...
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end/' ios/Podfile
 
+# This makes the iOS build much quieter. In particular libevent dependency, pulled in by react core / flipper items is ridiculously noisy.
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end/' ios/Podfile
+
 # In case we have any patches
 echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
