@@ -128,7 +128,7 @@ rm ./App.js && cp ../App.js ./App.js
 
 # Another Java build tweak - or gradle runs out of memory during the build
 echo "Increasing memory available to gradle for android java build"
-echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
+echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
 
 # Hermes is available on both platforms and provides faster startup since it pre-parses javascript. Enable it.
 sed -i -e $'s/enableHermes: false/enableHermes: true/' android/app/build.gradle
