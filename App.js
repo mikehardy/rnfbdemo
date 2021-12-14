@@ -36,7 +36,7 @@ export default class App extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>React Native Firebase V6 Demo</Text>
+        <Text style={styles.welcome}>React Native Firebase Build Demo</Text>
         <Text style={styles.instructions}>To get started, edit App.js</Text>
         <Text style={styles.instructions}>{instructions}</Text>
         <Text>The following modules are installed natively and working:</Text>
