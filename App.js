@@ -15,7 +15,7 @@ import appDistribution from '@react-native-firebase/app-distribution';
 import auth from '@react-native-firebase/auth';
 import crashlytics from '@react-native-firebase/crashlytics';
 import database from '@react-native-firebase/database';
-import dynamic_links from '@react-native-firebase/dynamic-links';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
 import firestore from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import inAppMessaging from '@react-native-firebase/in-app-messaging';
@@ -47,7 +47,7 @@ export default class App extends Component {
         {auth().native && <Text style={styles.module}>auth()</Text>}
         {crashlytics().native && <Text style={styles.module}>crashlytics()</Text>}
         {database().native && <Text style={styles.module}>database()</Text>}
-        {dynamic_links().native && <Text style={styles.module}>dynamic-links()</Text>}
+        {dynamicLinks().native && <Text style={styles.module}>dynamicLinks()</Text>}
         {firestore().native && <Text style={styles.module}>firestore()</Text>}
         {functions().native && <Text style={styles.module}>functions()</Text>}
         {inAppMessaging().native && <Text style={styles.module}>inAppMessaging()</Text>}
