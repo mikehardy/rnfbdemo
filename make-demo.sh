@@ -14,7 +14,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npx react-native init rnfbdemo
+npm_config_yes=true npx react-native init rnfbdemo
 cd rnfbdemo
 
 # This is the most basic integration
@@ -159,7 +159,7 @@ sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(ins
 # In case we have any patches
 echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
-npx patch-package
+npm_config_yes=true npx patch-package
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then

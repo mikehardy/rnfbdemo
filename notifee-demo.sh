@@ -5,7 +5,7 @@ set -e
 \rm -fr notifeedemo
 
 echo "Testing react-native current + notifee current"
-npx react-native init notifeedemo
+npm_config_yes=true npx react-native init notifeedemo --version=0.66.4
 cd notifeedemo
 
 # This is the most basic integration - adding the package, adding the necessary Android local repository
@@ -21,7 +21,7 @@ echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemo
 # A quirk of this example, sometimes we have local example-specific patches
 echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
-npx patch-package
+npm_config_yes=true npx patch-package
 
 # Copy in our demonstrator App.js
 echo "Copying demonstrator App.js"
