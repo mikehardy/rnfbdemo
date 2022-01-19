@@ -49,7 +49,7 @@ fi
 # This is the most basic integration - adding the package, adding the necessary Android local repository
 echo "Adding Notifee app package"
 yarn add "@notifee/react-native"
-sed -i -e $'s/mavenLocal()/mavenLocal()\\\n        maven \{ url "$rootDir\/..\/node_modules\/@notifee\/react-native\/android\/libs" \}/' android/build.gradle
+sed -i -e $'s/google()/google()\\\n        maven \{ url "$rootDir\/..\/node_modules\/@notifee\/react-native\/android\/libs" \}/' android/build.gradle
 rm -f android/build.gradle??
 
 # A general react-native Java build tweak - or gradle runs out of memory sometimes
