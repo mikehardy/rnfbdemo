@@ -14,8 +14,17 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx react-native init rnfbdemo
+npm_config_yes=true npx react-native init rnfbdemo --skip-install
 cd rnfbdemo
+
+# New versions of react-native include a Gemfile, and it specifies a concrete ruby version. Alter it to >=
+if [ -f Gemfile ]; then
+  sed -i -e $'s/ruby \'2.7.4\'/ruby \'>= 2.7.4\'/' Gemfile
+fi
+
+# Now run our initial dependency install
+yarn
+pushd ios && pod install && popd
 
 # This is the most basic integration
 echo "Adding react-native-firebase core app package"

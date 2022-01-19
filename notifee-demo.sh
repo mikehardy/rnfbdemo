@@ -4,11 +4,20 @@ set -e
 # Basic template create, notifee install, link
 \rm -fr notifeedemo
 
-RNVERSION=0.61.2
+RNVERSION=0.67.0
 
 echo "Testing react-native $RNVERSION + notifee current"
-npm_config_yes=true npx react-native init notifeedemo --version=$RNVERSION
+npm_config_yes=true npx react-native init notifeedemo --version=$RNVERSION --skip-install
 cd notifeedemo
+
+# New versions of react-native include a Gemfile, and it specifies a concrete ruby version. Alter it to >=
+if [ -f Gemfile ]; then
+  sed -i -e $'s/ruby \'2.7.4\'/ruby \'>= 2.7.4\'/' Gemfile
+fi
+
+# Now run our initial dependency install
+yarn
+pushd ios && pod install && popd
 
 # Notifee requires minimum sdk of 20
 sed -i -e $'s/minSdkVersion = 16/minSdkVersion = 20/' android/build.gradle
