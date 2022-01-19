@@ -65,7 +65,7 @@ rm -f android/app/build.gradle??
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
-npx react-native run-android --variant release
+npx react-native run-android --variant release --no-jetifier
 
 # Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
 sleep 10
@@ -75,4 +75,4 @@ popd
 
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
-npx react-native run-android
+npx react-native run-android --no-jetifier
