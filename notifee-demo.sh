@@ -4,18 +4,38 @@ set -e
 # Basic template create, notifee install, link
 \rm -fr notifeedemo
 
-echo "Testing react-native current + notifee current"
-npm_config_yes=true npx react-native init notifeedemo --version=0.66.4
+RNVERSION=0.61.2
+
+echo "Testing react-native $RNVERSION + notifee current"
+npm_config_yes=true npx react-native init notifeedemo --version=$RNVERSION
 cd notifeedemo
 
-# Notifee requires Android12, so let's bump up our compile and target versions on android
-# Remove this if you use react-native 0.67+ (current as of 20220119)
+# Notifee requires minimum sdk of 20
+sed -i -e $'s/minSdkVersion = 16/minSdkVersion = 20/' android/build.gradle
+rm -f android/build.gradle??
+
+# Notifee requires Android12, bump up our compile and target versions on android as needed
+sed -i -e $'s/compileSdkVersion = 28/compileSdkVersion = 31/' android/build.gradle
+sed -i -e $'s/targetSdkVersion = 28/targetSdkVersion = 31/' android/build.gradle
+sed -i -e $'s/compileSdkVersion = 29/compileSdkVersion = 31/' android/build.gradle
+sed -i -e $'s/targetSdkVersion = 29/targetSdkVersion = 31/' android/build.gradle
 sed -i -e $'s/compileSdkVersion = 30/compileSdkVersion = 31/' android/build.gradle
 sed -i -e $'s/targetSdkVersion = 30/targetSdkVersion = 31/' android/build.gradle
 rm -f android/build.gradle??
-# Android 12 does require a tweak to the stock template AndroidManifest for compliance
+# Android 12 does require a tweak to the stock template AndroidManifest for compliance - TODO, not needed in RN67+, add if check
 sed -i -e $'s/android:launchMode/android:exported="true"\\\n        android:launchMode/' android/app/src/main/AndroidManifest.xml
 rm -f android/app/src/main/AndroidManifest.xml??
+
+# Notifee requires iOS minimum of 10
+sed -i -e $'s/platform :ios, \'9.0\'/platform :ios, \'10.0\'/' ios/Podfile
+rm -f ios/Podfile??
+
+# old versions of metro has a problem with babel. Visible in really old react-native like 0.61.2
+MRNBP_VERSION=`npm_config_yes=true npx json -f package.json  'devDependencies.metro-react-native-babel-preset'`
+if [ "$MRNBP_VERSION" == '^0.51.1' ]; then
+  echo "Bumping old metro-react-native-babel-preset version to something that works with modern babel."
+  yarn add metro-react-native-babel-preset@^0.59 --dev
+fi
 
 # This is the most basic integration - adding the package, adding the necessary Android local repository
 echo "Adding Notifee app package"
@@ -65,6 +85,9 @@ rm -f android/app/build.gradle??
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
+pushd android
+./gradlew uninstallRelease
+popd
 npx react-native run-android --variant release --no-jetifier
 
 # Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
