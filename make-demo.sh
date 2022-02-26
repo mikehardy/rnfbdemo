@@ -14,12 +14,12 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.0-rc.1
+npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.0-rc.2
 cd rnfbdemo
 
-# New versions of react-native include a Gemfile, and it specifies a concrete ruby version. Alter it to >=
+# New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
 if [ -f Gemfile ]; then
-  sed -i -e $'s/ruby \'2.7.4\'/ruby \'>= 2.7.4\'/' Gemfile
+  rm -f Gemfile* .ruby*
 fi
 
 # Now run our initial dependency install
@@ -42,8 +42,8 @@ rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'29.0.4'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.11.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'29.1.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.12.1\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
@@ -173,33 +173,33 @@ if [ "$(uname)" == "Darwin" ]; then
   cd ios && pod install --repo-update && cd ..
 
   # Check iOS debug mode compile
-  npx react-native run-ios
+#  npx react-native run-ios
 
   # Check iOS release mode compile
-  npx react-native run-ios --configuration "Release"
+#  npx react-native run-ios --configuration "Release"
 
   #################################
   # Check static frameworks compile
   # FIXME react-native 0.68.0-rc.1 - this is not working! Fails with xcodebuild error code 65, suspect find-node.sh script fail? Needs triage.
 
   # This is how you configure for static frameworks:
-  # sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+  sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
 
   # Static frameworks does not work with hermes and flipper - toggle them both off again
-  # sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
-  # rm -f ios/Podfile.??
-  # sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
-  # rm -f ios/Podfile.??
-  # sed -i -e $'s/hermes_enabled => true/hermes_enabled => false/' ios/Podfile
-  # rm -f ios/Podfile??
+  sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
+  rm -f ios/Podfile.??
+  sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
+  rm -f ios/Podfile.??
+  sed -i -e $'s/hermes_enabled => true/hermes_enabled => false/' ios/Podfile
+  rm -f ios/Podfile??
 
   # Workaround needed for static framework build only, regular build is fine.
   # https://github.com/facebook/react-native/issues/31149#issuecomment-800841668
-  # sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
-  # rm -f ios/Podfile.??
-  # cd ios && pod install && cd ..
+  sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
+  rm -f ios/Podfile.??
+  cd ios && pod install && cd ..
 
-  # npx react-native run-ios
+  npx react-native run-ios
 
   # end of static frameworks workarounds + test
   #############################################
@@ -233,19 +233,19 @@ fi
 
 # uninstall it (just in case, otherwise ABI-split-generated version codes will prevent debug from installing)
 pushd android
-./gradlew uninstallRelease
+# ./gradlew uninstallRelease
 popd
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
-npx react-native run-android --variant release --no-jetifier
+# npx react-native run-android --variant release --no-jetifier
 
 # Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
 sleep 10
 pushd android
-./gradlew uninstallRelease
+# ./gradlew uninstallRelease
 popd
 
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
-npx react-native run-android --no-jetifier
+# npx react-native run-android --no-jetifier
