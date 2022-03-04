@@ -173,10 +173,10 @@ if [ "$(uname)" == "Darwin" ]; then
   cd ios && pod install --repo-update && cd ..
 
   # Check iOS debug mode compile
-#  npx react-native run-ios
+  npx react-native run-ios
 
   # Check iOS release mode compile
-#  npx react-native run-ios --configuration "Release"
+  npx react-native run-ios --configuration "Release"
 
   #################################
   # Check static frameworks compile
@@ -233,19 +233,19 @@ fi
 
 # uninstall it (just in case, otherwise ABI-split-generated version codes will prevent debug from installing)
 pushd android
-# ./gradlew uninstallRelease
+./gradlew uninstallRelease
 popd
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app"
-# npx react-native run-android --variant release --no-jetifier
+npx react-native run-android --variant release --no-jetifier
 
 # Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
 sleep 10
 pushd android
-# ./gradlew uninstallRelease
+./gradlew uninstallRelease
 popd
 
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
-# npx react-native run-android --no-jetifier
+npx react-native run-android --no-jetifier
