@@ -158,9 +158,11 @@ rm -f ios/Podfile.??
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
 # In that way you can install ccache or buildcache and get much faster compiles...
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end/' ios/Podfile
+rm -f ios/Podfile??
 
 # This makes the iOS build much quieter. In particular libevent dependency, pulled in by react core / flipper items is ridiculously noisy.
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end/' ios/Podfile
+rm -f ios/Podfile??
 
 # In case we have any patches
 echo "Running any patches necessary to compile successfully"
@@ -184,6 +186,7 @@ if [ "$(uname)" == "Darwin" ]; then
 
   # This is how you configure for static frameworks:
   sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+  rm -f ios/Podfile??
 
   # Static frameworks does not work with hermes and flipper - toggle them both off again
   sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
