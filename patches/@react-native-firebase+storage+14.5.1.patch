@@ -1,0 +1,17 @@
+diff --git a/node_modules/@react-native-firebase/storage/ios/RNFBStorage/RNFBStorageModule.m b/node_modules/@react-native-firebase/storage/ios/RNFBStorage/RNFBStorageModule.m
+index 3b5763c..2e070de 100644
+--- a/node_modules/@react-native-firebase/storage/ios/RNFBStorage/RNFBStorageModule.m
++++ b/node_modules/@react-native-firebase/storage/ios/RNFBStorage/RNFBStorageModule.m
+@@ -511,7 +511,11 @@ RCT_EXPORT_METHOD(setTaskStatus
+       [task pause];
+       break;
+     case 1:
+-      [task resume];
++      if ([task isKindOfClass:[FIRStorageDownloadTask class]]) {
++        [(FIRStorageDownloadTask *)task resume];
++      } else {
++        [(FIRStorageUploadTask *)task resume];
++      }
+       break;
+     case 2:
+       [task cancel];
