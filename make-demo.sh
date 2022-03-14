@@ -227,23 +227,18 @@ if [ "$(uname)" == "Darwin" ]; then
   pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo SUPPORTS_MACCATALYST YES
   # add build flag 				DEVELOPMENT_TEAM = 2W4T2B656C;
   pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEVELOPMENT_TEAM "$XCODE_DEVELOPMENT_TEAM"
+  # add build flag 				DEAD_CODE_STRIPPING = YES;
+  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEAD_CODE_STRIPPING YES
 
   # Add necessary Podfile hack to sign resource bundles for macCatalyst local development
   sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"\\\n        target.build_configurations.each do |config|\\\n          config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "-"\\\n        end\\\n      end\\\n    end/' ios/Podfile
   rm -f ios/Podfile-e
 
   # macCatalyst does not work with flipper - toggle it off
-  sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
+  #sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
+  # ...or specify versions of flipper for react-native 0.68 rc series while debugging flipper#3117
+  sed -i -e $'s/use_flipper!()/use_flipper!({ "Flipper" => "0.125.0", "Flipper-Folly" => "2.6.10", "Flipper-DoubleConversion" => "3.2.0", "Flipper-Glog" => "0.5.0.3", "Flipper-PeerTalk" => "0.0.4", "OpenSSL-Universal" => "1.1.1100" })/' ios/Podfile
   rm -f ios/Podfile.??
-
-  # Specify versions of flipper for react-native 0.68 rc series while debugging flipper#3117
-  # use_flipper!({
-  #   'Flipper' => '0.138.0',
-  #   'Flipper-Folly' => '2.6.10',
-  #   'Flipper-DoubleConversion' => '3.2.0',
-  #   'Flipper-Glog' => '0.5.0.3',
-  #   'OpenSSL-Universal' => '1.1.1100',
-  # })
   npm_config_yes=true npx pod-install
 
   # Now run it with our mac device name as device target, that triggers catalyst build
