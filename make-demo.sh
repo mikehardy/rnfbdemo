@@ -201,6 +201,9 @@ rm -f ios/Podfile??
 
 # In case we have any patches
 echo "Running any patches necessary to compile successfully"
+# - we have one patch for react-native 0.68.0-rc.2 to make static framework compilation on iOS work
+# - we have one patch for @react-native-firebase/storage to make catalyst build flavor of iOS work that needs a PR
+# - there is a hard-coding of flipper pods below that will be unnecessary with react-native 0.68.0-rc.3+ when it's integrated upstream
 cp -rv ../patches .
 npm_config_yes=true npx patch-package
 
@@ -234,11 +237,14 @@ if [ "$(uname)" == "Darwin" ]; then
   sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"\\\n        target.build_configurations.each do |config|\\\n          config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "-"\\\n        end\\\n      end\\\n    end/' ios/Podfile
   rm -f ios/Podfile-e
 
-  # macCatalyst does not work with flipper - toggle it off
-  #sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
-  # ...or specify versions of flipper for react-native 0.68 rc series while debugging flipper#3117
+  # Specify newly updated versions of flipper for react-native 0.68 rc series while debugging flipper#3117
   sed -i -e $'s/use_flipper!()/use_flipper!({ "Flipper" => "0.125.0", "Flipper-Folly" => "2.6.10", "Flipper-DoubleConversion" => "3.2.0", "Flipper-Glog" => "0.5.0.3", "Flipper-PeerTalk" => "0.0.4", "OpenSSL-Universal" => "1.1.1100" })/' ios/Podfile
   rm -f ios/Podfile.??
+
+  # macCatalyst requires one extra path on linker line: '$(SDKROOT)/System/iOSSupport/usr/lib/swift'
+  sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(SDKROOT)\/System\/iOSSupport\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
+  rm -f ios/Podfile.??
+
   npm_config_yes=true npx pod-install
 
   # Now run it with our mac device name as device target, that triggers catalyst build
@@ -246,7 +252,6 @@ if [ "$(uname)" == "Darwin" ]; then
 
   #################################
   # Check static frameworks compile
-  # FIXME react-native 0.68.0-rc.1 - this is not working! Fails with xcodebuild error code 65, suspect find-node.sh script fail? Needs triage.
 
   # Static frameworks does not work with hermes and flipper - toggle them both off again
   sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
