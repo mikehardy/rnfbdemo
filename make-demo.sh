@@ -73,20 +73,22 @@ else
   exit 1
 fi
 
-# Copy in a project file that is pre-constructed - no way to patch it cleanly that I've found
-# There is already a pre-constructed project file here. 
-# Normal users may skip these steps unless you are maintaining this repository and need to generate a new project
-# To build it do this:
-# 1.  stop this script here (by uncommenting the exit line)
-# 2.  open the .xcworkspace created by running the script to this point
-# 3.  alter the bundleID to com.rnfbdemo
-# 4.  alter the target to iPhone and iPad instead of iPhone only (Mac is not supported yet, but feel free to try...)
-# 5.  right-click on rnfbdemo, "add files to rnfbdemo" select rnfbdemo/GoogleService-Info.plist for rnfbdemo (and any other targets...)
-# 6.  copy the rnfbdemo.xcodeproj and rnfbdemo.xcworkspace folders over the existing ones saved in the root directory
-#exit 1
-rm -rf ios/rnfbdemo.xcodeproj ios/rnfbdemo.xcworkspace
-cp -r ../rnfbdemo.xcodeproj ios/
-cp -r ../rnfbdemo.xcworkspace ios/
+# Set up python virtual environment so we can do some local mods to Xcode project with mod-pbxproj
+# FIXME need to verify that python3 exists (recommend brew) and has venv module installed
+echo "Setting up python virtual environment + mod-pbxproj for Xcode project edits"
+python3 -m venv virtualenv
+source virtualenv/bin/activate
+pip install pbxproj
+
+# set PRODUCT_BUNDLE_IDENTIFIER to com.rnfbdemo
+sed -i -e $'s/org.reactjs.native.example/com/' ios/rnfbdemo.xcodeproj/project.pbxproj
+rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
+
+# Add our Google Services file to the Xcode project
+pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/GoogleService-Info.plist --target rnfbdemo
+
+# Toggle on iPad: add build flag: TARGETED_DEVICE_FAMILY = "1,2"
+pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo TARGETED_DEVICE_FAMILY "1,2"
 
 # From this point on we are adding optional modules
 # First set up all the modules that need no further config for the demo 
