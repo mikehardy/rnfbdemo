@@ -24,7 +24,7 @@ fi
 
 # Now run our initial dependency install
 yarn
-pushd ios && pod install && popd
+npm_config_yes=true npx pod-install
 
 # This is the most basic integration
 echo "Adding react-native-firebase core app package"
@@ -171,8 +171,9 @@ npm_config_yes=true npx patch-package
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
+
   echo "Installing pods and running iOS app"
-  cd ios && pod install --repo-update && cd ..
+  npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
   npx react-native run-ios
@@ -200,7 +201,7 @@ if [ "$(uname)" == "Darwin" ]; then
   # https://github.com/facebook/react-native/issues/31149#issuecomment-800841668
   sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
   rm -f ios/Podfile.??
-  cd ios && pod install && cd ..
+  npm_config_yes=true npx pod-install
 
   npx react-native run-ios
 
