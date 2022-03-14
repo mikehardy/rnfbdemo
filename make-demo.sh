@@ -30,10 +30,10 @@ npm_config_yes=true npx pod-install
 echo "Adding react-native-firebase core app package"
 yarn add "@react-native-firebase/app"
 echo "Adding basic iOS integration - AppDelegate import and config call"
-sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import <Firebase.h>/' ios/rnfbdemo/AppDelegate.mm
-rm -f ios/rnfbdemo/AppDelegate.mm??
-sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.mm
-rm -f ios/rnfbdemo/AppDelegate.mm??
+sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import <Firebase.h>/' ios/rnfbdemo/AppDelegate.m*
+rm -f ios/rnfbdemo/AppDelegate.m*-e
+sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m*
+rm -f ios/rnfbdemo/AppDelegate.m*-e
 echo "Adding basic java integration - gradle plugin dependency and call"
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.10"/' android/build.gradle
 rm -f android/build.gradle??
