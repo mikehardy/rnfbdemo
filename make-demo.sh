@@ -1,6 +1,39 @@
 #!/bin/bash
 set -e 
 
+# We need to verify our environment first, so we fail fast for easily detectable things
+if [ "$(uname)" == "Darwin" ]; then
+  # If the keychain is unlocked then this fails in the middle, let's check that now and fail fast
+  if ! security show-keychain-info login.keychain > /dev/null 2>&1; then
+    echo "Login keychain is not unlocked, codesigning will fail so macCatalyst build wll fail."
+    echo "run 'security unlock-keychain login.keychain' to unlock the login keychain then re-run"
+    exit 1
+  fi
+
+  # We do not want to run under Rosetta 2, brew doesn't work and compiles might not work after
+  arch_name="$(uname -m)"
+  if [ "${arch_name}" = "x86_64" ]; then
+    if [ "$(sysctl -in sysctl.proc_translated)" = "1" ]; then
+      echo "Running on Rosetta 2"
+      echo "This is not supported. Run \`env /usr/bin/arch -arm64 /bin/bash --login\` then try again"
+      exit 1
+    else
+      echo "Running on native Intel"
+    fi
+  elif [ "${arch_name}" = "arm64" ]; then
+    echo "Running on ARM"
+  else
+    echo "Unknown architecture: ${arch_name}"
+  fi
+
+  # We need a development team or macCatalyst build will fail
+  if [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
+    echo "You must set XCODE_DEVELOPMENT_TEAM environment variable to your team id"
+    echo "Try running it like: XCODE_DEVELOPMENT_TEAM=2W4T123443 ./make-demo.sh (but with your id)"
+    exit 1
+  fi
+fi
+
 # Previous compiles may confound future compiles, erase...
 \rm -fr "$HOME/Library/Developer/Xcode/DerivedData/rnfbdemo*"
 
@@ -183,13 +216,42 @@ if [ "$(uname)" == "Darwin" ]; then
   # Check iOS release mode compile
   npx react-native run-ios --configuration "Release"
 
+  # Check catalyst build
+  echo "Adding macCatalyst entitlements file / build flags to Xcode project"
+  cp ../rnfbdemo.entitlements ios/rnfbdemo/
+  # add file rnfbdemo/rnfbdemo.entitlements, with reference to rnfbdemo target, but no build phase
+  pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/rnfbdemo.entitlements --target rnfbdemo -C
+  # add build flag: CODE_SIGN_ENTITLEMENTS = rnfbdemo/rnfbdemo.entitlements
+  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo CODE_SIGN_ENTITLEMENTS rnfbdemo/rnfbdemo.entitlements
+  # add build flag: SUPPORTS_MACCATALYST = YES
+  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo SUPPORTS_MACCATALYST YES
+  # add build flag 				DEVELOPMENT_TEAM = 2W4T2B656C;
+  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEVELOPMENT_TEAM "$XCODE_DEVELOPMENT_TEAM"
+
+  # Add necessary Podfile hack to sign resource bundles for macCatalyst local development
+  sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"\\\n        target.build_configurations.each do |config|\\\n          config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "-"\\\n        end\\\n      end\\\n    end/' ios/Podfile
+  rm -f ios/Podfile-e
+
+  # macCatalyst does not work with flipper - toggle it off
+  sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
+  rm -f ios/Podfile.??
+
+  # Specify versions of flipper for react-native 0.68 rc series while debugging flipper#3117
+  # use_flipper!({
+  #   'Flipper' => '0.138.0',
+  #   'Flipper-Folly' => '2.6.10',
+  #   'Flipper-DoubleConversion' => '3.2.0',
+  #   'Flipper-Glog' => '0.5.0.3',
+  #   'OpenSSL-Universal' => '1.1.1100',
+  # })
+  npm_config_yes=true npx pod-install
+
+  # Now run it with our mac device name as device target, that triggers catalyst build
+  npx react-native run-ios --device "$(scutil --get LocalHostName)"
+
   #################################
   # Check static frameworks compile
   # FIXME react-native 0.68.0-rc.1 - this is not working! Fails with xcodebuild error code 65, suspect find-node.sh script fail? Needs triage.
-
-  # This is how you configure for static frameworks:
-  sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
-  rm -f ios/Podfile??
 
   # Static frameworks does not work with hermes and flipper - toggle them both off again
   sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
@@ -197,6 +259,10 @@ if [ "$(uname)" == "Darwin" ]; then
   sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
   rm -f ios/Podfile.??
   sed -i -e $'s/hermes_enabled => true/hermes_enabled => false/' ios/Podfile
+  rm -f ios/Podfile??
+
+  # This is how you configure for static frameworks:
+  sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
   rm -f ios/Podfile??
 
   # Workaround needed for static framework build only, regular build is fine.
