@@ -4,7 +4,7 @@ set -e
 # Basic template create, notifee install, link
 \rm -fr notifeedemo
 
-RNVERSION=0.68.0-rc.2
+RNVERSION=0.68.0-rc.3
 
 echo "Testing react-native $RNVERSION + notifee current"
 npm_config_yes=true npx react-native init notifeedemo --version=$RNVERSION --skip-install

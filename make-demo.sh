@@ -47,7 +47,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.0-rc.2
+npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.0-rc.3
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -236,10 +236,6 @@ if [ "$(uname)" == "Darwin" ]; then
   # Add necessary Podfile hack to sign resource bundles for macCatalyst local development
   sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"\\\n        target.build_configurations.each do |config|\\\n          config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "-"\\\n        end\\\n      end\\\n    end/' ios/Podfile
   rm -f ios/Podfile-e
-
-  # Specify newly updated versions of flipper for react-native 0.68 rc series while debugging flipper#3117
-  sed -i -e $'s/use_flipper!()/use_flipper!({ "Flipper" => "0.125.0", "Flipper-Folly" => "2.6.10", "Flipper-DoubleConversion" => "3.2.0", "Flipper-Glog" => "0.5.0.3", "Flipper-PeerTalk" => "0.0.4", "OpenSSL-Universal" => "1.1.1100" })/' ios/Podfile
-  rm -f ios/Podfile.??
 
   # macCatalyst requires one extra path on linker line: '$(SDKROOT)/System/iOSSupport/usr/lib/swift'
   sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(SDKROOT)\/System\/iOSSupport\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
