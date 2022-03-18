@@ -244,7 +244,10 @@ if [ "$(uname)" == "Darwin" ]; then
   npm_config_yes=true npx pod-install
 
   # Now run it with our mac device name as device target, that triggers catalyst build
-  npx react-native run-ios --device "$(scutil --get LocalHostName)"
+  # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
+  # Also, this is still failing on an M1. Works on x86_64:
+  # https://github.com/facebook/flipper/issues/3117#issuecomment-1072462848
+  npx react-native run-ios --device "$(scutil --get ComputerName)"
 
   #################################
   # Check static frameworks compile
