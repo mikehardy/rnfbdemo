@@ -28,9 +28,11 @@ if [ "$(uname)" == "Darwin" ]; then
 
   # We need a development team or macCatalyst build will fail
   if [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
-    echo "You must set XCODE_DEVELOPMENT_TEAM environment variable to your team id"
-    echo "Try running it like: XCODE_DEVELOPMENT_TEAM=2W4T123443 ./make-demo.sh (but with your id)"
-    exit 1
+    printf "\n\n\n\n\n**********************************\n\n\n\n"
+    printf "You must set XCODE_DEVELOPMENT_TEAM environment variable to your team id to test macCatalyst"
+    printf "Try running it like: XCODE_DEVELOPMENT_TEAM=2W4T123443 ./make-demo.sh (but with your id)"
+    printf "Skipping macCatalyst test"
+    printf "\n\n\n\n\n**********************************\n\n\n\n"
   fi
 fi
 
@@ -220,34 +222,37 @@ if [ "$(uname)" == "Darwin" ]; then
   npx react-native run-ios --configuration "Release"
 
   # Check catalyst build
-  echo "Adding macCatalyst entitlements file / build flags to Xcode project"
-  cp ../rnfbdemo.entitlements ios/rnfbdemo/
-  # add file rnfbdemo/rnfbdemo.entitlements, with reference to rnfbdemo target, but no build phase
-  pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/rnfbdemo.entitlements --target rnfbdemo -C
-  # add build flag: CODE_SIGN_ENTITLEMENTS = rnfbdemo/rnfbdemo.entitlements
-  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo CODE_SIGN_ENTITLEMENTS rnfbdemo/rnfbdemo.entitlements
-  # add build flag: SUPPORTS_MACCATALYST = YES
-  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo SUPPORTS_MACCATALYST YES
-  # add build flag 				DEVELOPMENT_TEAM = 2W4T2B656C;
-  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEVELOPMENT_TEAM "$XCODE_DEVELOPMENT_TEAM"
-  # add build flag 				DEAD_CODE_STRIPPING = YES;
-  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEAD_CODE_STRIPPING YES
+  if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
 
-  # Add necessary Podfile hack to sign resource bundles for macCatalyst local development
-  sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"\\\n        target.build_configurations.each do |config|\\\n          config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "-"\\\n        end\\\n      end\\\n    end/' ios/Podfile
-  rm -f ios/Podfile-e
+    echo "Adding macCatalyst entitlements file / build flags to Xcode project"
+    cp ../rnfbdemo.entitlements ios/rnfbdemo/
+    # add file rnfbdemo/rnfbdemo.entitlements, with reference to rnfbdemo target, but no build phase
+    pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/rnfbdemo.entitlements --target rnfbdemo -C
+    # add build flag: CODE_SIGN_ENTITLEMENTS = rnfbdemo/rnfbdemo.entitlements
+    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo CODE_SIGN_ENTITLEMENTS rnfbdemo/rnfbdemo.entitlements
+    # add build flag: SUPPORTS_MACCATALYST = YES
+    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo SUPPORTS_MACCATALYST YES
+    # add build flag 				DEVELOPMENT_TEAM = 2W4T2B656C;
+    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEVELOPMENT_TEAM "$XCODE_DEVELOPMENT_TEAM"
+    # add build flag 				DEAD_CODE_STRIPPING = YES;
+    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEAD_CODE_STRIPPING YES
 
-  # macCatalyst requires one extra path on linker line: '$(SDKROOT)/System/iOSSupport/usr/lib/swift'
-  sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(SDKROOT)\/System\/iOSSupport\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
-  rm -f ios/Podfile.??
+    # Add necessary Podfile hack to sign resource bundles for macCatalyst local development
+    sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"\\\n        target.build_configurations.each do |config|\\\n          config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "-"\\\n        end\\\n      end\\\n    end/' ios/Podfile
+    rm -f ios/Podfile-e
 
-  npm_config_yes=true npx pod-install
+    # macCatalyst requires one extra path on linker line: '$(SDKROOT)/System/iOSSupport/usr/lib/swift'
+    sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(SDKROOT)\/System\/iOSSupport\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
+    rm -f ios/Podfile.??
 
-  # Now run it with our mac device name as device target, that triggers catalyst build
-  # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
-  # Also, this is still failing on an M1. Works on x86_64:
-  # https://github.com/facebook/flipper/issues/3117#issuecomment-1072462848
-  npx react-native run-ios --device "$(scutil --get ComputerName)"
+    npm_config_yes=true npx pod-install
+
+    # Now run it with our mac device name as device target, that triggers catalyst build
+    # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
+    # Also, this is still failing on an M1. Works on x86_64:
+    # https://github.com/facebook/flipper/issues/3117#issuecomment-1072462848
+    npx react-native run-ios --device "$(scutil --get ComputerName)"
+  fi
 
   #################################
   # Check static frameworks compile
