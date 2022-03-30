@@ -49,7 +49,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.0-rc.4
+npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.0
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
