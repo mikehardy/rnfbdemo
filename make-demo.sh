@@ -149,6 +149,9 @@ sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.fir
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
+sed -i -e $'s/proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"/proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"\\\n            firebaseCrashlytics {\\\n                nativeSymbolUploadEnabled true\\\n                unstrippedNativeLibsDir "build\/intermediates\/merged_native_libs\/release\/out\/lib"\\\n            }/' android/app/build.gradle
+rm -f android/app/build.gradle??
+
 
 # Performance - classpath, plugin, dependency, import, init
 echo "Setting up Performance - package, gradle plugin"
