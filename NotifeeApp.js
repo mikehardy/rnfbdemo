@@ -10,7 +10,7 @@ import React, { useEffect } from "react";
 import { Button, Platform, StyleSheet, Text, View } from "react-native";
 import notifee, {
   AndroidLaunchActivityFlag,
-  IOSAuthorizationStatus,
+  AuthorizationStatus,
   EventType,
 } from "@notifee/react-native";
 
@@ -38,14 +38,14 @@ async function requestPermissions() {
   try {
     const settings = await notifee.requestPermission();
 
-    if (settings.authorizationStatus === IOSAuthorizationStatus.DENIED) {
+    if (settings.authorizationStatus === AuthorizationStatus.DENIED) {
       console.log("User denied permissions request");
     } else if (
-      settings.authorizationStatus === IOSAuthorizationStatus.AUTHORIZED
+      settings.authorizationStatus === AuthorizationStatus.AUTHORIZED
     ) {
       console.log("User granted permissions request");
     } else if (
-      settings.authorizationStatus === IOSAuthorizationStatus.PROVISIONAL
+      settings.authorizationStatus === AuthorizationStatus.PROVISIONAL
     ) {
       console.log("User provisionally granted permissions request");
     }
