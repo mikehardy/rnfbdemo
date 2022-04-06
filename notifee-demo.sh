@@ -4,9 +4,8 @@ set -e
 # Basic template create, notifee install, link
 \rm -fr notifeedemo
 
-RNVERSION=0.68.0
-
 echo "Testing react-native $RNVERSION + notifee current"
+RNVERSION=0.68.0
 npm_config_yes=true npx react-native init notifeedemo --version=$RNVERSION --skip-install
 cd notifeedemo
 
@@ -112,3 +111,20 @@ popd
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
 npx react-native run-android --no-jetifier
+
+# Test web
+npm_config_yes=true npx react-native init notifeewebdemo --template criszz77/luna --skip-install
+cd notifeewebdemo
+yarn
+yarn add https://github.com/invertase/notifee
+
+# A quirk of this example, sometimes we have local example-specific patches
+echo "Running any patches necessary to compile successfully"
+cp -rv ../patches .
+npm_config_yes=true npx patch-package
+
+# Copy in our demonstrator App.js
+echo "Copying demonstrator App.js"
+rm ./App.js && cp ../NotifeeApp.js ./src/App.tsx
+
+yarn build-web

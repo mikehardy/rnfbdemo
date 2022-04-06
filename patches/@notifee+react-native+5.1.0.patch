@@ -1,0 +1,876 @@
+diff --git a/node_modules/@notifee/react-native/dist/NotifeeApiModule.js b/node_modules/@notifee/react-native/dist/NotifeeApiModule.js
+index 9efb695..f17e1f1 100644
+--- a/node_modules/@notifee/react-native/dist/NotifeeApiModule.js
++++ b/node_modules/@notifee/react-native/dist/NotifeeApiModule.js
+@@ -8,6 +8,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
+ Object.defineProperty(exports, "__esModule", { value: true });
+ const react_native_1 = require("react-native");
+ const NotificationAndroid_1 = require("./types/NotificationAndroid");
++const Notification_1 = require("./types/Notification");
+ const NotifeeNativeModule_1 = __importDefault(require("./NotifeeNativeModule"));
+ const utils_1 = require("./utils");
+ const validateNotification_1 = __importDefault(require("./validators/validateNotification"));
+@@ -54,19 +55,28 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         }
+     }
+     getTriggerNotificationIds = () => {
+-        return this.native.getTriggerNotificationIds();
++        if (utils_1.isAndroid || utils_1.isIOS) {
++            return this.native.getTriggerNotificationIds();
++        }
++        return Promise.resolve([]);
+     };
+     getTriggerNotifications = () => {
+-        return this.native.getTriggerNotifications();
++        if (utils_1.isAndroid || utils_1.isIOS) {
++            return this.native.getTriggerNotifications();
++        }
++        return Promise.resolve([]);
+     };
+     getDisplayedNotifications = () => {
+-        return this.native.getDisplayedNotifications();
++        if (utils_1.isAndroid || utils_1.isIOS) {
++            return this.native.getDisplayedNotifications();
++        }
++        return Promise.resolve([]);
+     };
+     isChannelBlocked = (channelId) => {
+         if (!(0, utils_1.isString)(channelId)) {
+             throw new Error("notifee.isChannelBlocked(*) 'channelId' expected a string value.");
+         }
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
++        if (utils_1.isWeb || utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+             return Promise.resolve(false);
+         }
+         return this.native.isChannelBlocked(channelId);
+@@ -76,64 +86,82 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+             channelId;
+             throw new Error("notifee.isChannelCreated(*) 'channelId' expected a string value.");
+         }
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
++        if (utils_1.isWeb || utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+             return Promise.resolve(true);
+         }
+         return this.native.isChannelCreated(channelId);
+     };
+     cancelAllNotifications = (notificationIds, tag) => {
+-        if (notificationIds) {
+-            if (react_native_1.Platform.OS === 'android') {
+-                return this.native.cancelAllNotificationsWithIds(notificationIds, utils_1.NotificationType.ALL, tag);
++        if (utils_1.isAndroid || utils_1.isIOS) {
++            if (notificationIds) {
++                if (utils_1.isAndroid) {
++                    return this.native.cancelAllNotificationsWithIds(notificationIds, utils_1.NotificationType.ALL, tag);
++                }
++                return this.native.cancelAllNotificationsWithIds(notificationIds);
+             }
+-            return this.native.cancelAllNotificationsWithIds(notificationIds);
++            return this.native.cancelAllNotifications();
+         }
+-        return this.native.cancelAllNotifications();
++        return Promise.resolve();
+     };
+     cancelDisplayedNotifications = (notificationIds, tag) => {
+-        if (notificationIds) {
+-            if (react_native_1.Platform.OS === 'android') {
+-                return this.native.cancelAllNotificationsWithIds(notificationIds, utils_1.NotificationType.DISPLAYED, tag);
++        if (utils_1.isAndroid || utils_1.isIOS) {
++            if (notificationIds) {
++                if (utils_1.isAndroid) {
++                    return this.native.cancelAllNotificationsWithIds(notificationIds, utils_1.NotificationType.DISPLAYED, tag);
++                }
++                return this.native.cancelDisplayedNotificationsWithIds(notificationIds);
+             }
+-            return this.native.cancelDisplayedNotificationsWithIds(notificationIds);
++            return this.native.cancelDisplayedNotifications();
+         }
+-        return this.native.cancelDisplayedNotifications();
++        return Promise.resolve();
+     };
+     cancelTriggerNotifications = (notificationIds) => {
+-        if (notificationIds) {
+-            if (react_native_1.Platform.OS === 'android') {
+-                return this.native.cancelAllNotificationsWithIds(notificationIds, utils_1.NotificationType.TRIGGER, null);
++        if (utils_1.isAndroid || utils_1.isIOS) {
++            if (notificationIds) {
++                if (utils_1.isAndroid) {
++                    return this.native.cancelAllNotificationsWithIds(notificationIds, utils_1.NotificationType.TRIGGER, null);
++                }
++                return this.native.cancelTriggerNotificationsWithIds(notificationIds);
+             }
+-            return this.native.cancelTriggerNotificationsWithIds(notificationIds);
++            return this.native.cancelTriggerNotifications();
+         }
+-        return this.native.cancelTriggerNotifications();
++        return Promise.resolve();
+     };
+     cancelNotification = (notificationId, tag) => {
+         if (!(0, utils_1.isString)(notificationId)) {
+             throw new Error("notifee.cancelNotification(*) 'notificationId' expected a string value.");
+         }
+-        if (react_native_1.Platform.OS === 'android') {
++        if (utils_1.isAndroid) {
+             return this.native.cancelAllNotificationsWithIds([notificationId], utils_1.NotificationType.ALL, tag);
+         }
+-        return this.native.cancelNotification(notificationId);
++        if (utils_1.isIOS) {
++            return this.native.cancelNotification(notificationId);
++        }
++        return Promise.resolve();
+     };
+     cancelDisplayedNotification = (notificationId, tag) => {
+         if (!(0, utils_1.isString)(notificationId)) {
+             throw new Error("notifee.cancelDisplayedNotification(*) 'notificationId' expected a string value.");
+         }
+-        if (react_native_1.Platform.OS === 'android') {
++        if (utils_1.isAndroid) {
+             return this.native.cancelAllNotificationsWithIds([notificationId], utils_1.NotificationType.DISPLAYED, tag);
+         }
+-        return this.native.cancelDisplayedNotification(notificationId);
++        if (utils_1.isIOS) {
++            return this.native.cancelDisplayedNotification(notificationId);
++        }
++        return Promise.resolve();
+     };
+     cancelTriggerNotification = (notificationId) => {
+         if (!(0, utils_1.isString)(notificationId)) {
+             throw new Error("notifee.cancelTriggerNotification(*) 'notificationId' expected a string value.");
+         }
+-        if (react_native_1.Platform.OS === 'android') {
++        if (utils_1.isAndroid) {
+             return this.native.cancelAllNotificationsWithIds([notificationId], utils_1.NotificationType.TRIGGER, null);
+         }
+-        return this.native.cancelTriggerNotification(notificationId);
++        if (utils_1.isIOS) {
++            return this.native.cancelTriggerNotification(notificationId);
++        }
++        return Promise.resolve();
+     };
+     createChannel = (channel) => {
+         let options;
+@@ -143,15 +171,15 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         catch (e) {
+             throw new Error(`notifee.createChannel(*) ${e.message}`);
+         }
+-        if (utils_1.isIOS) {
+-            return Promise.resolve('');
+-        }
+-        if (this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve(options.id);
++        if (utils_1.isAndroid) {
++            if (this.native.ANDROID_API_LEVEL < 26) {
++                return Promise.resolve(options.id);
++            }
++            return this.native.createChannel(options).then(() => {
++                return options.id;
++            });
+         }
+-        return this.native.createChannel(options).then(() => {
+-            return options.id;
+-        });
++        return Promise.resolve('');
+     };
+     createChannels = (channels) => {
+         if (!(0, utils_1.isArray)(channels)) {
+@@ -166,10 +194,10 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         catch (e) {
+             throw new Error(`notifee.createChannels(*) 'channels' a channel is invalid: ${e.message}`);
+         }
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve();
++        if (utils_1.isAndroid && this.native.ANDROID_API_LEVEL >= 26) {
++            return this.native.createChannels(options);
+         }
+-        return this.native.createChannels(options);
++        return Promise.resolve();
+     };
+     createChannelGroup = (channelGroup) => {
+         let options;
+@@ -179,15 +207,15 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         catch (e) {
+             throw new Error(`notifee.createChannelGroup(*) ${e.message}`);
+         }
+-        if (this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve(options.id);
+-        }
+-        if (utils_1.isIOS) {
+-            return Promise.resolve('');
++        if (utils_1.isAndroid) {
++            if (this.native.ANDROID_API_LEVEL < 26) {
++                return Promise.resolve(options.id);
++            }
++            return this.native.createChannelGroup(options).then(() => {
++                return options.id;
++            });
+         }
+-        return this.native.createChannelGroup(options).then(() => {
+-            return options.id;
+-        });
++        return Promise.resolve('');
+     };
+     createChannelGroups = (channelGroups) => {
+         if (!(0, utils_1.isArray)(channelGroups)) {
+@@ -202,28 +230,28 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         catch (e) {
+             throw new Error(`notifee.createChannelGroups(*) 'channelGroups' a channel group is invalid: ${e.message}`);
+         }
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve();
++        if (utils_1.isAndroid && this.native.ANDROID_API_LEVEL >= 26) {
++            return this.native.createChannelGroups(options);
+         }
+-        return this.native.createChannelGroups(options);
++        return Promise.resolve();
+     };
+     deleteChannel = (channelId) => {
+         if (!(0, utils_1.isString)(channelId)) {
+             throw new Error("notifee.deleteChannel(*) 'channelId' expected a string value.");
+         }
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve();
++        if (utils_1.isAndroid && this.native.ANDROID_API_LEVEL >= 26) {
++            return this.native.deleteChannel(channelId);
+         }
+-        return this.native.deleteChannel(channelId);
++        return Promise.resolve();
+     };
+     deleteChannelGroup = (channelGroupId) => {
+         if (!(0, utils_1.isString)(channelGroupId)) {
+             throw new Error("notifee.deleteChannelGroup(*) 'channelGroupId' expected a string value.");
+         }
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve();
++        if (utils_1.isAndroid && this.native.ANDROID_API_LEVEL >= 26) {
++            return this.native.deleteChannelGroup(channelGroupId);
+         }
+-        return this.native.deleteChannelGroup(channelGroupId);
++        return Promise.resolve();
+     };
+     displayNotification = (notification) => {
+         let options;
+@@ -233,15 +261,18 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         catch (e) {
+             throw new Error(`notifee.displayNotification(*) ${e.message}`);
+         }
+-        return this.native.displayNotification(options).then(() => {
+-            return options.id;
+-        });
++        if (utils_1.isIOS || utils_1.isAndroid) {
++            return this.native.displayNotification(options).then(() => {
++                return options.id;
++            });
++        }
++        return Promise.resolve('');
+     };
+     openAlarmPermissionSettings = () => {
+-        if (utils_1.isIOS) {
+-            return Promise.resolve();
++        if (utils_1.isAndroid) {
++            return this.native.openAlarmPermissionSettings();
+         }
+-        return this.native.openAlarmPermissionSettings();
++        return Promise.resolve();
+     };
+     createTriggerNotification = (notification, trigger) => {
+         let options;
+@@ -258,42 +289,48 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         catch (e) {
+             throw new Error(`notifee.createTriggerNotification(*) ${e.message}`);
+         }
+-        return this.native.createTriggerNotification(options, triggerOptions).then(() => {
+-            return options.id;
+-        });
++        if (utils_1.isIOS || utils_1.isAndroid) {
++            return this.native.createTriggerNotification(options, triggerOptions).then(() => {
++                return options.id;
++            });
++        }
++        return Promise.resolve('');
+     };
+     getChannel = (channelId) => {
+         if (!(0, utils_1.isString)(channelId)) {
+             throw new Error("notifee.getChannel(*) 'channelId' expected a string value.");
+         }
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve(null);
++        if (utils_1.isAndroid && this.native.ANDROID_API_LEVEL >= 26) {
++            return this.native.getChannel(channelId);
+         }
+-        return this.native.getChannel(channelId);
++        return Promise.resolve(null);
+     };
+     getChannels = () => {
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve([]);
++        if (utils_1.isAndroid && this.native.ANDROID_API_LEVEL >= 26) {
++            return this.native.getChannels();
+         }
+-        return this.native.getChannels();
++        return Promise.resolve([]);
+     };
+     getChannelGroup = (channelGroupId) => {
+         if (!(0, utils_1.isString)(channelGroupId)) {
+             throw new Error("notifee.getChannelGroup(*) 'channelGroupId' expected a string value.");
+         }
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve(null);
++        if (utils_1.isAndroid || this.native.ANDROID_API_LEVEL >= 26) {
++            return this.native.getChannelGroup(channelGroupId);
+         }
+-        return this.native.getChannelGroup(channelGroupId);
++        return Promise.resolve(null);
+     };
+     getChannelGroups = () => {
+-        if (utils_1.isIOS || this.native.ANDROID_API_LEVEL < 26) {
+-            return Promise.resolve([]);
++        if (utils_1.isAndroid || this.native.ANDROID_API_LEVEL >= 26) {
++            return this.native.getChannelGroups();
+         }
+-        return this.native.getChannelGroups();
++        return Promise.resolve([]);
+     };
+     getInitialNotification = () => {
+-        return this.native.getInitialNotification();
++        if (utils_1.isIOS || utils_1.isAndroid) {
++            return this.native.getInitialNotification();
++        }
++        return Promise.resolve(null);
+     };
+     onBackgroundEvent = (observer) => {
+         if (!(0, utils_1.isFunction)(observer)) {
+@@ -316,10 +353,10 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         if (!(0, utils_1.isUndefined)(channelId) && !(0, utils_1.isString)(channelId)) {
+             throw new Error("notifee.openNotificationSettings(*) 'channelId' expected a string value.");
+         }
+-        if (utils_1.isIOS) {
+-            return Promise.resolve();
++        if (utils_1.isAndroid) {
++            return this.native.openNotificationSettings(channelId || null);
+         }
+-        return this.native.openNotificationSettings(channelId || null);
++        return Promise.resolve();
+     };
+     requestPermission = (permissions = {}) => {
+         if (utils_1.isAndroid) {
+@@ -342,39 +379,64 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+                         inAppNotificationSettings: 1,
+                         authorizationStatus,
+                     },
++                    web: {},
+                 };
+             });
+         }
+-        let options;
+-        try {
+-            options = (0, validateIOSPermissions_1.default)(permissions);
++        if (utils_1.isIOS) {
++            let options;
++            try {
++                options = (0, validateIOSPermissions_1.default)(permissions);
++            }
++            catch (e) {
++                throw new Error(`notifee.requestPermission(*) ${e.message}`);
++            }
++            return this.native
++                .requestPermission(options)
++                .then(({ authorizationStatus, ios, }) => {
++                return {
++                    authorizationStatus,
++                    ios,
++                    android: {
++                        alarm: NotificationAndroid_1.AndroidNotificationSetting.ENABLED,
++                    },
++                    web: {},
++                };
++            });
+         }
+-        catch (e) {
+-            throw new Error(`notifee.requestPermission(*) ${e.message}`);
+-        }
+-        return this.native
+-            .requestPermission(options)
+-            .then(({ authorizationStatus, ios, }) => {
+-            return {
+-                authorizationStatus,
+-                ios,
+-                android: {
+-                    alarm: NotificationAndroid_1.AndroidNotificationSetting.ENABLED,
+-                },
+-            };
++        // assume web
++        return Promise.resolve({
++            authorizationStatus: Notification_1.AuthorizationStatus.NOT_DETERMINED,
++            android: {
++                alarm: NotificationAndroid_1.AndroidNotificationSetting.ENABLED,
++            },
++            ios: {
++                alert: 1,
++                badge: 1,
++                criticalAlert: 1,
++                showPreviews: 1,
++                sound: 1,
++                carPlay: 1,
++                lockScreen: 1,
++                announcement: 1,
++                notificationCenter: 1,
++                inAppNotificationSettings: 1,
++                authorizationStatus: Notification_1.AuthorizationStatus.NOT_DETERMINED,
++            },
++            web: {},
+         });
+     };
+     registerForegroundService(runner) {
+         if (!(0, utils_1.isFunction)(runner)) {
+             throw new Error("notifee.registerForegroundService(_) 'runner' expected a function.");
+         }
+-        if (utils_1.isIOS) {
+-            return;
++        if (utils_1.isAndroid) {
++            registeredForegroundServiceTask = runner;
+         }
+-        registeredForegroundServiceTask = runner;
++        return;
+     }
+     setNotificationCategories = (categories) => {
+-        if (utils_1.isAndroid) {
++        if (!utils_1.isIOS) {
+             return Promise.resolve();
+         }
+         if (!(0, utils_1.isArray)(categories)) {
+@@ -392,7 +454,7 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         return this.native.setNotificationCategories(categories);
+     };
+     getNotificationCategories = () => {
+-        if (utils_1.isAndroid) {
++        if (!utils_1.isIOS) {
+             return Promise.resolve([]);
+         }
+         return this.native.getNotificationCategories();
+@@ -418,29 +480,53 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+                         inAppNotificationSettings: 1,
+                         authorizationStatus,
+                     },
++                    web: {},
++                };
++            });
++        }
++        if (utils_1.isIOS) {
++            return this.native
++                .getNotificationSettings()
++                .then(({ authorizationStatus, ios, }) => {
++                return {
++                    authorizationStatus,
++                    ios,
++                    android: {
++                        alarm: NotificationAndroid_1.AndroidNotificationSetting.ENABLED,
++                    },
+                 };
+             });
+         }
+-        return this.native
+-            .getNotificationSettings()
+-            .then(({ authorizationStatus, ios, }) => {
+-            return {
+-                authorizationStatus,
+-                ios,
+-                android: {
+-                    alarm: NotificationAndroid_1.AndroidNotificationSetting.ENABLED,
+-                },
+-            };
++        // assume web
++        return Promise.resolve({
++            authorizationStatus: Notification_1.AuthorizationStatus.NOT_DETERMINED,
++            android: {
++                alarm: NotificationAndroid_1.AndroidNotificationSetting.ENABLED,
++            },
++            ios: {
++                alert: 1,
++                badge: 1,
++                criticalAlert: 1,
++                showPreviews: 1,
++                sound: 1,
++                carPlay: 1,
++                lockScreen: 1,
++                announcement: 1,
++                notificationCenter: 1,
++                inAppNotificationSettings: 1,
++                authorizationStatus: Notification_1.AuthorizationStatus.NOT_DETERMINED,
++            },
++            web: {},
+         });
+     };
+     getBadgeCount = () => {
+-        if (utils_1.isAndroid) {
++        if (!utils_1.isIOS) {
+             return Promise.resolve(0);
+         }
+         return this.native.getBadgeCount();
+     };
+     setBadgeCount = (count) => {
+-        if (utils_1.isAndroid) {
++        if (!utils_1.isIOS) {
+             return Promise.resolve();
+         }
+         if (!(0, utils_1.isNumber)(count) || count < 0) {
+@@ -449,7 +535,7 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         return this.native.setBadgeCount(Math.round(count));
+     };
+     incrementBadgeCount = (incrementBy) => {
+-        if (utils_1.isAndroid) {
++        if (!utils_1.isIOS) {
+             return Promise.resolve();
+         }
+         let value = 1;
+@@ -462,7 +548,7 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         return this.native.incrementBadgeCount(Math.round(value));
+     };
+     decrementBadgeCount = (decrementBy) => {
+-        if (utils_1.isAndroid) {
++        if (!utils_1.isIOS) {
+             return Promise.resolve();
+         }
+         let value = 1;
+@@ -475,43 +561,43 @@ class NotifeeApiModule extends NotifeeNativeModule_1.default {
+         return this.native.decrementBadgeCount(Math.round(value));
+     };
+     isBatteryOptimizationEnabled = () => {
+-        if (utils_1.isIOS) {
++        if (!utils_1.isAndroid) {
+             return Promise.resolve(false);
+         }
+         return this.native.isBatteryOptimizationEnabled();
+     };
+     openBatteryOptimizationSettings = () => {
+-        if (utils_1.isIOS) {
++        if (!utils_1.isAndroid) {
+             return Promise.resolve();
+         }
+         return this.native.openBatteryOptimizationSettings();
+     };
+     getPowerManagerInfo = () => {
+-        if (utils_1.isIOS) {
+-            // iOS doesn't support this, so instead we
++        if (!utils_1.isAndroid) {
++            // only Android supports this, so instead we
+             // return a dummy response to allow the power manager
+-            // flow work the same on both iOS & Android
++            // flow work the same on all platforms
+             return Promise.resolve({
+-                manufacturer: 'apple',
++                manufacturer: react_native_1.Platform.OS,
+                 activity: null,
+             });
+         }
+         return this.native.getPowerManagerInfo();
+     };
+     openPowerManagerSettings = () => {
+-        if (utils_1.isIOS) {
++        if (!utils_1.isAndroid) {
+             return Promise.resolve();
+         }
+         return this.native.openPowerManagerSettings();
+     };
+     stopForegroundService = () => {
+-        if (utils_1.isIOS) {
++        if (!utils_1.isAndroid) {
+             return Promise.resolve();
+         }
+         return this.native.stopForegroundService();
+     };
+     hideNotificationDrawer = () => {
+-        if (utils_1.isIOS) {
++        if (!utils_1.isAndroid) {
+             return;
+         }
+         return this.native.hideNotificationDrawer();
+diff --git a/node_modules/@notifee/react-native/dist/NotifeeApiModule.js.map b/node_modules/@notifee/react-native/dist/NotifeeApiModule.js.map
+index 8265f52..e4577b3 100644
+--- a/node_modules/@notifee/react-native/dist/NotifeeApiModule.js.map
++++ b/node_modules/@notifee/react-native/dist/NotifeeApiModule.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"NotifeeApiModule.js","sourceRoot":"","sources":["../src/NotifeeApiModule.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"NotifeeApiModule.js","sourceRoot":"","sources":["../src/NotifeeApiModule.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.d.ts b/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.d.ts
+new file mode 100644
+index 0000000..1c9b28b
+--- /dev/null
++++ b/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.d.ts
+@@ -0,0 +1,12 @@
++import { EventEmitter, NativeModulesStatic } from 'react-native';
++export interface NativeModuleConfig {
++    version: string;
++    nativeModuleName: string;
++    nativeEvents: string[];
++}
++export default class NotifeeNativeModule {
++    private readonly _moduleConfig;
++    constructor(config: NativeModuleConfig);
++    get emitter(): EventEmitter;
++    get native(): NativeModulesStatic;
++}
+diff --git a/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.js b/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.js
+new file mode 100644
+index 0000000..1a52c07
+--- /dev/null
++++ b/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.js
+@@ -0,0 +1,17 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++const react_native_1 = require("react-native");
++class NotifeeNativeModule {
++    _moduleConfig;
++    constructor(config) {
++        this._moduleConfig = Object.assign({}, config);
++    }
++    get emitter() {
++        return new react_native_1.NativeEventEmitter();
++    }
++    get native() {
++        return {};
++    }
++}
++exports.default = NotifeeNativeModule;
++//# sourceMappingURL=NotifeeNativeModule.web.js.map
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.js.map b/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.js.map
+new file mode 100644
+index 0000000..1a1f94c
+--- /dev/null
++++ b/node_modules/@notifee/react-native/dist/NotifeeNativeModule.web.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"NotifeeNativeModule.web.js","sourceRoot":"","sources":["../src/NotifeeNativeModule.web.ts"],"names":[],"mappings":";;AAAA,+CAAqF;AAQrF,MAAqB,mBAAmB;IACrB,aAAa,CAAqB;IAEnD,YAAmB,MAA0B;QAC3C,IAAI,CAAC,aAAa,GAAG,MAAM,CAAC,MAAM,CAAC,EAAE,EAAE,MAAM,CAAC,CAAC;IACjD,CAAC;IAED,IAAW,OAAO;QAChB,OAAO,IAAI,iCAAkB,EAAE,CAAC;IAClC,CAAC;IAED,IAAW,MAAM;QACf,OAAO,EAAE,CAAC;IACZ,CAAC;CACF;AAdD,sCAcC"}
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/types/Notification.d.ts b/node_modules/@notifee/react-native/dist/types/Notification.d.ts
+index cc99b82..ffab929 100644
+--- a/node_modules/@notifee/react-native/dist/types/Notification.d.ts
++++ b/node_modules/@notifee/react-native/dist/types/Notification.d.ts
+@@ -1,6 +1,7 @@
+ import { IOSNotificationSettings, NotificationIOS } from './NotificationIOS';
+ import { NativeAndroidChannel, NativeAndroidChannelGroup, NotificationAndroid, AndroidLaunchActivityFlag } from './NotificationAndroid';
+ import { AndroidNotificationSettings, Trigger } from '..';
++import { WebNotificationSettings } from './NotificationWeb';
+ /**
+  * Interface for building a local notification for both Android & iOS devices.
+  *
+@@ -428,12 +429,17 @@ export interface NotificationSettings {
+     authorizationStatus: AuthorizationStatus;
+     /**
+      * Overall notification settings for the application in iOS.
+-     * On Android, this will be populated with default values
++     * On non-iOS platforms, this will be populated with default values
+      */
+     ios: IOSNotificationSettings;
+     /**
+      * Overall notification settings for the application in android.
+-     * On iOS, this will be populated with default values
++     * On non-Android platforms, this will be populated with default values
+      */
+     android: AndroidNotificationSettings;
++    /**
++     * Overall notification settings for the application in web.
++     * On non-Web platforms, this will be populated with default values
++     */
++    web: WebNotificationSettings;
+ }
+diff --git a/node_modules/@notifee/react-native/dist/types/Notification.js.map b/node_modules/@notifee/react-native/dist/types/Notification.js.map
+index 65c117a..1815930 100644
+--- a/node_modules/@notifee/react-native/dist/types/Notification.js.map
++++ b/node_modules/@notifee/react-native/dist/types/Notification.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"Notification.js","sourceRoot":"","sources":["../../src/types/Notification.ts"],"names":[],"mappings":";AAAA;;GAEG;;;AAkSH;;;;;GAKG;AACH,IAAY,SAoEX;AApED,WAAY,SAAS;IACnB;;;;;OAKG;IACH,gDAAY,CAAA;IAEZ;;;;;;;OAOG;IACH,mDAAa,CAAA;IAEb;;;;;;OAMG;IACH,2CAAS,CAAA;IAET;;OAEG;IACH,yDAAgB,CAAA;IAEhB;;;;;;OAMG;IACH,mDAAa,CAAA;IAEb;;;;;OAKG;IACH,uDAAe,CAAA;IAEf;;;;OAIG;IACH,+DAAmB,CAAA;IAEnB;;;;OAIG;IACH,2EAAyB,CAAA;IAEzB;;OAEG;IACH,yFAAgC,CAAA;AAClC,CAAC,EApEW,SAAS,GAAT,iBAAS,KAAT,iBAAS,QAoEpB;AA8ED;;;;;;GAMG;AACH,IAAY,mBAwBX;AAxBD,WAAY,mBAAmB;IAC7B;;;;;OAKG;IACH,kFAAmB,CAAA;IAEnB;;OAEG;IACH,iEAAU,CAAA;IAEV;;OAEG;IACH,yEAAc,CAAA;IAEd;;;OAGG;IACH,2EAAe,CAAA;AACjB,CAAC,EAxBW,mBAAmB,GAAnB,2BAAmB,KAAnB,2BAAmB,QAwB9B"}
+\ No newline at end of file
++{"version":3,"file":"Notification.js","sourceRoot":"","sources":["../../src/types/Notification.ts"],"names":[],"mappings":";AAAA;;GAEG;;;AAmSH;;;;;GAKG;AACH,IAAY,SAoEX;AApED,WAAY,SAAS;IACnB;;;;;OAKG;IACH,gDAAY,CAAA;IAEZ;;;;;;;OAOG;IACH,mDAAa,CAAA;IAEb;;;;;;OAMG;IACH,2CAAS,CAAA;IAET;;OAEG;IACH,yDAAgB,CAAA;IAEhB;;;;;;OAMG;IACH,mDAAa,CAAA;IAEb;;;;;OAKG;IACH,uDAAe,CAAA;IAEf;;;;OAIG;IACH,+DAAmB,CAAA;IAEnB;;;;OAIG;IACH,2EAAyB,CAAA;IAEzB;;OAEG;IACH,yFAAgC,CAAA;AAClC,CAAC,EApEW,SAAS,GAAT,iBAAS,KAAT,iBAAS,QAoEpB;AA8ED;;;;;;GAMG;AACH,IAAY,mBAwBX;AAxBD,WAAY,mBAAmB;IAC7B;;;;;OAKG;IACH,kFAAmB,CAAA;IAEnB;;OAEG;IACH,iEAAU,CAAA;IAEV;;OAEG;IACH,yEAAc,CAAA;IAEd;;;OAGG;IACH,2EAAe,CAAA;AACjB,CAAC,EAxBW,mBAAmB,GAAnB,2BAAmB,KAAnB,2BAAmB,QAwB9B"}
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/types/NotificationWeb.d.ts b/node_modules/@notifee/react-native/dist/types/NotificationWeb.d.ts
+new file mode 100644
+index 0000000..e18f3c5
+--- /dev/null
++++ b/node_modules/@notifee/react-native/dist/types/NotificationWeb.d.ts
+@@ -0,0 +1,5 @@
++/**
++ * Empty at the moment but will contain web-specific settings as needed
++ */
++export interface WebNotificationSettings {
++}
+diff --git a/node_modules/@notifee/react-native/dist/types/NotificationWeb.js b/node_modules/@notifee/react-native/dist/types/NotificationWeb.js
+new file mode 100644
+index 0000000..f760d76
+--- /dev/null
++++ b/node_modules/@notifee/react-native/dist/types/NotificationWeb.js
+@@ -0,0 +1,3 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++//# sourceMappingURL=NotificationWeb.js.map
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/types/NotificationWeb.js.map b/node_modules/@notifee/react-native/dist/types/NotificationWeb.js.map
+new file mode 100644
+index 0000000..9f132bf
+--- /dev/null
++++ b/node_modules/@notifee/react-native/dist/types/NotificationWeb.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"NotificationWeb.js","sourceRoot":"","sources":["../../src/types/NotificationWeb.ts"],"names":[],"mappings":""}
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/utils/index.d.ts b/node_modules/@notifee/react-native/dist/utils/index.d.ts
+index 21da2fb..6dc2e7b 100644
+--- a/node_modules/@notifee/react-native/dist/utils/index.d.ts
++++ b/node_modules/@notifee/react-native/dist/utils/index.d.ts
+@@ -4,6 +4,7 @@ export declare function isError(value: object): boolean;
+ export declare function objectHasProperty<T>(target: T, property: string | number | symbol): property is keyof T;
+ export declare const isIOS: boolean;
+ export declare const isAndroid: boolean;
++export declare const isWeb: boolean;
+ export declare function noop(): void;
+ export declare const kReactNativeNotifeeForegroundServiceHeadlessTask = "app.notifee.foreground-service-headless-task";
+ export declare const kReactNativeNotifeeNotificationEvent = "app.notifee.notification-event";
+diff --git a/node_modules/@notifee/react-native/dist/utils/index.js b/node_modules/@notifee/react-native/dist/utils/index.js
+index 48eb056..2b37bdd 100644
+--- a/node_modules/@notifee/react-native/dist/utils/index.js
++++ b/node_modules/@notifee/react-native/dist/utils/index.js
+@@ -17,7 +17,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
+     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+-exports.NotificationType = exports.kReactNativeNotifeeNotificationBackgroundEvent = exports.kReactNativeNotifeeNotificationEvent = exports.kReactNativeNotifeeForegroundServiceHeadlessTask = exports.noop = exports.isAndroid = exports.isIOS = exports.objectHasProperty = exports.isError = void 0;
++exports.NotificationType = exports.kReactNativeNotifeeNotificationBackgroundEvent = exports.kReactNativeNotifeeNotificationEvent = exports.kReactNativeNotifeeForegroundServiceHeadlessTask = exports.noop = exports.isWeb = exports.isAndroid = exports.isIOS = exports.objectHasProperty = exports.isError = void 0;
+ const react_native_1 = require("react-native");
+ __exportStar(require("./id"), exports);
+ __exportStar(require("./validate"), exports);
+@@ -35,6 +35,7 @@ function objectHasProperty(target, property) {
+ exports.objectHasProperty = objectHasProperty;
+ exports.isIOS = react_native_1.Platform.OS === 'ios';
+ exports.isAndroid = react_native_1.Platform.OS === 'android';
++exports.isWeb = react_native_1.Platform.OS === 'web';
+ function noop() {
+     // noop-🐈
+ }
+diff --git a/node_modules/@notifee/react-native/dist/utils/index.js.map b/node_modules/@notifee/react-native/dist/utils/index.js.map
+index 7c1c4aa..aa551bf 100644
+--- a/node_modules/@notifee/react-native/dist/utils/index.js.map
++++ b/node_modules/@notifee/react-native/dist/utils/index.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/utils/index.ts"],"names":[],"mappings":";AAAA;;GAEG;;;;;;;;;;;;;;;;;AAEH,+CAAwC;AAExC,uCAAqB;AACrB,6CAA2B;AAE3B,2DAA2D;AAC3D,SAAgB,OAAO,CAAC,KAAa;IACnC,IAAI,MAAM,CAAC,SAAS,CAAC,QAAQ,CAAC,IAAI,CAAC,KAAK,CAAC,KAAK,gBAAgB,EAAE;QAC9D,OAAO,IAAI,CAAC;KACb;IAED,OAAO,KAAK,YAAY,KAAK,CAAC;AAChC,CAAC;AAND,0BAMC;AAED,SAAgB,iBAAiB,CAC/B,MAAS,EACT,QAAkC;IAElC,OAAO,MAAM,CAAC,cAAc,CAAC,IAAI,CAAC,MAAM,EAAE,QAAQ,CAAC,CAAC;AACtD,CAAC;AALD,8CAKC;AAEY,QAAA,KAAK,GAAG,uBAAQ,CAAC,EAAE,KAAK,KAAK,CAAC;AAE9B,QAAA,SAAS,GAAG,uBAAQ,CAAC,EAAE,KAAK,SAAS,CAAC;AAEnD,SAAgB,IAAI;IAClB,UAAU;AACZ,CAAC;AAFD,oBAEC;AACY,QAAA,gDAAgD,GAC3D,8CAA8C,CAAC;AAEpC,QAAA,oCAAoC,GAAG,gCAAgC,CAAC;AAExE,QAAA,8CAA8C,GACzD,2CAA2C,CAAC;AAE9C,IAAY,gBAIX;AAJD,WAAY,gBAAgB;IAC1B,qDAAO,CAAA;IACP,iEAAa,CAAA;IACb,6DAAW,CAAA;AACb,CAAC,EAJW,gBAAgB,GAAhB,wBAAgB,KAAhB,wBAAgB,QAI3B"}
+\ No newline at end of file
++{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/utils/index.ts"],"names":[],"mappings":";AAAA;;GAEG;;;;;;;;;;;;;;;;;AAEH,+CAAwC;AAExC,uCAAqB;AACrB,6CAA2B;AAE3B,2DAA2D;AAC3D,SAAgB,OAAO,CAAC,KAAa;IACnC,IAAI,MAAM,CAAC,SAAS,CAAC,QAAQ,CAAC,IAAI,CAAC,KAAK,CAAC,KAAK,gBAAgB,EAAE;QAC9D,OAAO,IAAI,CAAC;KACb;IAED,OAAO,KAAK,YAAY,KAAK,CAAC;AAChC,CAAC;AAND,0BAMC;AAED,SAAgB,iBAAiB,CAC/B,MAAS,EACT,QAAkC;IAElC,OAAO,MAAM,CAAC,cAAc,CAAC,IAAI,CAAC,MAAM,EAAE,QAAQ,CAAC,CAAC;AACtD,CAAC;AALD,8CAKC;AAEY,QAAA,KAAK,GAAG,uBAAQ,CAAC,EAAE,KAAK,KAAK,CAAC;AAE9B,QAAA,SAAS,GAAG,uBAAQ,CAAC,EAAE,KAAK,SAAS,CAAC;AAEtC,QAAA,KAAK,GAAG,uBAAQ,CAAC,EAAE,KAAK,KAAK,CAAC;AAE3C,SAAgB,IAAI;IAClB,UAAU;AACZ,CAAC;AAFD,oBAEC;AACY,QAAA,gDAAgD,GAC3D,8CAA8C,CAAC;AAEpC,QAAA,oCAAoC,GAAG,gCAAgC,CAAC;AAExE,QAAA,8CAA8C,GACzD,2CAA2C,CAAC;AAE9C,IAAY,gBAIX;AAJD,WAAY,gBAAgB;IAC1B,qDAAO,CAAA;IACP,iEAAa,CAAA;IACb,6DAAW,CAAA;AACb,CAAC,EAJW,gBAAgB,GAAhB,wBAAgB,KAAhB,wBAAgB,QAI3B"}
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/validators/validateAndroidNotification.js b/node_modules/@notifee/react-native/dist/validators/validateAndroidNotification.js
+index 7a3e359..8238592 100644
+--- a/node_modules/@notifee/react-native/dist/validators/validateAndroidNotification.js
++++ b/node_modules/@notifee/react-native/dist/validators/validateAndroidNotification.js
+@@ -7,8 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ /*
+  * Copyright (c) 2016-present Invertase Limited
+  */
+-// @ts-ignore
+-const resolveAssetSource_1 = __importDefault(require("react-native/Libraries/Image/resolveAssetSource"));
++const react_native_1 = require("react-native");
+ const utils_1 = require("../utils");
+ const NotificationAndroid_1 = require("../types/NotificationAndroid");
+ const NotificationAndroid_2 = require("../types/NotificationAndroid");
+@@ -215,7 +214,7 @@ function validateAndroidNotification(android) {
+             throw new Error("'notification.android.largeIcon' expected a React Native ImageResource value or a valid string URL.");
+         }
+         if ((0, utils_1.isNumber)(android.largeIcon) || (0, utils_1.isObject)(android.largeIcon)) {
+-            const image = (0, resolveAssetSource_1.default)(android.largeIcon);
++            const image = react_native_1.Image.resolveAssetSource(android.largeIcon);
+             out.largeIcon = image.uri;
+         }
+         else {
+diff --git a/node_modules/@notifee/react-native/dist/validators/validateAndroidNotification.js.map b/node_modules/@notifee/react-native/dist/validators/validateAndroidNotification.js.map
+index 9110d34..ed46ba2 100644
+--- a/node_modules/@notifee/react-native/dist/validators/validateAndroidNotification.js.map
++++ b/node_modules/@notifee/react-native/dist/validators/validateAndroidNotification.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"validateAndroidNotification.js","sourceRoot":"","sources":["../../src/validators/validateAndroidNotification.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"validateAndroidNotification.js","sourceRoot":"","sources":["../../src/validators/validateAndroidNotification.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/validators/validateAndroidStyle.js b/node_modules/@notifee/react-native/dist/validators/validateAndroidStyle.js
+index 3ce5f74..2cbe7f6 100644
+--- a/node_modules/@notifee/react-native/dist/validators/validateAndroidStyle.js
++++ b/node_modules/@notifee/react-native/dist/validators/validateAndroidStyle.js
+@@ -1,15 +1,10 @@
+ "use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.validateAndroidMessagingStyle = exports.validateAndroidMessagingStyleMessage = exports.validateAndroidPerson = exports.validateAndroidInboxStyle = exports.validateAndroidBigTextStyle = exports.validateAndroidBigPictureStyle = void 0;
+ /*
+  * Copyright (c) 2016-present Invertase Limited
+  */
+-var __importDefault = (this && this.__importDefault) || function (mod) {
+-    return (mod && mod.__esModule) ? mod : { "default": mod };
+-};
+-Object.defineProperty(exports, "__esModule", { value: true });
+-exports.validateAndroidMessagingStyle = exports.validateAndroidMessagingStyleMessage = exports.validateAndroidPerson = exports.validateAndroidInboxStyle = exports.validateAndroidBigTextStyle = exports.validateAndroidBigPictureStyle = void 0;
+-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+-// @ts-ignore
+-const resolveAssetSource_1 = __importDefault(require("react-native/Libraries/Image/resolveAssetSource"));
++const react_native_1 = require("react-native");
+ const NotificationAndroid_1 = require("../types/NotificationAndroid");
+ const utils_1 = require("../utils");
+ /**
+@@ -26,7 +21,7 @@ function validateAndroidBigPictureStyle(style) {
+         picture: style.picture,
+     };
+     if ((0, utils_1.isNumber)(style.picture) || (0, utils_1.isObject)(style.picture)) {
+-        const image = (0, resolveAssetSource_1.default)(style.picture);
++        const image = react_native_1.Image.resolveAssetSource(style.picture);
+         out.picture = image.uri;
+     }
+     if ((0, utils_1.objectHasProperty)(style, 'largeIcon')) {
+@@ -37,7 +32,7 @@ function validateAndroidBigPictureStyle(style) {
+             throw new Error("'notification.android.style' BigPictureStyle: 'largeIcon' expected a React Native ImageResource value or a valid string URL.");
+         }
+         if ((0, utils_1.isNumber)(style.largeIcon) || (0, utils_1.isObject)(style.largeIcon)) {
+-            const image = (0, resolveAssetSource_1.default)(style.largeIcon);
++            const image = react_native_1.Image.resolveAssetSource(style.largeIcon);
+             out.largeIcon = image.uri;
+         }
+         else {
+diff --git a/node_modules/@notifee/react-native/dist/validators/validateAndroidStyle.js.map b/node_modules/@notifee/react-native/dist/validators/validateAndroidStyle.js.map
+index 3821060..94bbecf 100644
+--- a/node_modules/@notifee/react-native/dist/validators/validateAndroidStyle.js.map
++++ b/node_modules/@notifee/react-native/dist/validators/validateAndroidStyle.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"validateAndroidStyle.js","sourceRoot":"","sources":["../../src/validators/validateAndroidStyle.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"validateAndroidStyle.js","sourceRoot":"","sources":["../../src/validators/validateAndroidStyle.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/node_modules/@notifee/react-native/dist/validators/validateIOSAttachment.js b/node_modules/@notifee/react-native/dist/validators/validateIOSAttachment.js
+index d6a8237..97ad1dd 100644
+--- a/node_modules/@notifee/react-native/dist/validators/validateIOSAttachment.js
++++ b/node_modules/@notifee/react-native/dist/validators/validateIOSAttachment.js
+@@ -2,14 +2,11 @@
+ /*
+  * Copyright (c) 2016-present Invertase Limited
+  */
+-var __importDefault = (this && this.__importDefault) || function (mod) {
+-    return (mod && mod.__esModule) ? mod : { "default": mod };
+-};
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.validateThumbnailClippingRect = void 0;
+ // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+ // @ts-ignore
+-const resolveAssetSource_1 = __importDefault(require("react-native/Libraries/Image/resolveAssetSource"));
++const react_native_1 = require("react-native");
+ const utils_1 = require("../utils");
+ function validateIOSAttachment(attachment) {
+     if (!(0, utils_1.isObject)(attachment)) {
+@@ -24,7 +21,7 @@ function validateIOSAttachment(attachment) {
+         thumbnailHidden: false,
+     };
+     if ((0, utils_1.isNumber)(attachment.url) || (0, utils_1.isObject)(attachment.url)) {
+-        const image = (0, resolveAssetSource_1.default)(attachment.url);
++        const image = react_native_1.Image.resolveAssetSource(attachment.url);
+         out.url = image.uri;
+     }
+     if ((0, utils_1.objectHasProperty)(attachment, 'id') && !(0, utils_1.isUndefined)(attachment.id)) {
+diff --git a/node_modules/@notifee/react-native/dist/validators/validateIOSAttachment.js.map b/node_modules/@notifee/react-native/dist/validators/validateIOSAttachment.js.map
+index 68994e7..19b872c 100644
+--- a/node_modules/@notifee/react-native/dist/validators/validateIOSAttachment.js.map
++++ b/node_modules/@notifee/react-native/dist/validators/validateIOSAttachment.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"validateIOSAttachment.js","sourceRoot":"","sources":["../../src/validators/validateIOSAttachment.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"validateIOSAttachment.js","sourceRoot":"","sources":["../../src/validators/validateIOSAttachment.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
