@@ -215,13 +215,14 @@ npm_config_yes=true npx patch-package
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
 
-  echo "Installing pods and running iOS app"
+  echo "Installing pods and running iOS app in debug mode"
   npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
   npx react-native run-ios
 
   # Check iOS release mode compile
+  echo "Installing pods and running iOS app in release mode"
   npx react-native run-ios --configuration "Release"
 
   # Check catalyst build
@@ -248,6 +249,7 @@ if [ "$(uname)" == "Darwin" ]; then
     sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(SDKROOT)\/System\/iOSSupport\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
     rm -f ios/Podfile.??
 
+    echo "Installing pods and running iOS app in macCatalyst mode"
     npm_config_yes=true npx pod-install
 
     # Now run it with our mac device name as device target, that triggers catalyst build
@@ -278,6 +280,7 @@ if [ "$(uname)" == "Darwin" ]; then
   rm -f ios/Podfile.??
   npm_config_yes=true npx pod-install
 
+  echo "Installing pods and running iOS app in static frameworks mode"
   npx react-native run-ios
 
   # end of static frameworks workarounds + test
@@ -316,7 +319,7 @@ pushd android
 popd
 
 # Run it for Android (assumes you have an android emulator running)
-echo "Running android app"
+echo "Running android app in release mode"
 npx react-native run-android --variant release --no-jetifier
 
 # Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
@@ -327,4 +330,5 @@ popd
 
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
+echo "Running android app in debug mode"
 npx react-native run-android --no-jetifier

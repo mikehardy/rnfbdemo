@@ -96,7 +96,7 @@ sed -i -e $'s/universalApk false/universalApk true/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
 # Run it for Android (assumes you have an android emulator running)
-echo "Running android app"
+echo "Running android app in release mode"
 pushd android
 ./gradlew uninstallRelease
 popd
@@ -110,9 +110,11 @@ popd
 
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
+echo "Running android app in debug mode"
 npx react-native run-android --no-jetifier
 
 # Test web
+echo "Running android app in web mode"
 npm_config_yes=true npx react-native init notifeewebdemo --template criszz77/luna --skip-install
 cd notifeewebdemo
 yarn
