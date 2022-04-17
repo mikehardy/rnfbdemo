@@ -49,7 +49,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.0
+npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.1
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -77,8 +77,8 @@ rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'29.3.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.14.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'29.3.1'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.15.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.

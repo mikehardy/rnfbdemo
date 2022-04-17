@@ -5,7 +5,7 @@ set -e
 \rm -fr notifeedemo
 
 echo "Testing react-native $RNVERSION + notifee current"
-RNVERSION=0.68.0
+RNVERSION=0.68.1
 npm_config_yes=true npx react-native init notifeedemo --version=$RNVERSION --skip-install
 cd notifeedemo
 
