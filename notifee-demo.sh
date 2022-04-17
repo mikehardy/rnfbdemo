@@ -112,13 +112,14 @@ popd
 # I run it manually in testing when I have one, comment if you like
 echo "Running android app in debug mode"
 npx react-native run-android --no-jetifier
+cd ..
 
 # Test web
 echo "Running android app in web mode"
 npm_config_yes=true npx react-native init notifeewebdemo --template criszz77/luna --skip-install
 cd notifeewebdemo
 yarn
-yarn add https://github.com/invertase/notifee
+yarn add @notifee/react-native
 
 # A quirk of this example, sometimes we have local example-specific patches
 echo "Running any patches necessary to compile successfully"
@@ -127,6 +128,6 @@ npm_config_yes=true npx patch-package
 
 # Copy in our demonstrator App.js
 echo "Copying demonstrator App.js"
-rm ./App.js && cp ../NotifeeApp.js ./src/App.tsx
+rm -f ./src/App.tsx && cp ../NotifeeApp.js ./src/App.tsx
 
 yarn build-web
