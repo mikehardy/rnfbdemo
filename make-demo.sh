@@ -225,8 +225,8 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app in release mode"
   npx react-native run-ios --configuration "Release"
 
-  # Check catalyst build
-  if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
+  # Check catalyst build (but not on arm64 because it does not work there yet)
+  if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ] && ! [ "${arch_name}" = "arm64" ]; then
 
     echo "Adding macCatalyst entitlements file / build flags to Xcode project"
     cp ../rnfbdemo.entitlements ios/rnfbdemo/
