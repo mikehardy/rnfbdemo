@@ -1,0 +1,24 @@
+diff --git a/node_modules/react-native/scripts/.packager.env b/node_modules/react-native/scripts/.packager.env
+new file mode 100644
+index 0000000..361f5fb
+--- /dev/null
++++ b/node_modules/react-native/scripts/.packager.env
+@@ -0,0 +1 @@
++export RCT_METRO_PORT=8081
+diff --git a/node_modules/react-native/scripts/react_native_pods.rb b/node_modules/react-native/scripts/react_native_pods.rb
+index f2ceeda..fa3c311 100644
+--- a/node_modules/react-native/scripts/react_native_pods.rb
++++ b/node_modules/react-native/scripts/react_native_pods.rb
+@@ -131,10 +131,10 @@ end
+ def use_flipper!(versions = {}, configurations: ['Debug'])
+   versions['Flipper'] ||= '0.125.0'
+   versions['Flipper-Boost-iOSX'] ||= '1.76.0.1.11'
+-  versions['Flipper-DoubleConversion'] ||= '3.2.0'
++  versions['Flipper-DoubleConversion'] ||= '3.2.0.1'
+   versions['Flipper-Fmt'] ||= '7.1.7'
+   versions['Flipper-Folly'] ||= '2.6.10'
+-  versions['Flipper-Glog'] ||= '0.5.0.4'
++  versions['Flipper-Glog'] ||= '0.5.0.5'
+   versions['Flipper-PeerTalk'] ||= '0.0.4'
+   versions['Flipper-RSocket'] ||= '1.4.3'
+   versions['OpenSSL-Universal'] ||= '1.1.1100'

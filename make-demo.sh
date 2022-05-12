@@ -49,7 +49,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.1
+npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.2
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -225,8 +225,8 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app in release mode"
   npx react-native run-ios --configuration "Release"
 
-  # Check catalyst build (but not on arm64 because it does not work there yet)
-  if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ] && ! [ "${arch_name}" = "arm64" ]; then
+  # Check catalyst build
+  if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
 
     echo "Adding macCatalyst entitlements file / build flags to Xcode project"
     cp ../rnfbdemo.entitlements ios/rnfbdemo/
