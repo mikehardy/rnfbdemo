@@ -2,10 +2,10 @@
 set -e 
 
 # Basic template create, notifee install, link
-\rm -fr notifeedemo
+\rm -fr notifeedemo notifeewebdemo
 
 echo "Testing react-native $RNVERSION + notifee current"
-RNVERSION=0.68.1
+RNVERSION=0.68.2
 npm_config_yes=true npx react-native init notifeedemo --version=$RNVERSION --skip-install
 cd notifeedemo
 
@@ -40,17 +40,15 @@ rm -f android/build.gradle??
 #rm -f ios/Podfile??
 
 # old versions of metro has a problem with babel. Visible in really old react-native like 0.61.2
-MRNBP_VERSION=`npm_config_yes=true npx json -f package.json  'devDependencies.metro-react-native-babel-preset'`
+MRNBP_VERSION=$(npm_config_yes=true npx json -f package.json  'devDependencies.metro-react-native-babel-preset')
 if [ "$MRNBP_VERSION" == '^0.51.1' ]; then
   echo "Bumping old metro-react-native-babel-preset version to something that works with modern babel."
   yarn add metro-react-native-babel-preset@^0.59 --dev
 fi
 
-# This is the most basic integration - adding the package, adding the necessary Android local repository
+# This is the most basic integration - adding the package - local maven repo not needed with modern notifee
 echo "Adding Notifee app package"
 yarn add "@notifee/react-native"
-sed -i -e $'s/google()/google()\\\n        maven \{ url "$rootDir\/..\/node_modules\/@notifee\/react-native\/android\/libs" \}/' android/build.gradle
-rm -f android/build.gradle??
 
 # A general react-native Java build tweak - or gradle runs out of memory sometimes - not needed with RN68+
 #echo "Increasing memory available to gradle for android java build"
@@ -82,7 +80,7 @@ if [ "$(uname)" == "Darwin" ]; then
   npx react-native run-ios
 
   # Example-specific path workaround for poorly setup Android SDK environments
-  USER=`whoami`
+  USER=$(whoami)
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
 fi
 
@@ -130,4 +128,4 @@ npm_config_yes=true npx patch-package
 echo "Copying demonstrator App.js"
 rm -f ./src/App.tsx && cp ../NotifeeApp.js ./src/App.tsx
 
-yarn build-web
+yarn web
