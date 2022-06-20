@@ -77,8 +77,8 @@ rm -f android/app/build.gradle??
 
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'29.3.1'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'8.15.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'30.1.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'9.1.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
@@ -145,7 +145,7 @@ yarn add \
 # Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
 yarn add "@react-native-firebase/crashlytics"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.8.1"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.9.0"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
@@ -165,7 +165,7 @@ rm -f android/app/build.gradle??
 # App Distribution - classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
 yarn add "@react-native-firebase/app-distribution"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-appdistribution-gradle:3.0.0"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-appdistribution-gradle:3.0.2"/' android/build.gradle
 rm -f android/build.gradle??
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
@@ -187,8 +187,11 @@ echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMem
 # Hermes is available on both platforms and provides faster startup since it pre-parses javascript. Enable it.
 sed -i -e $'s/enableHermes: false/enableHermes: true/' android/app/build.gradle
 rm -f android/app/build.gradle??
-sed -i -e $'s/hermes_enabled => false/hermes_enabled => true/' ios/Podfile
-rm -f ios/Podfile??
+
+# Temporarily do *not* enable hermes on iOS because we require use_frameworks for firebase-ios-sdk v9 and Hermes does not work with it yet.
+# See https://github.com/facebook/react-native/pull/34030
+#sed -i -e $'s/hermes_enabled => false/hermes_enabled => true/' ios/Podfile
+#rm -f ios/Podfile??
 
 # Apple builds in general have a problem with architectures on Apple Silicon and Intel, and doing some exclusions should help
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
@@ -203,6 +206,21 @@ rm -f ios/Podfile??
 # This makes the iOS build much quieter. In particular libevent dependency, pulled in by react core / flipper items is ridiculously noisy.
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end/' ios/Podfile
 rm -f ios/Podfile??
+
+# Static frameworks does not work with flipper (yet) - toggle it off
+sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
+rm -f ios/Podfile.??
+sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
+rm -f ios/Podfile.??
+
+# This is how you configure react-native-firebase for static frameworks, required for firebase-ios-sdk v9:
+sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+rm -f ios/Podfile??
+
+# Another workaround needed for static framework build
+# https://github.com/facebook/react-native/issues/31149#issuecomment-800841668
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
+rm -f ios/Podfile.??
 
 # In case we have any patches
 echo "Running any patches necessary to compile successfully"
@@ -258,33 +276,6 @@ if [ "$(uname)" == "Darwin" ]; then
     # https://github.com/facebook/flipper/issues/3117#issuecomment-1072462848
     npx react-native run-ios --device "$(scutil --get ComputerName)"
   fi
-
-  #################################
-  # Check static frameworks compile
-
-  # Static frameworks does not work with hermes and flipper - toggle them both off again
-  sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
-  rm -f ios/Podfile.??
-  sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
-  rm -f ios/Podfile.??
-  sed -i -e $'s/hermes_enabled => true/hermes_enabled => false/' ios/Podfile
-  rm -f ios/Podfile??
-
-  # This is how you configure for static frameworks:
-  sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
-  rm -f ios/Podfile??
-
-  # Workaround needed for static framework build only, regular build is fine.
-  # https://github.com/facebook/react-native/issues/31149#issuecomment-800841668
-  sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
-  rm -f ios/Podfile.??
-  npm_config_yes=true npx pod-install
-
-  echo "Installing pods and running iOS app in static frameworks mode"
-  npx react-native run-ios
-
-  # end of static frameworks workarounds + test
-  #############################################
 
   # workaround for poorly setup Android SDK environments
   USER=$(whoami)
