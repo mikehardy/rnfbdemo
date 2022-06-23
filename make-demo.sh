@@ -49,7 +49,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx react-native init rnfbdemo --skip-install --version=0.68.2
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.69.0
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -59,6 +59,13 @@ fi
 
 # Now run our initial dependency install
 yarn
+
+# Our patches right now are all iOS, and alter pod items, run them before first pod install
+echo "Running any patches necessary to compile successfully"
+# - we have two patches for react-native 0.69.0 to make static framework compilation on iOS work w/Hermes
+cp -rv ../patches .
+npm_config_yes=true npx patch-package
+
 npm_config_yes=true npx pod-install
 
 # This is the most basic integration
@@ -78,7 +85,7 @@ rm -f android/app/build.gradle??
 # Allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
 echo "project.ext{set('react-native',[versions:[firebase:[bom:'30.1.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'9.1.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'9.2.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # This is a reference to a pre-built version of Firestore. It's a neat trick to speed up builds.
@@ -184,14 +191,9 @@ rm ./App.js && cp ../App.js ./App.js
 echo "Increasing memory available to gradle for android java build"
 echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
 
-# Hermes is available on both platforms and provides faster startup since it pre-parses javascript. Enable it.
-sed -i -e $'s/enableHermes: false/enableHermes: true/' android/app/build.gradle
-rm -f android/app/build.gradle??
-
-# Temporarily do *not* enable hermes on iOS because we require use_frameworks for firebase-ios-sdk v9 and Hermes does not work with it yet.
-# See https://github.com/facebook/react-native/pull/34030
-#sed -i -e $'s/hermes_enabled => false/hermes_enabled => true/' ios/Podfile
-#rm -f ios/Podfile??
+# Turn on Hermes for faster startup
+sed -i -e $'s/hermes_enabled => false/hermes_enabled => true/' ios/Podfile
+rm -f ios/Podfile??
 
 # Apple builds in general have a problem with architectures on Apple Silicon and Intel, and doing some exclusions should help
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
@@ -222,13 +224,11 @@ rm -f ios/Podfile??
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
 rm -f ios/Podfile.??
 
-# In case we have any patches
+# You have to re-run patch-package after yarn since it is not integrated into postinstall, so run it again
 echo "Running any patches necessary to compile successfully"
-# - we have one patch for react-native 0.68.0-rc.2 to make static framework compilation on iOS work
-# - we have one patch for @react-native-firebase/storage to make catalyst build flavor of iOS work that needs a PR
-# - there is a hard-coding of flipper pods below that will be unnecessary with react-native 0.68.0-rc.3+ when it's integrated upstream
-cp -rv ../patches .
+# - we have two patches for react-native 0.69.0 to make static framework compilation on iOS work w/Hermes
 npm_config_yes=true npx patch-package
+
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
