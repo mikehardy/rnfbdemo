@@ -117,20 +117,22 @@ fi
 
 # Set up python virtual environment so we can do some local mods to Xcode project with mod-pbxproj
 # FIXME need to verify that python3 exists (recommend brew) and has venv module installed
-echo "Setting up python virtual environment + mod-pbxproj for Xcode project edits"
-python3 -m venv virtualenv
-source virtualenv/bin/activate
-pip install pbxproj
+if [ "$(uname)" == "Darwin" ]; then
+  echo "Setting up python virtual environment + mod-pbxproj for Xcode project edits"
+  python3 -m venv virtualenv
+  source virtualenv/bin/activate
+  pip install pbxproj
 
-# set PRODUCT_BUNDLE_IDENTIFIER to com.rnfbdemo
-sed -i -e $'s/org.reactjs.native.example/com/' ios/rnfbdemo.xcodeproj/project.pbxproj
-rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
+  # set PRODUCT_BUNDLE_IDENTIFIER to com.rnfbdemo
+  sed -i -e $'s/org.reactjs.native.example/com/' ios/rnfbdemo.xcodeproj/project.pbxproj
+  rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
 
-# Add our Google Services file to the Xcode project
-pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/GoogleService-Info.plist --target rnfbdemo
+  # Add our Google Services file to the Xcode project
+  pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/GoogleService-Info.plist --target rnfbdemo
 
-# Toggle on iPad: add build flag: TARGETED_DEVICE_FAMILY = "1,2"
-pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo TARGETED_DEVICE_FAMILY "1,2"
+  # Toggle on iPad: add build flag: TARGETED_DEVICE_FAMILY = "1,2"
+  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo TARGETED_DEVICE_FAMILY "1,2"
+fi
 
 # From this point on we are adding optional modules
 # First set up all the modules that need no further config for the demo 
