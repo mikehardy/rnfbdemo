@@ -219,7 +219,7 @@ sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
 rm -f ios/Podfile.??
 
 # This is how you configure react-native-firebase for static frameworks, required for firebase-ios-sdk v9:
-sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  onfig = use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
 rm -f ios/Podfile??
 
 # Another workaround needed for static framework build
