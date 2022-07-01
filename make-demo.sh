@@ -49,7 +49,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.69.0
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.69.1
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -62,7 +62,7 @@ yarn
 
 # Our patches right now are all iOS, and alter pod items, run them before first pod install
 echo "Running any patches necessary to compile successfully"
-# - we have two patches for react-native 0.69.0 to make static framework compilation on iOS work w/Hermes
+# - we have two patches for react-native 0.69.1 to make static framework compilation on iOS work w/Hermes
 cp -rv ../patches .
 npm_config_yes=true npx patch-package
 
@@ -195,8 +195,8 @@ echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMem
 
 # Turn on Hermes for faster startup
 # FIXME - do not turn on hermes yet, it does not work with use_frameworks
-#sed -i -e $'s/hermes_enabled => flags\[\:hermes_enabled\]/hermes_enabled => true/' ios/Podfile
-#rm -f ios/Podfile??
+sed -i -e $'s/hermes_enabled => flags\[\:hermes_enabled\]/hermes_enabled => true/' ios/Podfile
+rm -f ios/Podfile??
 
 # Apple builds in general have a problem with architectures on Apple Silicon and Intel, and doing some exclusions should help
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
@@ -219,7 +219,7 @@ sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
 rm -f ios/Podfile.??
 
 # This is how you configure react-native-firebase for static frameworks, required for firebase-ios-sdk v9:
-sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  onfig = use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
 rm -f ios/Podfile??
 
 # Another workaround needed for static framework build
@@ -229,7 +229,7 @@ rm -f ios/Podfile.??
 
 # You have to re-run patch-package after yarn since it is not integrated into postinstall, so run it again
 echo "Running any patches necessary to compile successfully"
-# - we have two patches for react-native 0.69.0 to make static framework compilation on iOS work w/Hermes
+# - we have two patches for react-native 0.69.1 to make static framework compilation on iOS work w/Hermes
 npm_config_yes=true npx patch-package
 
 

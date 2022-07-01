@@ -7,7 +7,7 @@
  */
 
 import React, { Component } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View, StatusBar } from 'react-native';
 import firebase from '@react-native-firebase/app';
 import analytics from '@react-native-firebase/analytics';
 import appCheck from '@react-native-firebase/app-check';
@@ -35,28 +35,43 @@ const instructions = Platform.select({
 export default class App extends Component {
   render() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>React Native Firebase Build Demo</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
-        <Text>The following modules are installed natively and working:</Text>
-        {firebase.apps.length && <Text style={styles.module}>app()</Text>}
-        {analytics().native && <Text style={styles.module}>analytics()</Text>}
-        {appCheck().native && <Text style={styles.module}>appCheck()</Text>}
-        {appDistribution().native && <Text style={styles.module}>appDistribution()</Text>}
-        {auth().native && <Text style={styles.module}>auth()</Text>}
-        {crashlytics().native && <Text style={styles.module}>crashlytics()</Text>}
-        {database().native && <Text style={styles.module}>database()</Text>}
-        {dynamicLinks().native && <Text style={styles.module}>dynamicLinks()</Text>}
-        {firestore().native && <Text style={styles.module}>firestore()</Text>}
-        {functions().native && <Text style={styles.module}>functions()</Text>}
-        {inAppMessaging().native && <Text style={styles.module}>inAppMessaging()</Text>}
-        {installations().native && <Text style={styles.module}>installations()</Text>}
-        {messaging().native && <Text style={styles.module}>messaging()</Text>}
-        {perf().native && <Text style={styles.module}>perf()</Text>}
-        {remoteConfig().native && <Text style={styles.module}>remoteConfig()</Text>}
-        {storage().native && <Text style={styles.module}>storage()</Text>}
-      </View>
+      <>
+        <StatusBar barStyle='dark-content' />
+        <View style={styles.container}>
+          <Text style={styles.welcome}>React Native Firebase Build Demo</Text>
+          <Text style={styles.instructions}>To get started, edit App.js</Text>
+          <Text style={styles.instructions}>{instructions}</Text>
+          <Text>The following modules are installed natively and working:</Text>
+          {firebase.apps.length && <Text style={styles.module}>app()</Text>}
+          {analytics().native && <Text style={styles.module}>analytics()</Text>}
+          {appCheck().native && <Text style={styles.module}>appCheck()</Text>}
+          {appDistribution().native && (
+            <Text style={styles.module}>appDistribution()</Text>
+          )}
+          {auth().native && <Text style={styles.module}>auth()</Text>}
+          {crashlytics().native && (
+            <Text style={styles.module}>crashlytics()</Text>
+          )}
+          {database().native && <Text style={styles.module}>database()</Text>}
+          {dynamicLinks().native && (
+            <Text style={styles.module}>dynamicLinks()</Text>
+          )}
+          {firestore().native && <Text style={styles.module}>firestore()</Text>}
+          {functions().native && <Text style={styles.module}>functions()</Text>}
+          {inAppMessaging().native && (
+            <Text style={styles.module}>inAppMessaging()</Text>
+          )}
+          {installations().native && (
+            <Text style={styles.module}>installations()</Text>
+          )}
+          {messaging().native && <Text style={styles.module}>messaging()</Text>}
+          {perf().native && <Text style={styles.module}>perf()</Text>}
+          {remoteConfig().native && (
+            <Text style={styles.module}>remoteConfig()</Text>
+          )}
+          {storage().native && <Text style={styles.module}>storage()</Text>}
+        </View>
+      </>
     );
   }
 }
