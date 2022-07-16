@@ -49,7 +49,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.69.0
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.69.1
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -59,12 +59,6 @@ fi
 
 # Now run our initial dependency install
 yarn
-
-# Our patches right now are all iOS, and alter pod items, run them before first pod install
-echo "Running any patches necessary to compile successfully"
-# - we have two patches for react-native 0.69.0 to make static framework compilation on iOS work w/Hermes
-cp -rv ../patches .
-npm_config_yes=true npx patch-package
 
 npm_config_yes=true npx pod-install
 
@@ -222,6 +216,11 @@ rm -f ios/Podfile.??
 sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
 rm -f ios/Podfile??
 
+# Another workaround needed for static framework build - bitcode will not work with it, but that's okay, bitcode is deprecated
+# https://github.com/facebook/react-native/pull/34030#issuecomment-1171197734
+sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["ENABLE_BITCODE"] = "NO"\\\n      end\\\n    end/' ios/Podfile
+rm -f ios/Podfile??
+
 # Another workaround needed for static framework build
 # https://github.com/facebook/react-native/issues/31149#issuecomment-800841668
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
@@ -229,9 +228,7 @@ rm -f ios/Podfile.??
 
 # You have to re-run patch-package after yarn since it is not integrated into postinstall, so run it again
 echo "Running any patches necessary to compile successfully"
-# - we have two patches for react-native 0.69.0 to make static framework compilation on iOS work w/Hermes
 npm_config_yes=true npx patch-package
-
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
