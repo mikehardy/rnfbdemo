@@ -38,8 +38,13 @@ export default class App extends Component {
       <View style={styles.container}>
         <Text style={styles.welcome}>React Native Firebase Build Demo</Text>
         <Text style={styles.instructions}>To get started, edit App.js</Text>
+        <Text />
         <Text style={styles.instructions}>{instructions}</Text>
-        <Text>The following modules are installed natively and working:</Text>
+        <Text />
+        <Text>JSI Executor: {global.__jsiExecutorDescription}</Text>
+        <Text />
+        <Text>These firebase modules appear to be working:</Text>
+        <Text />
         {firebase.apps.length && <Text style={styles.module}>app()</Text>}
         {analytics().native && <Text style={styles.module}>analytics()</Text>}
         {appCheck().native && <Text style={styles.module}>appCheck()</Text>}
