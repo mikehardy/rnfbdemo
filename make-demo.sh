@@ -188,9 +188,10 @@ echo "Increasing memory available to gradle for android java build"
 echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
 
 # Turn on Hermes for faster startup
-# FIXME - do not turn on hermes yet, it does not work with use_frameworks
-#sed -i -e $'s/hermes_enabled => flags\[\:hermes_enabled\]/hermes_enabled => true/' ios/Podfile
-#rm -f ios/Podfile??
+sed -i -e $'s/hermes_enabled => flags\[\:hermes_enabled\]/hermes_enabled => true/' ios/Podfile
+rm -f ios/Podfile??
+sed -i -e $'s/enableHermes\: false/enableHermes\: true/' android/app/build.gradle
+rm -f android/app/build.gradle??
 
 # Apple builds in general have a problem with architectures on Apple Silicon and Intel, and doing some exclusions should help
 sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
