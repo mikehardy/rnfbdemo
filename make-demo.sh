@@ -187,9 +187,9 @@ rm ./App.js && cp ../App.js ./App.js
 echo "Increasing memory available to gradle for android java build"
 echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
 
-# Turn on Hermes for faster startup
-sed -i -e $'s/hermes_enabled => flags\[\:hermes_enabled\]/hermes_enabled => true/' ios/Podfile
-rm -f ios/Podfile??
+# Turn on Hermes for faster startup - but only for android, on ios it crashes in release and doesn't load HermesRuntime anyway?
+# sed -i -e $'s/hermes_enabled => flags\[\:hermes_enabled\]/hermes_enabled => true/' ios/Podfile
+# rm -f ios/Podfile??
 sed -i -e $'s/enableHermes\: false/enableHermes\: true/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
