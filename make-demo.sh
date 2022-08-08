@@ -49,7 +49,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.69.4
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.70.0-rc.3
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -188,23 +188,24 @@ echo "Increasing memory available to gradle for android java build"
 echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
 
 # Turn on Hermes for faster startup - but only for android, on ios it crashes in release and doesn't load HermesRuntime anyway?
-# sed -i -e $'s/hermes_enabled => flags\[\:hermes_enabled\]/hermes_enabled => true/' ios/Podfile
-# rm -f ios/Podfile??
-sed -i -e $'s/enableHermes\: false/enableHermes\: true/' android/app/build.gradle
-rm -f android/app/build.gradle??
+# FIXME for 0.70 - Hermes is now default on, turn it off if needed?
+sed -i -e $'s/hermes_enabled => true/hermes_enabled => false/' ios/Podfile
+rm -f ios/Podfile??
+# sed -i -e $'s/enableHermes\: false/enableHermes\: true/' android/app/build.gradle
+# rm -f android/app/build.gradle??
 
 # Apple builds in general have a problem with architectures on Apple Silicon and Intel, and doing some exclusions should help
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
+sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
 rm -f ios/Podfile.??
 
 # This is just a speed optimization, very optional, but asks xcodebuild to use clang and clang++ without the fully-qualified path
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
 # In that way you can install ccache or buildcache and get much faster compiles...
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end/' ios/Podfile
+sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end/' ios/Podfile
 rm -f ios/Podfile??
 
 # This makes the iOS build much quieter. In particular libevent dependency, pulled in by react core / flipper items is ridiculously noisy.
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end/' ios/Podfile
+sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end/' ios/Podfile
 rm -f ios/Podfile??
 
 # Static frameworks does not work with flipper (yet) - toggle it off
@@ -212,17 +213,17 @@ sed -i -e $'s/FlipperConfiguration.enabled/FlipperConfiguration.disabled/' ios/P
 rm -f ios/Podfile.??
 
 # This is how you configure react-native-firebase for static frameworks, required for firebase-ios-sdk v9:
-sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  config = use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks!\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
 rm -f ios/Podfile??
 
 # Another workaround needed for static framework build - bitcode will not work with it, but that's okay, bitcode is deprecated
 # https://github.com/facebook/react-native/pull/34030#issuecomment-1171197734
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["ENABLE_BITCODE"] = "NO"\\\n      end\\\n    end/' ios/Podfile
+sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["ENABLE_BITCODE"] = "NO"\\\n      end\\\n    end/' ios/Podfile
 rm -f ios/Podfile??
 
 # Another workaround needed for static framework build
 # https://github.com/facebook/react-native/issues/31149#issuecomment-800841668
-sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
+sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
 rm -f ios/Podfile.??
 
 # You have to re-run patch-package after yarn since it is not integrated into postinstall, so run it again
@@ -256,16 +257,9 @@ if [ "$(uname)" == "Darwin" ]; then
     pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo SUPPORTS_MACCATALYST YES
     # add build flag 				DEVELOPMENT_TEAM = 2W4T2B656C;
     pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEVELOPMENT_TEAM "$XCODE_DEVELOPMENT_TEAM"
-    # add build flag 				DEAD_CODE_STRIPPING = YES;
-    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEAD_CODE_STRIPPING YES
 
-    # Add necessary Podfile hack to sign resource bundles for macCatalyst local development
-    sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"\\\n        target.build_configurations.each do |config|\\\n          config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "-"\\\n        end\\\n      end\\\n    end/' ios/Podfile
-    rm -f ios/Podfile-e
-
-    # macCatalyst requires one extra path on linker line: '$(SDKROOT)/System/iOSSupport/usr/lib/swift'
-    sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'LIBRARY_SEARCH_PATHS\'] = [\'$(SDKROOT)\/usr\/lib\/swift\', \'$(SDKROOT)\/System\/iOSSupport\/usr\/lib\/swift\', \'$(inherited)\']\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
-    rm -f ios/Podfile.??
+    # Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
+    sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
 
     echo "Installing pods and running iOS app in macCatalyst mode"
     npm_config_yes=true npx pod-install
