@@ -49,7 +49,7 @@ if ! which yarn > /dev/null 2>&1; then
   exit 1
 fi
 
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.69.1
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.69.4
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -208,9 +208,7 @@ sed -i -e $'s/react_native_post_install(installer)/react_native_post_install(ins
 rm -f ios/Podfile??
 
 # Static frameworks does not work with flipper (yet) - toggle it off
-sed -i -e $'s/use_flipper/#use_flipper/' ios/Podfile
-rm -f ios/Podfile.??
-sed -i -e $'s/flipper_post_install/#flipper_post_install/' ios/Podfile
+sed -i -e $'s/FlipperConfiguration.enabled/FlipperConfiguration.disabled/' ios/Podfile
 rm -f ios/Podfile.??
 
 # This is how you configure react-native-firebase for static frameworks, required for firebase-ios-sdk v9:
@@ -315,7 +313,7 @@ echo "Running android app in release mode"
 npx react-native run-android --variant release --no-jetifier
 
 # Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
-sleep 10
+sleep 30
 pushd android
 ./gradlew uninstallRelease
 popd
