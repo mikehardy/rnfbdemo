@@ -271,9 +271,14 @@ if [ "$(uname)" == "Darwin" ]; then
 
     # Now run it with our mac device name as device target, that triggers catalyst build
     # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
-    # Also, this is still failing on an M1. Works on x86_64:
-    # https://github.com/facebook/flipper/issues/3117#issuecomment-1072462848
-    npx react-native run-ios --device "$(scutil --get ComputerName)"
+
+    # For some reason, the device id returned if you use the computer name is wrong.
+    # It is also wrong from ios-deploy or xcrun xctrace list devices
+    # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
+    CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
+
+    # WIP This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
+    npx react-native run-ios --udid "$CATALYST_DESTINATION"
   fi
 
   # workaround for poorly setup Android SDK environments
