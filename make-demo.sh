@@ -227,6 +227,7 @@ rm -f ios/Podfile.??
 
 # You have to re-run patch-package after yarn since it is not integrated into postinstall, so run it again
 echo "Running any patches necessary to compile successfully"
+cp -rv ../patches .
 npm_config_yes=true npx patch-package
 
 # Run the thing for iOS
