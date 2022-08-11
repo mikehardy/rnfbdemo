@@ -310,7 +310,7 @@ popd
 
 # Run it for Android (assumes you have an android emulator running)
 echo "Running android app in release mode"
-npx react-native run-android --variant release --no-jetifier
+npx react-native run-android --variant release
 
 # Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
 sleep 30
@@ -321,4 +321,4 @@ popd
 # may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
 echo "Running android app in debug mode"
-npx react-native run-android --no-jetifier
+npx react-native run-android
