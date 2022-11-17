@@ -62,7 +62,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.70.6
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.71.0-rc.3
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -74,7 +74,6 @@ fi
 yarn
 npm_config_yes=true npx pod-install
 
-
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
 
 # Required: This is the most basic part of the integration - include google services plugin and call to firebase init on iOS
@@ -83,7 +82,7 @@ yarn add "@react-native-firebase/app"
 echo "Adding basic iOS integration - AppDelegate import and config call"
 sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import <Firebase.h>/' ios/rnfbdemo/AppDelegate.m*
 rm -f ios/rnfbdemo/AppDelegate.m*-e
-sed -i -e $'s/RCTBridge \*bridge/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  RCTBridge \*bridge/' ios/rnfbdemo/AppDelegate.m*
+sed -i -e $'s/self.moduleName/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  self.moduleName/' ios/rnfbdemo/AppDelegate.m*
 rm -f ios/rnfbdemo/AppDelegate.m*-e
 echo "Adding basic java integration - gradle plugin dependency and call"
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.14"/' android/build.gradle
@@ -99,7 +98,7 @@ rm -f android/app/build.gradle??
 sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
 
 # Required Workaround: Static frameworks does not work with flipper - toggle it off (follow/vote: https://github.com/facebook/flipper/issues/3861)
-sed -i -e $'s/FlipperConfiguration.enabled/FlipperConfiguration.disabled/' ios/Podfile
+sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
 rm -f ios/Podfile.??
 
 # Required Workaround: bitcode will not work with static frameworks+hermes, but that's okay, bitcode is deprecated (details: https://github.com/facebook/react-native/pull/34030#issuecomment-1171197734)
@@ -240,9 +239,9 @@ rm -f ios/Podfile??
 sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end/' ios/Podfile
 rm -f ios/Podfile??
 
-# Test: Copy in our demonstrator App.js
-echo "Copying demonstrator App.js"
-rm ./App.js && cp ../App.js ./App.js
+# Test: Copy in our demonstrator App.tsx
+echo "Copying demonstrator App.tsx"
+rm ./App.tsx && cp ../App.tsx ./App.tsx
 
 # Test: You have to re-run patch-package after yarn since it is not integrated into postinstall, so run it again
 echo "Running any patches necessary to compile successfully"
@@ -256,13 +255,13 @@ if [ "$(uname)" == "Darwin" ]; then
   npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
-  npx react-native run-ios
+  NO_FLIPPER=1 npx react-native run-ios
 
   # Check iOS release mode compile
   echo "Installing pods and running iOS app in release mode"
   # Note: Flipper is disabled, but to make sure it is not included in release builds you have to set PRODUCTION=1 for release
   # https://github.com/reactwg/react-native-releases/discussions/26#discussioncomment-3398711
-  PRODUCTION=1  npx react-native run-ios --configuration "Release"
+  NO_FLIPPER=1 PRODUCTION=1 npx react-native run-ios --configuration "Release"
 
   # Optional: Check catalyst build
   if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
@@ -297,7 +296,7 @@ if [ "$(uname)" == "Darwin" ]; then
     CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
 
     # WIP This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
-    npx react-native run-ios --udid "$CATALYST_DESTINATION"
+    NO_FLIPPER=1 npx react-native run-ios --udid "$CATALYST_DESTINATION"
   fi
 
   # Optiona: workaround for poorly setup Android SDK environments on macs
