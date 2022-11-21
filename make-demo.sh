@@ -62,7 +62,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.70.5
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.70.6
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -199,7 +199,7 @@ rm -f android/app/build.gradle??
 # Optional: App Distribution - classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
 yarn add "@react-native-firebase/app-distribution"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-appdistribution-gradle:3.1.0"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-appdistribution-gradle:3.1.1"/' android/build.gradle
 rm -f android/build.gradle??
 
 # Required for Firestore - android build tweak - or gradle runs out of memory during the build
