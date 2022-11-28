@@ -196,7 +196,7 @@ sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\
 rm -f android/app/build.gradle??
 
 # Optional: App Distribution - classpath, plugin, dependency, import, init
-echo "Setting up Crashlytics - package, gradle plugin"
+echo "Setting up App Distribution - package, gradle plugin"
 yarn add "@react-native-firebase/app-distribution"
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-appdistribution-gradle:3.1.1"/' android/build.gradle
 rm -f android/build.gradle??
@@ -281,7 +281,7 @@ if [ "$(uname)" == "Darwin" ]; then
     pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEVELOPMENT_TEAM "$XCODE_DEVELOPMENT_TEAM"
     #################################################################################################
 
-    # Required for macCatalost: Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
+    # Required for macCatalyst: Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
     sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
 
     echo "Installing pods and running iOS app in macCatalyst mode"
