@@ -284,9 +284,6 @@ if [ "$(uname)" == "Darwin" ]; then
     # Required for macCatalyst: Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
     sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
 
-    # Temporary workaround for unclean Pods / build after switching to macCatalyst
-    \rm -fr ios/Pods ios/build
-
     echo "Installing pods and running iOS app in macCatalyst mode"
     npm_config_yes=true npx pod-install
 
