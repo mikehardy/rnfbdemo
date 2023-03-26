@@ -171,7 +171,7 @@ yarn add \
 # Optional: Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
 yarn add "@react-native-firebase/crashlytics"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.9.4"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.9.2"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
