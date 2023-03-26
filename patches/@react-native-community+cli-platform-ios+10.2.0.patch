@@ -1,15 +1,14 @@
 diff --git a/node_modules/@react-native-community/cli-platform-ios/build/commands/runIOS/index.js b/node_modules/@react-native-community/cli-platform-ios/build/commands/runIOS/index.js
-index 4ba8c86..2b5be7b 100644
+index a7296fb..51e598f 100644
 --- a/node_modules/@react-native-community/cli-platform-ios/build/commands/runIOS/index.js
 +++ b/node_modules/@react-native-community/cli-platform-ios/build/commands/runIOS/index.js
-@@ -124,10 +124,19 @@ function runIOS(_, ctx, args) {
+@@ -129,9 +129,18 @@ async function runIOS(_, ctx, args) {
+     return _cliTools().logger.error('The `device` and `udid` options are mutually exclusive.');
    }
- 
    if (args.udid) {
 -    const device = devices.find(d => d.udid === args.udid);
 +    let device = devices.find(d => d.udid === args.udid);
 +    console.error("device is: " + JSON.stringify(device))
- 
      if (!device) {
 -      return _cliTools().logger.error(`Could not find a device with udid: "${_chalk().default.bold(args.udid)}". ${printFoundDevices(devices)}`);
 +      // FIXME - on arm64 machines, the catalyst UDID returned by 'xcrun xctrace list devices' is not correct
@@ -22,5 +21,5 @@ index 4ba8c86..2b5be7b 100644
 +      _cliTools().logger.warn(`Could not find a device with udid: "${_chalk().default.bold(args.udid)}". ${printFoundDevices(devices)}`);
 +      _cliTools().logger.warn(`Running with provided udid anyway, and type "catalyst". 'xcodebuild' command may return error.`);
      }
- 
      if (device.type === 'simulator') {
+       return runOnSimulator(xcodeProject, scheme, args);
