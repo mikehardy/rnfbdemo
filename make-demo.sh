@@ -62,7 +62,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.71.2
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.71.4
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -82,7 +82,7 @@ yarn add "@react-native-firebase/app"
 echo "Adding basic iOS integration - AppDelegate import and config call"
 sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import <Firebase.h>/' ios/rnfbdemo/AppDelegate.m*
 rm -f ios/rnfbdemo/AppDelegate.m*-e
-sed -i -e $'s/self.moduleName/if ([FIRApp defaultApp] == nil) { [FIRApp configure]; }\\\n  self.moduleName/' ios/rnfbdemo/AppDelegate.m*
+sed -i -e $'s/self.moduleName/[FIRApp configure];\\\n  self.moduleName/' ios/rnfbdemo/AppDelegate.m*
 rm -f ios/rnfbdemo/AppDelegate.m*-e
 echo "Adding basic java integration - gradle plugin dependency and call"
 sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.15"/' android/build.gradle
@@ -99,14 +99,6 @@ sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use
 
 # Required Workaround: Static frameworks does not work with flipper - toggle it off (follow/vote: https://github.com/facebook/flipper/issues/3861)
 sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
-rm -f ios/Podfile.??
-
-# Required Workaround: bitcode will not work with static frameworks+hermes, but that's okay, bitcode is deprecated (details: https://github.com/facebook/react-native/pull/34030#issuecomment-1171197734)
-sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["ENABLE_BITCODE"] = "NO"\\\n      end\\\n    end/' ios/Podfile
-rm -f ios/Podfile??
-
-# Requried Workaround: Fix a react-native spec generation step ordering issue (https://github.com/facebook/react-native/issues/31149#issuecomment-800841668)
-sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    installer.pods_project.targets.each do |target|\\\n      if (target.name.eql?(\'FBReactNativeSpec\'))\\\n        target.build_phases.each do |build_phase|\\\n          if (build_phase.respond_to?(:name) \&\& build_phase.name.eql?(\'[CP-User] Generate Specs\'))\\\n            target.build_phases.move(build_phase, 0)\\\n          end\\\n        end\\\n      end\\\n    end/' ios/Podfile
 rm -f ios/Podfile.??
 #############################################################################################################
 
@@ -179,7 +171,7 @@ yarn add \
 # Optional: Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
 yarn add "@react-native-firebase/crashlytics"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.9.2"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.9.4"/' android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
@@ -198,7 +190,7 @@ rm -f android/app/build.gradle??
 # Optional: App Distribution - classpath, plugin, dependency, import, init
 echo "Setting up App Distribution - package, gradle plugin"
 yarn add "@react-native-firebase/app-distribution"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-appdistribution-gradle:3.2.0"/' android/build.gradle
+sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-appdistribution-gradle:4.0.0"/' android/build.gradle
 rm -f android/build.gradle??
 
 # Required for Firestore - android build tweak - or gradle runs out of memory during the build
@@ -216,8 +208,8 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 
 # Optional: allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'31.2.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'10.4.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'31.3.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'10.7.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # Optional: build performance - use pre-built version of Firestore - https://github.com/invertase/firestore-ios-sdk-frameworks
