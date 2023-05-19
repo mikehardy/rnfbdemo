@@ -1,0 +1,13 @@
+diff --git a/node_modules/@react-native-firebase/app-check/android/build.gradle b/node_modules/@react-native-firebase/app-check/android/build.gradle
+index 3a97bbd..e69abb0 100644
+--- a/node_modules/@react-native-firebase/app-check/android/build.gradle
++++ b/node_modules/@react-native-firebase/app-check/android/build.gradle
+@@ -90,7 +90,7 @@ dependencies {
+   api appProject
+   implementation platform("com.google.firebase:firebase-bom:${ReactNative.ext.getVersion('firebase', 'bom')}")
+   implementation 'com.google.firebase:firebase-appcheck-playintegrity'
+-  implementation "com.google.firebase:firebase-appcheck-safetynet"
++  implementation "com.google.firebase:firebase-appcheck-safetynet:16.1.2"
+   implementation "com.google.firebase:firebase-appcheck-debug"
+ }
+ 
