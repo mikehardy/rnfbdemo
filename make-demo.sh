@@ -62,7 +62,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.71.4
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.71.8
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -208,8 +208,8 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 
 # Optional: allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'32.0.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'10.9.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'32.1.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'10.10.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # Optional: build performance - use pre-built version of Firestore - https://github.com/invertase/firestore-ios-sdk-frameworks
