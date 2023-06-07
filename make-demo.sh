@@ -1,6 +1,15 @@
 #!/bin/bash
 set -e 
 
+RN_VER=0.72.1
+RNFB_VER=18.1.0
+FB_IOS_VER=10.11.0
+FB_ANDROID_VER=32.1.1
+FB_GRADLE_SERVICES_VER=4.3.15
+FB_GRADLE_PERF_VER=1.4.2
+FB_GRADLE_CRASH_VER=2.9.6
+FB_GRADLE_APP_DIST_VER=4.0.0
+
 #######################################################################################################
 #######################################################################################################
 # This whole section is test setup, and environment verification, it does not represent integration yet
@@ -33,7 +42,7 @@ if [ "$(uname)" == "Darwin" ]; then
   if [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
     printf "\n\n\n\n\n**********************************\n\n\n\n"
     printf "You must set XCODE_DEVELOPMENT_TEAM environment variable to your team id to test macCatalyst"
-    printf "Try running it like: XCODE_DEVELOPMENT_TEAM=2W4T123443 ./make-demo.sh (but with your id)"
+    printf "Try running it like: XCODE_DEVELOPMENT_TEAM=2W4T2B656C ./make-demo.sh (but with your id)"
     printf "Skipping macCatalyst test"
     printf "\n\n\n\n\n**********************************\n\n\n\n"
   fi
@@ -45,7 +54,7 @@ fi
 # Test: Basic template create, rnfb install, link
 \rm -fr rnfbdemo
 
-echo "Testing react-native current + react-native-firebase current + Firebase SDKs current"
+echo "Testing react-native ${RN_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
 if ! which yarn > /dev/null 2>&1; then
   echo "This script uses yarn, please install yarn (for example \`npm i yarn -g\` and re-try"
@@ -62,7 +71,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=0.71.8
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --version=${RN_VER}
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -78,14 +87,14 @@ npm_config_yes=true npx pod-install
 
 # Required: This is the most basic part of the integration - include google services plugin and call to firebase init on iOS
 echo "Adding react-native-firebase core app package"
-yarn add "@react-native-firebase/app"
+yarn add "@react-native-firebase/app@${RNFB_VER}"
 echo "Adding basic iOS integration - AppDelegate import and config call"
 sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import <Firebase.h>/' ios/rnfbdemo/AppDelegate.m*
 rm -f ios/rnfbdemo/AppDelegate.m*-e
 sed -i -e $'s/self.moduleName/[FIRApp configure];\\\n  self.moduleName/' ios/rnfbdemo/AppDelegate.m*
 rm -f ios/rnfbdemo/AppDelegate.m*-e
 echo "Adding basic java integration - gradle plugin dependency and call"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.gms:google-services:4.3.15"/' android/build.gradle
+sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.gms:google-services:${FB_GRADLE_SERVICES_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/apply plugin: "com.android.application"/apply plugin: "com.android.application"\\\napply plugin: "com.google.gms.google-services"/' android/app/build.gradle
 rm -f android/app/build.gradle??
@@ -155,23 +164,23 @@ fi
 # First set up all the modules that need no further config for the demo 
 echo "Adding packages: Analytics, App Check, Auth, Database, Dynamic Links, Firestore, Functions, In App Messaging, Installations, Messaging, ML, Remote Config, Storage"
 yarn add \
-  @react-native-firebase/analytics \
-  @react-native-firebase/app-check \
-  @react-native-firebase/auth \
-  @react-native-firebase/database \
-  @react-native-firebase/dynamic-links \
-  @react-native-firebase/firestore \
-  @react-native-firebase/functions \
-  @react-native-firebase/in-app-messaging \
-  @react-native-firebase/installations \
-  @react-native-firebase/messaging \
-  @react-native-firebase/remote-config \
-  @react-native-firebase/storage
+  @react-native-firebase/analytics@${RNFB_VER} \
+  @react-native-firebase/app-check@${RNFB_VER} \
+  @react-native-firebase/auth@${RNFB_VER} \
+  @react-native-firebase/database@${RNFB_VER} \
+  @react-native-firebase/dynamic-links@${RNFB_VER} \
+  @react-native-firebase/firestore@${RNFB_VER} \
+  @react-native-firebase/functions@${RNFB_VER} \
+  @react-native-firebase/in-app-messaging@${RNFB_VER} \
+  @react-native-firebase/installations@${RNFB_VER} \
+  @react-native-firebase/messaging@${RNFB_VER} \
+  @react-native-firebase/remote-config@${RNFB_VER} \
+  @react-native-firebase/storage@${RNFB_VER}
 
 # Optional: Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
-yarn add "@react-native-firebase/crashlytics"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-crashlytics-gradle:2.9.2"/' android/build.gradle
+yarn add "@react-native-firebase/crashlytics@${RNFB_VER}"
+sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:firebase-crashlytics-gradle:${FB_GRADLE_CRASH_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
 rm -f android/app/build.gradle??
@@ -180,22 +189,22 @@ rm -f android/app/build.gradle??
 
 # Optional: Performance - classpath, plugin, dependency, import, init
 echo "Setting up Performance - package, gradle plugin"
-yarn add "@react-native-firebase/perf"
+yarn add "@react-native-firebase/perf@${RNFB_VER}"
 rm -f android/app/build.gradle??
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:perf-plugin:1.4.2"/' android/build.gradle
+sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:perf-plugin:${FB_GRADLE_PERF_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
 # Optional: App Distribution - classpath, plugin, dependency, import, init
 echo "Setting up App Distribution - package, gradle plugin"
-yarn add "@react-native-firebase/app-distribution"
-sed -i -e $'s/dependencies {/dependencies {\\\n        classpath "com.google.firebase:firebase-appdistribution-gradle:4.0.0"/' android/build.gradle
+yarn add "@react-native-firebase/app-distribution@${RNFB_VER}"
+sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:firebase-appdistribution-gradle:${FB_GRADLE_APP_DIST_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
 
 # Required for Firestore - android build tweak - or gradle runs out of memory during the build
 echo "Increasing memory available to gradle for android java build"
-echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
+echo "org.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8" >> android/gradle.properties
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
@@ -208,8 +217,8 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 
 # Optional: allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'32.1.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'10.10.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'${FB_ANDROID_VER}'],],])}" >> android/build.gradle
+sed -i -e $"s/  target 'rnfbdemoTests' do/  \$FirebaseSDKVersion = '${FB_IOS_VER}'\n  target 'rnfbdemoTests' do/" ios/Podfile
 rm -f ios/Podfile??
 
 # Optional: build performance - use pre-built version of Firestore - https://github.com/invertase/firestore-ios-sdk-frameworks
@@ -298,10 +307,12 @@ fi
 
 # Test: make sure proguard and abi splits work
 echo "Configuring Android release build for ABI splits and code shrinking"
+# FIXME not sure this is present anymore in rn72?
 sed -i -e $'s/def enableSeparateBuildPerCPUArchitecture = false/def enableSeparateBuildPerCPUArchitecture = true/' android/app/build.gradle
 rm -f android/app/build.gradle??
 sed -i -e $'s/def enableProguardInReleaseBuilds = false/def enableProguardInReleaseBuilds = true/' android/app/build.gradle
 rm -f android/app/build.gradle??
+# FIXME not sure this is present anymore in rn72?
 sed -i -e $'s/universalApk false/universalApk true/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
