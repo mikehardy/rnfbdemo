@@ -262,7 +262,9 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app in release mode"
   # Note: Flipper is disabled, but to make sure it is not included in release builds you have to set PRODUCTION=1 for release
   # https://github.com/reactwg/react-native-releases/discussions/26#discussioncomment-3398711
-  NO_FLIPPER=1 PRODUCTION=1 npx react-native run-ios --configuration "Release"
+  # FIXME with RN0.72 I do not think PRODUCTION=1 is necessary anymore
+  #NO_FLIPPER=1 PRODUCTION=1 npx react-native run-ios --configuration "Release"
+  NO_FLIPPER=1 npx react-native run-ios --configuration "Release"
 
   # Optional: Check catalyst build
   if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
@@ -307,9 +309,10 @@ fi
 
 # Test: make sure proguard and abi splits work
 echo "Configuring Android release build for ABI splits and code shrinking"
-# FIXME not sure this is present anymore in rn72?
-sed -i -e $'s/def enableSeparateBuildPerCPUArchitecture = false/def enableSeparateBuildPerCPUArchitecture = true/' android/app/build.gradle
-rm -f android/app/build.gradle??
+# FIXME this is no longer a thing in RN72?
+# https://github.com/react-native-community/discussions-and-proposals/issues/602
+#sed -i -e $'s/def enableSeparateBuildPerCPUArchitecture = false/def enableSeparateBuildPerCPUArchitecture = true/' android/app/build.gradle
+#rm -f android/app/build.gradle??
 sed -i -e $'s/def enableProguardInReleaseBuilds = false/def enableProguardInReleaseBuilds = true/' android/app/build.gradle
 rm -f android/app/build.gradle??
 # FIXME not sure this is present anymore in rn72?
