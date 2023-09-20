@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.72.3
-RNFB_VER=18.3.0
-FB_IOS_VER=10.13.0
-FB_ANDROID_VER=32.2.2
+RN_VER=0.72.4
+RNFB_VER=18.4.0
+FB_IOS_VER=10.15.0
+FB_ANDROID_VER=32.3.1
 FB_GRADLE_SERVICES_VER=4.3.15
 FB_GRADLE_PERF_VER=1.4.2
-FB_GRADLE_CRASH_VER=2.9.8
+FB_GRADLE_CRASH_VER=2.9.9
 FB_GRADLE_APP_DIST_VER=4.0.0
 
 #######################################################################################################
