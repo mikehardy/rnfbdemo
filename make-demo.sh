@@ -81,7 +81,7 @@ fi
 
 # Now run our initial dependency install
 yarn
-npm_config_yes=true npx pod-install
+NO_FLIPPER=1 USE_FRAMEWORKS=static npm_config_yes=true npx pod-install
 
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
 
@@ -255,10 +255,11 @@ npm_config_yes=true npx patch-package
 if [ "$(uname)" == "Darwin" ]; then
 
   echo "Installing pods and running iOS app in debug mode"
-  npm_config_yes=true npx pod-install
+  NO_FLIPPER=1 USE_FRAMEWORKS=static npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
-  NO_FLIPPER=1 npx react-native run-ios
+  #CLEANUP? NO_FLIPPER=1 npx react-native run-ios
+  npx react-native run-ios
 
   # Check iOS release mode compile
   echo "Installing pods and running iOS app in release mode"
@@ -266,7 +267,8 @@ if [ "$(uname)" == "Darwin" ]; then
   # https://github.com/reactwg/react-native-releases/discussions/26#discussioncomment-3398711
   # FIXME with RN0.72 I do not think PRODUCTION=1 is necessary anymore
   #NO_FLIPPER=1 PRODUCTION=1 npx react-native run-ios --configuration "Release"
-  NO_FLIPPER=1 npx react-native run-ios --configuration "Release"
+  # CLEANUP2 NO_FLIPPER=1 npx react-native run-ios --mode "Release"
+  npx react-native run-ios --mode "Release"
 
   # Optional: Check catalyst build
   if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
@@ -290,7 +292,7 @@ if [ "$(uname)" == "Darwin" ]; then
     sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
 
     echo "Installing pods and running iOS app in macCatalyst mode"
-    npm_config_yes=true npx pod-install
+    NO_FLIPPER=1 USE_FRAMEWORKS=static npm_config_yes=true npx pod-install
 
     # Now run it with our mac device name as device target, that triggers catalyst build
     # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
@@ -301,7 +303,8 @@ if [ "$(uname)" == "Darwin" ]; then
     CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
 
     # WIP This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
-    NO_FLIPPER=1 npx react-native run-ios --udid "$CATALYST_DESTINATION"
+    #CLEANUP? NO_FLIPPER=1 npx react-native run-ios --udid "$CATALYST_DESTINATION"
+    npx react-native run-ios --udid "$CATALYST_DESTINATION"
   fi
 
   # Optiona: workaround for poorly setup Android SDK environments on macs
