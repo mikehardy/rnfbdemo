@@ -103,12 +103,14 @@ rm -f android/app/build.gradle??
 # Required: Static Frameworks linkage set up in cocoapods, and various related workarounds for compatibility.
 #############################################################################################################
 
+# CLEANUP - this is controlled now via environment variables when you run pod install:
+# NO_FLIPPER=1 USE_FRAMEWORKS=static
 # Required: turn on static frameworks with static linkage, and tell react-native-firebase that is how we are linking
-sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+#sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
 
 # Required Workaround: Static frameworks does not work with flipper - toggle it off (follow/vote: https://github.com/facebook/flipper/issues/3861)
-sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
-rm -f ios/Podfile.??
+#sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
+#rm -f ios/Podfile.??
 #############################################################################################################
 
 
@@ -227,17 +229,17 @@ rm -f ios/Podfile??
 #rm -f ios/Podfile??
 
 # Optional: Apple M1 workaround - builds may have a problem with architectures on Apple Silicon and Intel, some exclusions may help
-sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end/' ios/Podfile
+sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end\\\n/' ios/Podfile
 rm -f ios/Podfile.??
 
 # Optional: build performance optimization to use ccache - asks xcodebuild to use clang and clang++ without the fully-qualified path
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
 # In that way you can install ccache or buildcache and get much faster compiles...
-sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end/' ios/Podfile
+sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end\\\n/' ios/Podfile
 rm -f ios/Podfile??
 
 # Optional: Cleaner build logs - libevent pulled in by react core / flipper items are ridiculously noisy otherwise
-sed -i -e $'s/__apply_Xcode_12_5_M1_post_install_workaround(installer)/__apply_Xcode_12_5_M1_post_install_workaround(installer)\\\n    \\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end/' ios/Podfile
+sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end\\\n/' ios/Podfile
 rm -f ios/Podfile??
 
 # Test: Copy in our demonstrator App.tsx
