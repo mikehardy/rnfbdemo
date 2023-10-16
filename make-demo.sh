@@ -259,7 +259,7 @@ if [ "$(uname)" == "Darwin" ]; then
 
   # Check iOS debug mode compile
   #CLEANUP? NO_FLIPPER=1 npx react-native run-ios
-  npx react-native run-ios
+  NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --mode Debug
 
   # Check iOS release mode compile
   echo "Installing pods and running iOS app in release mode"
@@ -268,7 +268,8 @@ if [ "$(uname)" == "Darwin" ]; then
   # FIXME with RN0.72 I do not think PRODUCTION=1 is necessary anymore
   #NO_FLIPPER=1 PRODUCTION=1 npx react-native run-ios --configuration "Release"
   # CLEANUP2 NO_FLIPPER=1 npx react-native run-ios --mode "Release"
-  npx react-native run-ios --mode "Release"
+  #FIXME not working right now
+#  NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --mode Release
 
   # Optional: Check catalyst build
   if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
@@ -304,7 +305,7 @@ if [ "$(uname)" == "Darwin" ]; then
 
     # WIP This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
     #CLEANUP? NO_FLIPPER=1 npx react-native run-ios --udid "$CATALYST_DESTINATION"
-    npx react-native run-ios --udid "$CATALYST_DESTINATION"
+    NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
   fi
 
   # Optiona: workaround for poorly setup Android SDK environments on macs
@@ -334,7 +335,7 @@ if [ "$(uname -a | grep Linux | grep -c microsoft)" == "1" ]; then
   \rm -fr node_modules
   echo "To run the app use Windows Powershell in the rnfbdemo directory with these commands:"
   echo "npm i"
-  echo "npx react-native run-android"
+  echo "npx react-native run-android --mode debug"
   exit
 fi
 
@@ -345,7 +346,7 @@ popd
 
 # Test: Run it for Android (assumes you have an android emulator running)
 echo "Running android app in release mode"
-npx react-native run-android --variant release
+npx react-native run-android --mode release
 
 # Test: Let it start up, then uninstall it (otherwise ABI-split-generated version codes will prevent debug from installing)
 sleep 30
@@ -362,4 +363,4 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.kt??
 # Test: may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
 echo "Running android app in debug mode"
-npx react-native run-android
+npx react-native run-android --mode debug
