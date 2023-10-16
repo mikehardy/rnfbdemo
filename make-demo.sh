@@ -355,9 +355,9 @@ popd
 
 # Workaround flipper crash problem until Android Marshmallow (release 6+)
 # see https://github.com/facebook/flipper/issues/3572
-sed -i -e 's/^import android.app.Application;/import android.app.Application;\nimport android.os.Build;/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-sed -i -e 's/^    ReactNativeFlipper.initializeFlipper(this, getReactNativeHost().getReactInstanceManager());/    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {\n      ReactNativeFlipper.initializeFlipper(this, getReactNativeHost().getReactInstanceManager());\n    }/' android/app/src/main/java/com/rnfbdemo/MainApplication.java
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.java??
+sed -i -e 's/^import android.app.Application/import android.app.Application\nimport android.os.Build/' android/app/src/main/java/com/rnfbdemo/MainApplication.kt
+sed -i -e 's/^    ReactNativeFlipper.initializeFlipper(this, reactNativeHost.reactInstanceManager)/    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {\n      ReactNativeFlipper.initializeFlipper(this, reactNativeHost.reactInstanceManager)\n    }/' android/app/src/main/java/com/rnfbdemo/MainApplication.kt
+rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.kt??
 
 # Test: may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
