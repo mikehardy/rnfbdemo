@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.72.6
-RN_VER=0.73.0-rc.2
+RN_VER=0.73.0-rc.3
 RNFB_VER=18.6.1
 FB_IOS_VER=10.17.0
 FB_ANDROID_VER=32.5.0
@@ -269,8 +268,8 @@ if [ "$(uname)" == "Darwin" ]; then
   # FIXME with RN0.72 I do not think PRODUCTION=1 is necessary anymore
   #NO_FLIPPER=1 PRODUCTION=1 npx react-native run-ios --configuration "Release"
   # CLEANUP2 NO_FLIPPER=1 npx react-native run-ios --mode "Release"
-  #FIXME not working right now
-#  NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --mode Release
+  # FIXME this is not working anymore - hermes framework copy error / hermes-engine pod download / existence failure "Exit 65"
+  NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --mode Release
 
   # Optional: Check catalyst build
   if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
@@ -302,11 +301,12 @@ if [ "$(uname)" == "Darwin" ]; then
     # For some reason, the device id returned if you use the computer name is wrong.
     # It is also wrong from ios-deploy or xcrun xctrace list devices
     # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
-    CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
+    #CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
 
     # WIP This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
-    #CLEANUP? NO_FLIPPER=1 npx react-native run-ios --udid "$CATALYST_DESTINATION"
-    NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+    # CLEANUP? NO_FLIPPER=1 npx react-native run-ios --udid "$CATALYST_DESTINATION"
+    # FIXME this is not working anymore - fatal error: 'React/RCTComponentViewProtocol.h' file not found
+    #NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
   fi
 
   # Optiona: workaround for poorly setup Android SDK environments on macs
