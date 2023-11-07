@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.73.0-rc.3
+RN_VER=0.73.0-rc.4
 
 #######################################################################################################
 #######################################################################################################
@@ -87,7 +87,12 @@ sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use
 
 # Required Workaround: Static frameworks does not work with flipper - toggle it off (follow/vote: https://github.com/facebook/flipper/issues/3861)
 sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
-rm -f ios/Podfile.??
+rm -f ios/Podfile-e
+
+# We control our pod installation manually, and do not want react-native CLI doing it
+# Otherwise, sometimes we see compile errors disguised as pod installation errors
+sed -i -e $'s/automaticPodsInstallation/\/\/ automaticPodsInstallation/' react-native.config.js
+rm -f react-native.config.js-e
 #############################################################################################################
 
 
