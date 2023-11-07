@@ -2,13 +2,13 @@
 set -e 
 
 RN_VER=0.72.6
-RNFB_VER=18.5.0
-FB_IOS_VER=10.15.0
-FB_ANDROID_VER=32.3.1
-FB_GRADLE_SERVICES_VER=4.3.15
+RNFB_VER=18.6.1
+FB_IOS_VER=10.17.0
+FB_ANDROID_VER=32.5.0
+FB_GRADLE_SERVICES_VER=4.4.0
 FB_GRADLE_PERF_VER=1.4.2
 FB_GRADLE_CRASH_VER=2.9.9
-FB_GRADLE_APP_DIST_VER=4.0.0
+FB_GRADLE_APP_DIST_VER=4.0.1
 
 #######################################################################################################
 #######################################################################################################
