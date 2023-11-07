@@ -181,6 +181,7 @@ yarn add \
   @react-native-firebase/in-app-messaging@${RNFB_VER} \
   @react-native-firebase/installations@${RNFB_VER} \
   @react-native-firebase/messaging@${RNFB_VER} \
+  @react-native-firebase/ml@${RNFB_VER} \
   @react-native-firebase/remote-config@${RNFB_VER} \
   @react-native-firebase/storage@${RNFB_VER}
 
