@@ -307,12 +307,11 @@ if [ "$(uname)" == "Darwin" ]; then
     # For some reason, the device id returned if you use the computer name is wrong.
     # It is also wrong from ios-deploy or xcrun xctrace list devices
     # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
-    #CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
+    CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
 
     # WIP This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
     # CLEANUP? NO_FLIPPER=1 npx react-native run-ios --udid "$CATALYST_DESTINATION"
-    # FIXME this is not working anymore - fatal error: 'React/RCTComponentViewProtocol.h' file not found
-    #NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+    NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
   fi
 
   # Optiona: workaround for poorly setup Android SDK environments on macs
