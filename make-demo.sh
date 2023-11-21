@@ -195,7 +195,7 @@ rm -f android/build.gradle??
 
 # Required for Firestore - android build tweak - or gradle runs out of memory during the build
 echo "Increasing memory available to gradle for android java build"
-echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
+echo "org.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8" >> android/gradle.properties
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.
@@ -208,8 +208,8 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 
 # Optional: allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 echo "Adding upstream SDK overrides for precise version control"
-echo "project.ext{set('react-native',[versions:[firebase:[bom:'32.1.0'],],])}" >> android/build.gradle
-sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'10.10.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
+echo "project.ext{set('react-native',[versions:[firebase:[bom:'32.6.0'],],])}" >> android/build.gradle
+sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseSDKVersion = \'10.18.0\'\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 rm -f ios/Podfile??
 
 # Optional: build performance - use pre-built version of Firestore - https://github.com/invertase/firestore-ios-sdk-frameworks
