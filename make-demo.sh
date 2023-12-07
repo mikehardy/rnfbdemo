@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.73.0-rc.6
+RN_VER=0.73.0
 RNFB_VER=18.6.1
 FB_IOS_VER=10.18.0
 FB_ANDROID_VER=32.6.0
@@ -81,7 +81,7 @@ fi
 
 # Now run our initial dependency install
 yarn
-NO_FLIPPER=1 USE_FRAMEWORKS=static npm_config_yes=true npx pod-install
+npm_config_yes=true npx pod-install
 
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
 
@@ -103,14 +103,22 @@ rm -f android/app/build.gradle??
 # Required: Static Frameworks linkage set up in cocoapods, and various related workarounds for compatibility.
 #############################################################################################################
 
-# CLEANUP - this is controlled now via environment variables when you run pod install:
-# NO_FLIPPER=1 USE_FRAMEWORKS=static
+# You have two options here:
+# - One is to dynamically disable flipper and turn on static frameworks with environment variables at build time
+# - Two is to permanently disable flipper and turn on static frameworks with Podfile edits
+
+# The default way a new react-native app is built from template uses method One, environment variables.
+# I worry that some developer somewhere will not have these environment variables set correctly though,
+# causing an unexpected build failure.
+
+# So we choose option Two, where we permanently disable Flipper and enable static frameworks in the Podfile.
+
 # Required: turn on static frameworks with static linkage, and tell react-native-firebase that is how we are linking
-#sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
 
 # Required Workaround: Static frameworks does not work with flipper - toggle it off (follow/vote: https://github.com/facebook/flipper/issues/3861)
-#sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
-#rm -f ios/Podfile.??
+sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
+rm -f ios/Podfile.??
 
 # We control our pod installation manually, and do not want react-native CLI doing it
 # Otherwise, sometimes we see compile errors disguised as pod installation errors
@@ -151,6 +159,7 @@ fi
 if [ "$(uname)" == "Darwin" ]; then
   echo "Setting up python virtual environment + mod-pbxproj for Xcode project edits"
   python3 -m venv virtualenv
+  # shellcheck disable=SC1091
   source virtualenv/bin/activate
   pip install pbxproj
 
@@ -257,25 +266,21 @@ echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
 npm_config_yes=true npx patch-package
 
+# Start up the packager - for some reason not starting automatically at the moment...
+yarn start --no-interactive &
+
 # Test: Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
 
   echo "Installing pods and running iOS app in debug mode"
-  NO_FLIPPER=1 USE_FRAMEWORKS=static npm_config_yes=true npx pod-install
+  npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
-  #CLEANUP? NO_FLIPPER=1 npx react-native run-ios
-  NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --mode Debug
+  npx react-native run-ios --mode Debug
 
   # Check iOS release mode compile
   echo "Installing pods and running iOS app in release mode"
-  # Note: Flipper is disabled, but to make sure it is not included in release builds you have to set PRODUCTION=1 for release
-  # https://github.com/reactwg/react-native-releases/discussions/26#discussioncomment-3398711
-  # FIXME with RN0.72 I do not think PRODUCTION=1 is necessary anymore
-  #NO_FLIPPER=1 PRODUCTION=1 npx react-native run-ios --configuration "Release"
-  # CLEANUP2 NO_FLIPPER=1 npx react-native run-ios --mode "Release"
-  # FIXME this is not working anymore - hermes framework copy error / hermes-engine pod download / existence failure "Exit 65"
-  NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --mode Release
+  npx react-native run-ios --mode Release
 
   # Optional: Check catalyst build
   if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
@@ -299,7 +304,7 @@ if [ "$(uname)" == "Darwin" ]; then
     sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
 
     echo "Installing pods and running iOS app in macCatalyst mode"
-    NO_FLIPPER=1 USE_FRAMEWORKS=static npm_config_yes=true npx pod-install
+    npm_config_yes=true npx pod-install
 
     # Now run it with our mac device name as device target, that triggers catalyst build
     # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
@@ -309,26 +314,18 @@ if [ "$(uname)" == "Darwin" ]; then
     # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
     CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
 
-    # WIP This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
-    # CLEANUP? NO_FLIPPER=1 npx react-native run-ios --udid "$CATALYST_DESTINATION"
-    NO_FLIPPER=1 USE_FRAMEWORKS=static npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+    # FIXME This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
+    npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
   fi
 
-  # Optiona: workaround for poorly setup Android SDK environments on macs
+  # Optional: workaround for poorly setup Android SDK environments on macs
   USER=$(whoami)
   echo "sdk.dir=/Users/$USER/Library/Android/sdk" > android/local.properties
 fi
 
-# Test: make sure proguard and abi splits work
+# Test: make sure proguard works
 echo "Configuring Android release build for ABI splits and code shrinking"
-# FIXME this is no longer a thing in RN72?
-# https://github.com/react-native-community/discussions-and-proposals/issues/602
-#sed -i -e $'s/def enableSeparateBuildPerCPUArchitecture = false/def enableSeparateBuildPerCPUArchitecture = true/' android/app/build.gradle
-#rm -f android/app/build.gradle??
 sed -i -e $'s/def enableProguardInReleaseBuilds = false/def enableProguardInReleaseBuilds = true/' android/app/build.gradle
-rm -f android/app/build.gradle??
-# FIXME not sure this is present anymore in rn72?
-sed -i -e $'s/universalApk false/universalApk true/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
 # Test: If we are on WSL the user needs to now run it from the Windows side
