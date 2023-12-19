@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.73.0
-RNFB_VER=18.7.1
+RN_VER=0.73.1
+RNFB_VER=18.7.3
 FB_IOS_VER=10.19.0
-FB_ANDROID_VER=32.6.0
+FB_ANDROID_VER=32.7.0
 FB_GRADLE_SERVICES_VER=4.4.0
 FB_GRADLE_PERF_VER=1.4.2
 FB_GRADLE_CRASH_VER=2.9.9
@@ -122,8 +122,9 @@ rm -f ios/Podfile.??
 
 # We control our pod installation manually, and do not want react-native CLI doing it
 # Otherwise, sometimes we see compile errors disguised as pod installation errors
-sed -i -e $'s/automaticPodsInstallation/\/\/ automaticPodsInstallation/' react-native.config.js
-rm -f react-native.config.js-e
+# This was removed between 0.73.0 and 0.73.1
+#sed -i -e $'s/automaticPodsInstallation/\/\/ automaticPodsInstallation/' react-native.config.js
+#rm -f react-native.config.js-e
 #############################################################################################################
 
 
