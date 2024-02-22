@@ -1,0 +1,37 @@
+diff --git a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/createRun.js b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/createRun.js
+index 66780aa..9fcc5ed 100644
+--- a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/createRun.js
++++ b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/createRun.js
+@@ -176,9 +176,17 @@ const createRun = ({
+     return _cliTools().logger.error('The `device` and `udid` options are mutually exclusive.');
+   }
+   if (args.udid) {
+-    const device = devices.find(d => d.udid === args.udid);
++    let device = devices.find(d => d.udid === args.udid);
+     if (!device) {
+-      return _cliTools().logger.error(`Could not find a device with udid: "${_chalk().default.bold(args.udid)}". ${(0, _matchingDevice.printFoundDevices)(devices)}`);
++      // FIXME - on arm64 machines, the catalyst UDID returned by 'xcrun xctrace list devices' is not correct
++      //         xcodebuild will return an error indicating the UDID is unknown and offering a different one
++      //         you may obtain it by running xcodebuild with the UDID you think works then parse out the other one from the returned error:
++      // CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
++      //
++      // How to handle this? offer a command line to force udid (and type, so "catalyst" will launch the app correctly) ?
++      device = { "name":"unknown","udid":args.udid,"type":"catalyst"};
++      _cliTools().logger.warn(`Could not find a device with udid: "${_chalk().default.bold(args.udid)}".`);
++      _cliTools().logger.warn(`Running with provided udid anyway, and type "catalyst". 'xcodebuild' command may return error.`);
+     }
+     if (device.type === 'simulator') {
+       return (0, _runOnSimulator.runOnSimulator)(xcodeProject, platformName, mode, scheme, args, fallbackSimulator);
+diff --git a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/getBuildPath.js b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/getBuildPath.js
+index c04a5be..6c4edf5 100644
+--- a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/getBuildPath.js
++++ b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/getBuildPath.js
+@@ -33,7 +33,7 @@ async function getBuildPath(buildSettings, platform = 'ios', isCatalyst = false)
+     throw new (_cliTools().CLIError)('Failed to get product name.');
+   }
+   if (isCatalyst) {
+-    return _path().default.join(targetBuildDir, '-maccatalyst', executableFolderPath);
++    return _path().default.join(`${targetBuildDir}-maccatalyst`, executableFolderPath);
+   } else if (platform === 'macos') {
+     return _path().default.join(targetBuildDir, fullProductName);
+   } else {
