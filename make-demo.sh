@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.73.6
+RN_VER=0.74.0-rc.9
 RNFB_VER=19.2.2
 FB_IOS_VER=10.24.0
 FB_ANDROID_VER=32.8.1
@@ -284,6 +284,9 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app in release mode"
   npx react-native run-ios --mode Release
 
+  # New architecture enable: RCT_NEW_ARCH_ENABLED=1 env var then pod install
+
+
   # Optional: Check catalyst build
   if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
 
@@ -369,3 +372,6 @@ rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.kt??
 # I run it manually in testing when I have one, comment if you like
 echo "Running android app in debug mode"
 npx react-native run-android --mode debug
+
+
+# new architecture put this in android/gradle.properties +newArchEnabled=true
