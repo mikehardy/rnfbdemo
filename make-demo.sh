@@ -80,6 +80,7 @@ if [ -f Gemfile ]; then
 fi
 
 # Now run our initial dependency install
+touch yarn.lock
 yarn
 npm_config_yes=true npx pod-install
 
