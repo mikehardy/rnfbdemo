@@ -1,0 +1,13 @@
+diff --git a/node_modules/@react-native-firebase/crashlytics/react-native.config.js b/node_modules/@react-native-firebase/crashlytics/react-native.config.js
+index d2fbbc5..e1e017e 100644
+--- a/node_modules/@react-native-firebase/crashlytics/react-native.config.js
++++ b/node_modules/@react-native-firebase/crashlytics/react-native.config.js
+@@ -21,7 +21,7 @@ module.exports = {
+         scriptPhases: [
+           {
+             name: '[RNFB] Crashlytics Configuration',
+-            path: './ios_config.sh',
++            path: '../node_modules/@react-native-firebase/crashlytics/ios_config.sh',
+             execution_position: 'after_compile',
+             input_files: [
+               '${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}',
