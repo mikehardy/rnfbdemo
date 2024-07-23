@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.74.3
+RN_VER=0.75.0-rc.6
 RNFB_VER=20.3.0
 FB_IOS_VER=10.29.0
 FB_ANDROID_VER=33.1.2
@@ -71,7 +71,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx react-native@${RN_VER} init rnfbdemo --skip-install --skip-git-init --version=${RN_VER}
+npm_config_yes=true npx @react-native-community/cli@next init rnfbdemo --skip-install --skip-git-init --version=${RN_VER}
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
