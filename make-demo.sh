@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.75.4
+RN_VER=0.76.0-rc.6
 RNFB_VER=21.0.0
 FB_IOS_VER=11.3.0
 FB_ANDROID_VER=33.4.0
@@ -71,7 +71,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx react-native@${RN_VER} init rnfbdemo --skip-install --skip-git-init --version=${RN_VER}
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --skip-git-init --version=${RN_VER}
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -116,18 +116,6 @@ rm -f android/app/build.gradle??
 
 # Required: turn on static frameworks with static linkage, and tell react-native-firebase that is how we are linking
 sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
-
-# Required Workaround: Static frameworks does not work with flipper - toggle it off (follow/vote: https://github.com/facebook/flipper/issues/3861)
-sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
-rm -f ios/Podfile.??
-
-# We control our pod installation manually, and do not want react-native CLI doing it
-# Otherwise, sometimes we see compile errors disguised as pod installation errors
-# This was removed between 0.73.0 and 0.73.1
-#sed -i -e $'s/automaticPodsInstallation/\/\/ automaticPodsInstallation/' react-native.config.js
-#rm -f react-native.config.js-e
-#############################################################################################################
-
 
 # Required: copy your Firebase config files in - you must supply them, downloaded from firebase web console
 echo "For this demo to work, you must create an \`rnfbdemo\` project in your firebase console,"
@@ -245,17 +233,13 @@ rm -f ios/Podfile??
 #sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseFirestoreExcludeLeveldb = true\\\n  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 #rm -f ios/Podfile??
 
-# Optional: Apple M1 workaround - builds may have a problem with architectures on Apple Silicon and Intel, some exclusions may help
-sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.aggregate_targets.each do |aggregate_target|\\\n      aggregate_target.user_project.native_targets.each do |target|\\\n        target.build_configurations.each do |config|\\\n          config.build_settings[\'ONLY_ACTIVE_ARCH\'] = \'YES\'\\\n          config.build_settings[\'EXCLUDED_ARCHS\'] = \'i386\'\\\n        end\\\n      end\\\n      aggregate_target.user_project.save\\\n    end\\\n/' ios/Podfile
-rm -f ios/Podfile.??
-
 # Optional: build performance optimization to use ccache - asks xcodebuild to use clang and clang++ without the fully-qualified path
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
 # In that way you can install ccache or buildcache and get much faster compiles...
 sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end\\\n/' ios/Podfile
 rm -f ios/Podfile??
 
-# Optional: Cleaner build logs - libevent pulled in by react core / flipper items are ridiculously noisy otherwise
+# Optional: Cleaner build logs - libevent pulled in by react core items are ridiculously noisy otherwise
 sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end\\\n/' ios/Podfile
 rm -f ios/Podfile??
 
@@ -267,9 +251,6 @@ rm ./App.tsx && cp ../App.tsx ./App.tsx
 echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
 npm_config_yes=true npx patch-package
-
-# Start up the packager - for some reason not starting automatically at the moment...
-yarn start --no-interactive &
 
 # Test: Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
@@ -362,12 +343,6 @@ sleep 30
 pushd android
 ./gradlew uninstallRelease
 popd
-
-# Workaround flipper crash problem until Android Marshmallow (release 6+)
-# see https://github.com/facebook/flipper/issues/3572
-sed -i -e 's/^import android.app.Application/import android.app.Application\nimport android.os.Build/' android/app/src/main/java/com/rnfbdemo/MainApplication.kt
-sed -i -e 's/^    ReactNativeFlipper.initializeFlipper(this, reactNativeHost.reactInstanceManager)/    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {\n      ReactNativeFlipper.initializeFlipper(this, reactNativeHost.reactInstanceManager)\n    }/' android/app/src/main/java/com/rnfbdemo/MainApplication.kt
-rm -f android/app/src/main/java/com/rnfbdemo/MainApplication.kt??
 
 # Test: may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
