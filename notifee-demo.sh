@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.75.4
-NOTIFEE_VER=9.1.1
+RN_VER=0.76.0
+NOTIFEE_VER=9.1.2
 
 # Basic template create, notifee install, link
 \rm -fr notifeedemo notifeewebdemo
 
 echo "Testing react-native ${RN_VER} + notifee ${NOTIFEE_VER}"
-npm_config_yes=true npx react-native@${RN_VER} init notifeedemo --skip-install --skip-git-init --version=${RN_VER}
+npm_config_yes=true npx @react-native-community/cli init notifeedemo --skip-install --skip-git-init --version=${RN_VER}
 cd notifeedemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -33,7 +33,7 @@ yarn add "@notifee/react-native@${NOTIFEE_VER}"
 sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["CC"] = "clang"\\\n        config.build_settings["LD"] = "clang"\\\n        config.build_settings["CXX"] = "clang++"\\\n        config.build_settings["LDPLUSPLUS"] = "clang++"\\\n      end\\\n    end\\\n/' ios/Podfile
 rm -f ios/Podfile??
 
-# Optional: Cleaner build logs - libevent pulled in by react core / flipper items are ridiculously noisy otherwise
+# Optional: Cleaner build logs - libevent pulled in by react core items are ridiculously noisy otherwise
 sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end\\\n/' ios/Podfile
 rm -f ios/Podfile??
 
@@ -48,14 +48,16 @@ npm_config_yes=true npx patch-package
 
 # Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
+
   echo "Installing pods and running iOS app"
+  pod repo update
   npm_config_yes=true npx pod-install
   # Check iOS debug mode compile
-  npx react-native run-ios --mode Debug
+  npx react-native run-ios --mode Debug --simulator "iPhone 16"
 
   # Check iOS release mode compile
   echo "Installing pods and running iOS app in release mode"
-  npx react-native run-ios --mode Release
+  npx react-native run-ios --mode Release --simulator "iPhone 16"
 
   # New architecture enable: RCT_NEW_ARCH_ENABLED=1 env var then pod install
 
