@@ -263,7 +263,7 @@ rm -f ios/Podfile??
 echo "Copying demonstrator App.tsx"
 rm ./App.tsx && cp ../App.tsx ./App.tsx
 
-# Test: You have to re-run patch-package after yarn since it is not integrated into postinstall, so run it again
+# Test: You have to re-run patch-package after yarn since it is not integrated into postinstall
 echo "Running any patches necessary to compile successfully"
 cp -rv ../patches .
 npm_config_yes=true npx patch-package
