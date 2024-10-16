@@ -279,11 +279,11 @@ if [ "$(uname)" == "Darwin" ]; then
   npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
-  npx react-native run-ios --mode Debug
+  npx react-native run-ios --mode Debug --simulator "iPhone 16"
 
   # Check iOS release mode compile
   echo "Installing pods and running iOS app in release mode"
-  npx react-native run-ios --mode Release
+  npx react-native run-ios --mode Release --simulator "iPhone 16"
 
   # New architecture enable: RCT_NEW_ARCH_ENABLED=1 env var then pod install
 
