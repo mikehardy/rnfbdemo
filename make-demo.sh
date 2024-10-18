@@ -259,6 +259,16 @@ if [ "$(uname)" == "Darwin" ]; then
   pod repo update
   npm_config_yes=true npx pod-install
 
+  # There is some bug right now with rn76 + leveldb-library
+  # the symbol `std::memory_order_relaxed` is turning up as `std::memory_order::memory_order_relaxed`
+  # but only on lines 840 and 857 of env_posix.cc, surrounded by NDEBUG preprocessor
+  # No easy reason during initial investigation, deferring deeper investigation, using this workaround:
+  ENV_POSIX_CC="ios/Pods/leveldb-library/util/env_posix.cc"
+  chmod +w $ENV_POSIX_CC
+  sed -i -e $'s/std::memory_order::memory_order_relaxed/std::memory_order_relaxed/' $ENV_POSIX_CC
+  rm -f ${ENV_POSIX_CC}??
+
+
   # Check iOS debug mode compile
   npx react-native run-ios --mode Debug --simulator "iPhone 16"
 
