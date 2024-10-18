@@ -2,7 +2,7 @@
 set -e 
 
 RN_VER=0.75.4
-NOTIFEE_VER=9.1.0
+NOTIFEE_VER=9.1.1
 
 # Basic template create, notifee install, link
 \rm -fr notifeedemo notifeewebdemo
