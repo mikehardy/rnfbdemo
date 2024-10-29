@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.76.0
+RN_VER=0.76.1
 RNFB_VER=21.2.0
 FB_IOS_VER=11.4.2
 FB_ANDROID_VER=33.5.1
@@ -258,16 +258,6 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app in debug mode"
   pod repo update
   npm_config_yes=true npx pod-install
-
-  # rn76 defines NDEBUG in iOS builds now by default
-  # leveldb-library had two invalid symbols guarded by IFDEFs for that symbol that are unmasked now
-  # Will be solved when upstream PR is merged and released:
-  # https://github.com/firebase/leveldb/pull/15
-  ENV_POSIX_CC="ios/Pods/leveldb-library/util/env_posix.cc"
-  chmod +w $ENV_POSIX_CC
-  sed -i -e $'s/std::memory_order::memory_order_relaxed/std::memory_order_relaxed/' $ENV_POSIX_CC
-  rm -f ${ENV_POSIX_CC}??
-
 
   # Check iOS debug mode compile
   npx react-native run-ios --mode Debug --simulator "iPhone 16"

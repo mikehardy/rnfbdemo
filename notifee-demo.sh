@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.76.0
+RN_VER=0.76.1
 NOTIFEE_VER=9.1.2
 
 # Basic template create, notifee install, link
