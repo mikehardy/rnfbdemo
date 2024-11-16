@@ -75,7 +75,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --package-name ${FB_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --pm yarn --package-name ${FB_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
