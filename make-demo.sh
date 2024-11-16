@@ -10,6 +10,10 @@ FB_GRADLE_PERF_VER=1.4.2
 FB_GRADLE_CRASH_VER=3.0.2
 FB_GRADLE_APP_DIST_VER=5.0.0
 
+# This should match what you have defined in firebase console, so that
+# it matches what is in your google-services.json and GoogleService-Info.plist
+FB_PACKAGE_NAME="com.invertase.testing"
+
 #######################################################################################################
 #######################################################################################################
 # This whole section is test setup, and environment verification, it does not represent integration yet
@@ -71,7 +75,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --skip-install --skip-git-init --version=${RN_VER}
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --package-name ${FB_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -152,10 +156,6 @@ if [ "$(uname)" == "Darwin" ]; then
   # shellcheck disable=SC1091
   source virtualenv/bin/activate
   pip install pbxproj
-
-  # set PRODUCT_BUNDLE_IDENTIFIER to com.rnfbdemo
-  sed -i -e $'s/org.reactjs.native.example/com/' ios/rnfbdemo.xcodeproj/project.pbxproj
-  rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
 
   # Add our Google Services file to the Xcode project
   pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/GoogleService-Info.plist --target rnfbdemo
