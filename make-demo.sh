@@ -208,6 +208,8 @@ echo "Setting up App Distribution - package, gradle plugin"
 yarn add "@react-native-firebase/app-distribution@${RNFB_VER}"
 sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:firebase-appdistribution-gradle:${FB_GRADLE_APP_DIST_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
+sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.appdistribution"/' android/app/build.gradle
+rm -f android/app/build.gradle??
 
 # Required for Firestore - android build tweak - or gradle runs out of memory during the build
 echo "Increasing memory available to gradle for android java build"
