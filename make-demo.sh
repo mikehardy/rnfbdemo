@@ -46,7 +46,7 @@ if [ "$(uname)" == "Darwin" ]; then
   if [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
     printf "\n\n\n\n\n**********************************\n\n\n\n"
     printf "You must set XCODE_DEVELOPMENT_TEAM environment variable to your team id to test macCatalyst"
-    printf "Try running it like: XCODE_DEVELOPMENT_TEAM=2W4T2B656C ./make-demo.sh (but with your id)"
+    printf "Try running it like: XCODE_DEVELOPMENT_TEAM=UX8X5J4WDV ./make-demo.sh (but with your id)"
     printf "Skipping macCatalyst test"
     printf "\n\n\n\n\n**********************************\n\n\n\n"
   fi
