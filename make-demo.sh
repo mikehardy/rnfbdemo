@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.76.6
+RN_VER=0.77.0-rc.6
 RNFB_VER=21.6.2
 FB_IOS_VER=11.6.0
 FB_ANDROID_VER=33.7.0
@@ -110,10 +110,10 @@ fi
 echo "Adding react-native-firebase core app package"
 yarn add "@react-native-firebase/app@${RNFB_VER}"
 echo "Adding basic iOS integration - AppDelegate import and config call"
-sed -i -e $'s/AppDelegate.h"/AppDelegate.h"\\\n#import <Firebase.h>/' ios/rnfbdemo/AppDelegate.m*
-rm -f ios/rnfbdemo/AppDelegate.m*-e
-sed -i -e $'s/self.moduleName/[FIRApp configure];\\\n  self.moduleName/' ios/rnfbdemo/AppDelegate.m*
-rm -f ios/rnfbdemo/AppDelegate.m*-e
+sed -i -e $'s/import UIKit/import UIKit\\\nimport FirebaseCore/' ios/rnfbdemo/AppDelegate.swift
+rm -f ios/rnfbdemo/AppDelegate.swift-e
+sed -i -e $'s/self.moduleName/FirebaseApp.configure()\\\n    self.moduleName/' ios/rnfbdemo/AppDelegate.swift
+rm -f ios/rnfbdemo/AppDelegate.swift-e
 echo "Adding basic java integration - gradle plugin dependency and call"
 sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.gms:google-services:${FB_GRADLE_SERVICES_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
