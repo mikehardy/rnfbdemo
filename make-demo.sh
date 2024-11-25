@@ -12,7 +12,8 @@ FB_GRADLE_APP_DIST_VER=5.0.0
 
 # This should match what you have defined in firebase console, so that
 # it matches what is in your google-services.json and GoogleService-Info.plist
-FB_PACKAGE_NAME="com.invertase.testing"
+FB_ANDROID_PACKAGE_NAME="com.invertase.testing"
+FB_IOS_PACKAGE_NAME="io.invertase.testing"
 
 #######################################################################################################
 #######################################################################################################
@@ -75,7 +76,8 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --pm yarn --package-name ${FB_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
+npm_config_yes=true npx @react-native-community/cli init rnfbdemo --pm yarn --package-name ${FB_ANDROID_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
+
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -86,7 +88,15 @@ fi
 # Now run our initial dependency install
 touch yarn.lock
 yarn
-npm_config_yes=true npx pod-install
+
+if [ "$(uname)" == "Darwin" ]; then
+  echo "Setting Apple PRODUCT_BUNDLE_IDENTIFIER to ${FB_IOS_PACKAGE_NAME}"
+  # It is difficult to change the Android package name, so we use it for init.
+  # The iOS name is trivial though, just a PRODUCT_BUNDLE_IDENTIFIER change in pbxproj
+  sed -i -e "s/${FB_ANDROID_PACKAGE_NAME}/${FB_IOS_PACKAGE_NAME}/"g ios/rnfbdemo.xcodeproj/project.pbxproj
+  rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
+  npm_config_yes=true npx pod-install
+fi
 
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
 
