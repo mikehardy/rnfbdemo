@@ -8,6 +8,7 @@
 import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
+  Button,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -23,7 +24,7 @@ import firebase from '@react-native-firebase/app';
 import analytics from '@react-native-firebase/analytics';
 import appCheck from '@react-native-firebase/app-check';
 import appDistribution from '@react-native-firebase/app-distribution';
-import auth from '@react-native-firebase/auth';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import crashlytics from '@react-native-firebase/crashlytics';
 import database from '@react-native-firebase/database';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
@@ -66,6 +67,10 @@ function Section({children, title}: SectionProps): JSX.Element {
   );
 }
 
+firebase.messaging().onMessage((message) => {
+  console.log('messaging.onMessage received: ' + JSON.stringify(message));
+})
+
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -79,6 +84,45 @@ function App(): JSX.Element {
     },
   });
 
+  firebase.auth().useEmulator('http://localhost:9099');
+
+  firebase.auth().onAuthStateChanged((user) => {
+    console.log('onAuthStateChanged was called with user ' + user);
+  });
+
+  const sendSilent = async () => {
+    console.log('sending a silent notification now');
+  };
+
+  const sendVisible = async () => {
+    console.log('sending a visible notification now');
+    // https://sendfcm-6rg4g7hv7q-uc.a.run.app
+    const fcmRequest = await fetch(
+      'https://us-central1-react-native-firebase-testing.cloudfunctions.net/sendFCM',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: {
+            message: {
+              // TODO all the mesage stuff here
+              token: await firebase.messaging().getToken(),
+              notification: {
+                title: 'hello world title',
+                body: 'hello world body',
+              },
+            }
+          },
+        }),
+        redirect: 'follow',
+      },
+    );
+    const { result } = await fcmRequest.json();
+    console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
+  };
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -88,6 +132,11 @@ function App(): JSX.Element {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
+          <Button title="sign in" onPress={async () => { console.log('anonymous sign in '); await firebase.auth().signInAnonymously()}} />
+          <Button title="sign out" onPress={async () => { console.log('signing out'); await firebase.auth().signOut(); }} />
+          <Button title="Send Silent Notification to Device" onPress={async () => { console.log('silent notification'); await sendSilent()}} />
+          <Button title="Send Visible Notification to Device" onPress={async () => { console.log('visible notification'); await sendVisible()}} />
+
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
