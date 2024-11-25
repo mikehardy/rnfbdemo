@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.73.0
-RNFB_VER=18.6.1
-FB_IOS_VER=10.18.0
-FB_ANDROID_VER=32.6.0
-FB_GRADLE_SERVICES_VER=4.4.0
+RN_VER=0.73.11
+RNFB_VER=21.6.0
+FB_IOS_VER=11.5.0
+FB_ANDROID_VER=33.6.0
+FB_GRADLE_SERVICES_VER=4.4.2
 FB_GRADLE_PERF_VER=1.4.2
-FB_GRADLE_CRASH_VER=2.9.9
-FB_GRADLE_APP_DIST_VER=4.0.1
+FB_GRADLE_CRASH_VER=3.0.2
+FB_GRADLE_APP_DIST_VER=5.0.0
 
 #######################################################################################################
 #######################################################################################################
@@ -99,6 +99,10 @@ rm -f android/build.gradle??
 sed -i -e $'s/apply plugin: "com.android.application"/apply plugin: "com.android.application"\\\napply plugin: "com.google.gms.google-services"/' android/app/build.gradle
 rm -f android/app/build.gradle??
 
+# Firebase only supports minSdkVersion 23+ now but RN73 was set to 21
+sed -i -e $"s/minSdkVersion = 21/minSdkVersion = 23/" android/build.gradle
+rm -f android/build.gradle??
+
 #############################################################################################################
 # Required: Static Frameworks linkage set up in cocoapods, and various related workarounds for compatibility.
 #############################################################################################################
@@ -120,10 +124,6 @@ sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use
 sed -i -e $'s/:flipper_configuration/# :flipper_configuration/' ios/Podfile
 rm -f ios/Podfile.??
 
-# We control our pod installation manually, and do not want react-native CLI doing it
-# Otherwise, sometimes we see compile errors disguised as pod installation errors
-sed -i -e $'s/automaticPodsInstallation/\/\/ automaticPodsInstallation/' react-native.config.js
-rm -f react-native.config.js-e
 #############################################################################################################
 
 
@@ -267,7 +267,6 @@ cp -rv ../patches .
 npm_config_yes=true npx patch-package
 
 # Start up the packager - for some reason not starting automatically at the moment...
-yarn start --no-interactive &
 
 # Test: Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
