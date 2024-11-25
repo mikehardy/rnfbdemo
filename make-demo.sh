@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.76.2
+RN_VER=0.76.3
 RNFB_VER=21.6.0
 FB_IOS_VER=11.5.0
 FB_ANDROID_VER=33.6.0
