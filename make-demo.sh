@@ -255,9 +255,9 @@ rm -f ios/Podfile??
 sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end\\\n/' ios/Podfile
 rm -f ios/Podfile??
 
-# Test: Copy in our demonstrator App.tsx
-echo "Copying demonstrator App.tsx"
-rm ./App.tsx && cp ../App.tsx ./App.tsx
+# Test: Copy in our demonstrator App.tsx and index.js
+echo "Copying demonstrator App.tsx and index.js"
+rm ./App.tsx ./index.js && cp ../App.tsx ./App.tsx && cp ../index.js ./index.js
 
 # Test: You have to re-run patch-package after yarn since it is not integrated into postinstall
 echo "Running any patches necessary to compile successfully"
