@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.74.0-rc.9
-RNFB_VER=19.2.2
-FB_IOS_VER=10.24.0
-FB_ANDROID_VER=32.8.1
-FB_GRADLE_SERVICES_VER=4.4.1 # Test 5.0.0 ?
+RN_VER=0.74.6
+RNFB_VER=21.6.1
+FB_IOS_VER=11.5.0
+FB_ANDROID_VER=33.6.0
+FB_GRADLE_SERVICES_VER=4.4.2 # Test 5.0.0 ?
 FB_GRADLE_PERF_VER=1.4.2
-FB_GRADLE_CRASH_VER=2.9.9
-FB_GRADLE_APP_DIST_VER=4.2.0
+FB_GRADLE_CRASH_VER=3.0.2
+FB_GRADLE_APP_DIST_VER=5.0.0
 
 #######################################################################################################
 #######################################################################################################
@@ -71,7 +71,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx react-native@${RN_VER} init rnfbdemo --skip-install --version=${RN_VER}
+npm_config_yes=true npx react-native@${RN_VER} init rnfbdemo --skip-install --skip-git-init --version=${RN_VER}
 cd rnfbdemo
 
 # New versions of react-native include annoying Ruby stuff that forces use of old rubies. Obliterate.
@@ -278,11 +278,11 @@ if [ "$(uname)" == "Darwin" ]; then
   npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
-  npx react-native run-ios --mode Debug
+  npx react-native run-ios --mode Debug --simulator "iPhone 16"
 
   # Check iOS release mode compile
   echo "Installing pods and running iOS app in release mode"
-  npx react-native run-ios --mode Release
+  npx react-native run-ios --mode Release --simulator "iPhone 16"
 
   # New architecture enable: RCT_NEW_ARCH_ENABLED=1 env var then pod install
 
