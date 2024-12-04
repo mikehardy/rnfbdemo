@@ -106,12 +106,16 @@ function App(): JSX.Element {
         },
         body: JSON.stringify({
           data: {
+            delay: 10000,
             message: {
               // TODO all the mesage stuff here
               token: await firebase.messaging().getToken(),
               notification: {
                 title: 'hello world title',
                 body: 'hello world body',
+              },
+              android:{
+                priority: 'high'
               },
             }
           },
