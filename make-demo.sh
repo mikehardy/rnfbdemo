@@ -67,8 +67,8 @@ fi
 
 echo "Testing react-native ${RN_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
-if ! which yarn > /dev/null 2>&1; then
-  echo "This script uses yarn, please install yarn (for example \`npm i yarn -g\` and re-try"
+if ! YARN_VERSION=$(yarn --version|cut -f1 -d'.') || [ "$YARN_VERSION" != "4" ]; then
+  echo "This script uses yarn@^4+, please install yarn (for example \`corepack install -g yarn@^4\` and re-try"
   exit 1
 fi
 #######################################################################################################
@@ -82,7 +82,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-npm_config_yes=true npx @react-native-community/cli init rnfbdemo --pm yarn --package-name ${FB_ANDROID_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
+yarn dlx @react-native-community/cli init rnfbdemo --pm yarn --package-name ${FB_ANDROID_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
 
 cd rnfbdemo
 
