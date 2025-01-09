@@ -82,7 +82,7 @@ fi
 
 # Initialize a fresh project.
 # We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-yarn dlx @react-native-community/cli init rnfbdemo --pm yarn --package-name ${FB_ANDROID_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
+echo Y | yarn dlx @react-native-community/cli init rnfbdemo --pm yarn --package-name ${FB_ANDROID_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
 
 cd rnfbdemo
 
