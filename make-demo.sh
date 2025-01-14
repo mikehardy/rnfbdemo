@@ -18,8 +18,10 @@ FB_GRADLE_APP_DIST_VER=5.0.0
 # (macCatalyst to you rmac, or a real iOS device) you'll need a bundle ID that
 # is unclaimed and your device will need to be registered with the XCODE_DEVELOPMENT_TEAM
 # you use
-FB_ANDROID_PACKAGE_NAME="com.invertase.testing"
-FB_IOS_PACKAGE_NAME="io.invertase.testing"
+# FB_ANDROID_PACKAGE_NAME="com.invertase.testing"
+# FB_IOS_PACKAGE_NAME="io.invertase.testing"
+FB_ANDROID_PACKAGE_NAME="net.mikehardy.crashlyticstest20250114"
+FB_IOS_PACKAGE_NAME="net.mikehardy.crashlyticstest20250114"
 
 #######################################################################################################
 #######################################################################################################
@@ -52,9 +54,9 @@ if [ "$(uname)" == "Darwin" ]; then
   # We need a development team or macCatalyst build will fail
   if [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
     printf "\n\n\n\n\n**********************************\n\n\n\n"
-    printf "You must set XCODE_DEVELOPMENT_TEAM environment variable to your team id to test macCatalyst"
-    printf "Try running it like: XCODE_DEVELOPMENT_TEAM=YYX2P3XVJ7 ./make-demo.sh (but with your id)"
-    printf "Skipping macCatalyst test"
+    printf "\nYou must set XCODE_DEVELOPMENT_TEAM environment variable to your team id to test macCatalyst"
+    printf "\nTry running it like: XCODE_DEVELOPMENT_TEAM=YYX2P3XVJ7 ./make-demo.sh (but with your id)"
+    printf "\nSkipping macCatalyst test"
     printf "\n\n\n\n\n**********************************\n\n\n\n"
   fi
 fi
@@ -184,21 +186,21 @@ fi
 
 # From this point on we are adding optional modules. We test them all so we add them all. You only need to add what you need.
 # First set up all the modules that need no further config for the demo 
-echo "Adding packages: Analytics, App Check, Auth, Database, Dynamic Links, Firestore, Functions, In App Messaging, Installations, Messaging, ML, Remote Config, Storage"
-yarn add \
-  @react-native-firebase/analytics@${RNFB_VER} \
-  @react-native-firebase/app-check@${RNFB_VER} \
-  @react-native-firebase/auth@${RNFB_VER} \
-  @react-native-firebase/database@${RNFB_VER} \
-  @react-native-firebase/dynamic-links@${RNFB_VER} \
-  @react-native-firebase/firestore@${RNFB_VER} \
-  @react-native-firebase/functions@${RNFB_VER} \
-  @react-native-firebase/in-app-messaging@${RNFB_VER} \
-  @react-native-firebase/installations@${RNFB_VER} \
-  @react-native-firebase/messaging@${RNFB_VER} \
-  @react-native-firebase/ml@${RNFB_VER} \
-  @react-native-firebase/remote-config@${RNFB_VER} \
-  @react-native-firebase/storage@${RNFB_VER}
+# echo "Adding packages: Analytics, App Check, Auth, Database, Dynamic Links, Firestore, Functions, In App Messaging, Installations, Messaging, ML, Remote Config, Storage"
+# yarn add \
+#   @react-native-firebase/analytics@${RNFB_VER} \
+#   @react-native-firebase/app-check@${RNFB_VER} \
+#   @react-native-firebase/auth@${RNFB_VER} \
+#   @react-native-firebase/database@${RNFB_VER} \
+#   @react-native-firebase/dynamic-links@${RNFB_VER} \
+#   @react-native-firebase/firestore@${RNFB_VER} \
+#   @react-native-firebase/functions@${RNFB_VER} \
+#   @react-native-firebase/in-app-messaging@${RNFB_VER} \
+#   @react-native-firebase/installations@${RNFB_VER} \
+#   @react-native-firebase/messaging@${RNFB_VER} \
+#   @react-native-firebase/ml@${RNFB_VER} \
+#   @react-native-firebase/remote-config@${RNFB_VER} \
+#   @react-native-firebase/storage@${RNFB_VER}
 
 # Optional: Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
@@ -211,21 +213,21 @@ sed -i -e $'s/proguardFiles getDefaultProguardFile("proguard-android.txt"), "pro
 rm -f android/app/build.gradle??
 
 # Optional: Performance - classpath, plugin, dependency, import, init
-echo "Setting up Performance - package, gradle plugin"
-yarn add "@react-native-firebase/perf@${RNFB_VER}"
-rm -f android/app/build.gradle??
-sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:perf-plugin:${FB_GRADLE_PERF_VER}\"/" android/build.gradle
-rm -f android/build.gradle??
-sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
-rm -f android/app/build.gradle??
+# echo "Setting up Performance - package, gradle plugin"
+# yarn add "@react-native-firebase/perf@${RNFB_VER}"
+# rm -f android/app/build.gradle??
+# sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:perf-plugin:${FB_GRADLE_PERF_VER}\"/" android/build.gradle
+# rm -f android/build.gradle??
+# sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.firebase-perf"/' android/app/build.gradle
+# rm -f android/app/build.gradle??
 
 # Optional: App Distribution - classpath, plugin, dependency, import, init
-echo "Setting up App Distribution - package, gradle plugin"
-yarn add "@react-native-firebase/app-distribution@${RNFB_VER}"
-sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:firebase-appdistribution-gradle:${FB_GRADLE_APP_DIST_VER}\"/" android/build.gradle
-rm -f android/build.gradle??
-sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.appdistribution"/' android/app/build.gradle
-rm -f android/app/build.gradle??
+# echo "Setting up App Distribution - package, gradle plugin"
+# yarn add "@react-native-firebase/app-distribution@${RNFB_VER}"
+# sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:firebase-appdistribution-gradle:${FB_GRADLE_APP_DIST_VER}\"/" android/build.gradle
+# rm -f android/build.gradle??
+# sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.appdistribution"/' android/app/build.gradle
+# rm -f android/app/build.gradle??
 
 # Required for Firestore - android build tweak - or gradle runs out of memory during the build
 echo "Increasing memory available to gradle for android java build"
