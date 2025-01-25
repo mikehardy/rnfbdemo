@@ -339,6 +339,11 @@ rm -f android/app/build.gradle??
 if [ "$(uname -a | grep Linux | grep -c microsoft)" == "1" ]; then
   echo "Detected Windows Subsystem for Linux. Stopping now."
 
+  # Windows has some sort of gradle error with gradle-8.10.2 but gradle 8.12 works
+  # "java.io.UncheckedIOException: Could not move temporary workspace"
+  sed -i -e $'s/8.10.2/8.12/' android/gradle/gradle-wrapper.properties
+  rm -f android/gradle/gradle-wrapper.properties
+
   # Clear out the unix-y node_modules
   \rm -fr node_modules
   echo "To run the app use Windows Powershell in the rnfbdemo directory with these commands:"
