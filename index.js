@@ -3,24 +3,24 @@
  */
 
 import {AppRegistry} from 'react-native';
-import {
-  getMessaging,
-  setBackgroundMessageHandler,
-} from '@react-native-firebase/messaging';
+// import {
+//   getMessaging,
+//   setBackgroundMessageHandler,
+// } from '@react-native-firebase/messaging';
 import App from './App';
 import {name as appName} from './app.json';
 
-setBackgroundMessageHandler(getMessaging(), async (message) => {
-  setImmediate(() => {
-    console.log(
-      'This is running from setBackgroundMessageHandler::setImmediate',
-    );
-  });
+// setBackgroundMessageHandler(getMessaging(), async (message) => {
+//   setImmediate(() => {
+//     console.log(
+//       'This is running from setBackgroundMessageHandler::setImmediate',
+//     );
+//   });
 
-  console.log(
-    'setBackgroundMessageHandler JS executing. Received message: ' +
-      JSON.stringify(message),
-  );
+//   console.log(
+//     'setBackgroundMessageHandler JS executing. Received message: ' +
+//       JSON.stringify(message),
+//   );
 
   // // Display a notification
   // await notifee.displayNotification({
@@ -34,7 +34,7 @@ setBackgroundMessageHandler(getMessaging(), async (message) => {
   //     },
   //   },
   // });
-});
+// });
 
 // notifee.onBackgroundEvent(async event => {
 //   setImmediate(() => {
