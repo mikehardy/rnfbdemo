@@ -48,15 +48,6 @@ if [ "$(uname)" == "Darwin" ]; then
   else
     echo "Unknown architecture: ${arch_name}"
   fi
-
-  # We need a development team or macCatalyst build will fail
-  if [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
-    printf "\n\n\n\n\n**********************************\n\n\n\n"
-    printf "You must set XCODE_DEVELOPMENT_TEAM environment variable to your team id to test macCatalyst"
-    printf "Try running it like: XCODE_DEVELOPMENT_TEAM=YYX2P3XVJ7 ./make-demo.sh (but with your id)"
-    printf "Skipping macCatalyst test"
-    printf "\n\n\n\n\n**********************************\n\n\n\n"
-  fi
 fi
 
 # Test: Previous compiles may confound future compiles, erase...
@@ -284,44 +275,44 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app in release mode"
   npx react-native run-ios --mode Release --simulator "iPhone 16"
 
-  # New architecture enable: RCT_NEW_ARCH_ENABLED=1 env var then pod install
+  # New architecture disable: RCT_NEW_ARCH_ENABLED=0 env var then pod install
 
+  # Check catalyst build
 
-  # Optional: Check catalyst build
-  if ! [ "$XCODE_DEVELOPMENT_TEAM" == "" ]; then
+  #################################################################################################
+  # This section is so the script may work fully automatic.
+  # If you are targeting macCatalyst, you will use the Xcode UI to add your development team.
+  # add file rnfbdemo/rnfbdemo.entitlements, with reference to rnfbdemo target, but no build phase
+  echo "Adding macCatalyst entitlements file / build flags to Xcode project"
+  cp ../rnfbdemo.entitlements ios/rnfbdemo/
+  pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/rnfbdemo.entitlements --target rnfbdemo -C
+  # add build flag: CODE_SIGN_ENTITLEMENTS = rnfbdemo/rnfbdemo.entitlements
+  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo CODE_SIGN_ENTITLEMENTS rnfbdemo/rnfbdemo.entitlements
+  # add build flag: SUPPORTS_MACCATALYST = YES
+  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo SUPPORTS_MACCATALYST YES
+  # for local signing / no dev team: add build flag 				CODE_SIGN_IDENTITY = "-";
+  pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo CODE_SIGN_IDENTITY "-"
+  # Only "-" may be added by pbxproj (it cannot handle ""), but only "" works. Adjust it.
+  sed -i -e $'s/CODE_SIGN_IDENTITY = "-"/CODE_SIGN_IDENTITY = ""/g' ios/rnfbdemo.xcodeproj/project.pbxproj
+  rm -f ios/rnfbdemo.xcodeproj/project.pbxproj??
+  #################################################################################################
 
-    #################################################################################################
-    # This section is so the script may work fully automatic.
-    # If you are targeting macCatalyst, you will use the Xcode UI to add your development team.
-    # add file rnfbdemo/rnfbdemo.entitlements, with reference to rnfbdemo target, but no build phase
-    echo "Adding macCatalyst entitlements file / build flags to Xcode project"
-    cp ../rnfbdemo.entitlements ios/rnfbdemo/
-    pbxproj file ios/rnfbdemo.xcodeproj rnfbdemo/rnfbdemo.entitlements --target rnfbdemo -C
-    # add build flag: CODE_SIGN_ENTITLEMENTS = rnfbdemo/rnfbdemo.entitlements
-    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo CODE_SIGN_ENTITLEMENTS rnfbdemo/rnfbdemo.entitlements
-    # add build flag: SUPPORTS_MACCATALYST = YES
-    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo SUPPORTS_MACCATALYST YES
-    # add build flag 				DEVELOPMENT_TEAM = 2W4T2B656C;
-    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo DEVELOPMENT_TEAM "$XCODE_DEVELOPMENT_TEAM"
-    #################################################################################################
+  # Required for macCatalyst: Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
+  sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
 
-    # Required for macCatalyst: Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
-    sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
+  echo "Installing pods and running iOS app in macCatalyst mode"
+  npm_config_yes=true npx pod-install
 
-    echo "Installing pods and running iOS app in macCatalyst mode"
-    npm_config_yes=true npx pod-install
+  # Now run it with our mac device name as device target, that triggers catalyst build
+  # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
 
-    # Now run it with our mac device name as device target, that triggers catalyst build
-    # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
+  # For some reason, the device id returned if you use the computer name is wrong.
+  # It is also wrong from ios-deploy or xcrun xctrace list devices
+  # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
+  CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
 
-    # For some reason, the device id returned if you use the computer name is wrong.
-    # It is also wrong from ios-deploy or xcrun xctrace list devices
-    # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
-    CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
-
-    # FIXME This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
-    npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
-  fi
+  # FIXME This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
+  npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
 
   # Optional: workaround for poorly setup Android SDK environments on macs
   USER=$(whoami)
