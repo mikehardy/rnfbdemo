@@ -116,14 +116,14 @@ rm -f android/app/build.gradle??
 #############################################################################################################
 
 # You have two options here:
-# - One is to dynamically disable flipper and turn on static frameworks with environment variables at build time
-# - Two is to permanently disable flipper and turn on static frameworks with Podfile edits
+# - One is to dynamically turn on static frameworks with environment variables at build time
+# - Two is to permanently turn on static frameworks with Podfile edits
 
 # The default way a new react-native app is built from template uses method One, environment variables.
 # I worry that some developer somewhere will not have these environment variables set correctly though,
 # causing an unexpected build failure.
 
-# So we choose option Two, where we permanently disable Flipper and enable static frameworks in the Podfile.
+# So we choose option Two, where we permanently enable static frameworks in the Podfile.
 
 # Required: turn on static frameworks with static linkage, and tell react-native-firebase that is how we are linking
 sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
