@@ -59,8 +59,8 @@ buck-out/
 *.jsbundle
 
 # Firebase
-google-services.json
-GoogleService-Info.plist
+google-services.json*
+GoogleService-Info.plist*
 
 # Example
 rnfbdemo
