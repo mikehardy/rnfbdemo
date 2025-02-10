@@ -58,7 +58,7 @@ fi
 
 echo "Testing react-native ${RN_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
-if ! YARN_VERSION=$(yarn --version|cut -f1 -d'.') || [ "$YARN_VERSION" != "4" ]; then
+if ! YARN_VERSION=$(yarn --version|cut -f1 -d'.') || ([ "$YARN_VERSION" != "3" ] && [ "$YARN_VERSION" != "4" ]); then
   echo "This script uses yarn@^4+, please install yarn (for example \`corepack install -g yarn@^4\` and re-try"
   exit 1
 fi
@@ -309,7 +309,7 @@ if [ "$(uname)" == "Darwin" ]; then
   # For some reason, the device id returned if you use the computer name is wrong.
   # It is also wrong from ios-deploy or xcrun xctrace list devices
   # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
-  CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1)
+  CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
 
   # FIXME This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
   npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
