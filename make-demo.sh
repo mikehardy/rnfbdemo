@@ -242,6 +242,13 @@ rm -f ios/Podfile??
 #sed -i -e $'s/  target \'rnfbdemoTests\' do/  $FirebaseFirestoreExcludeLeveldb = true\\\n  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n  target \'rnfbdemoTests\' do/' ios/Podfile
 #rm -f ios/Podfile??
 
+# Required for AppCheck on iOS - need to add the initializer into the AppDelegate
+echo "Adding basic iOS integration - AppDelegate import and config call"
+sed -i -e $'s/import UIKit/import UIKit\\\nimport RNFBAppCheck/' ios/rnfbdemo/AppDelegate.swift
+rm -f ios/rnfbdemo/AppDelegate.swift-e
+sed -i -e $'s/FirebaseApp.configure/RNFBAppCheckModule.sharedInstance()\\\n    FirebaseApp.configure/' ios/rnfbdemo/AppDelegate.swift
+rm -f ios/rnfbdemo/AppDelegate.swift-e
+
 # Optional: build performance optimization to use ccache - asks xcodebuild to use clang and clang++ without the fully-qualified path
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
 # In that way you can install ccache or buildcache and get much faster compiles...
