@@ -271,21 +271,6 @@ npm_config_yes=true npx patch-package
 # Test: Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
 
-  echo "Installing pods and running iOS app in debug mode"
-  pod repo update
-  npm_config_yes=true npx pod-install
-
-  # Check iOS debug mode compile
-  npx react-native run-ios --mode Debug --simulator "iPhone 16"
-
-  # Check iOS release mode compile
-  echo "Installing pods and running iOS app in release mode"
-  npx react-native run-ios --mode Release --simulator "iPhone 16"
-
-  # New architecture disable: RCT_NEW_ARCH_ENABLED=0 env var then pod install
-
-  # Check catalyst build
-
   #################################################################################################
   # This section is so the script may work fully automatic.
   # If you are targeting macCatalyst, you will use the Xcode UI to add your development team.
@@ -302,7 +287,28 @@ if [ "$(uname)" == "Darwin" ]; then
   # Only "-" may be added by pbxproj (it cannot handle ""), but only "" works. Adjust it.
   sed -i -e $'s/CODE_SIGN_IDENTITY = "-"/CODE_SIGN_IDENTITY = ""/g' ios/rnfbdemo.xcodeproj/project.pbxproj
   rm -f ios/rnfbdemo.xcodeproj/project.pbxproj??
-  #################################################################################################
+
+  # These are the background modes you need for push notifications and processing (just in case)
+  /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" ios/rnfbdemo/Info.plist 
+  /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string fetch" ios/rnfbdemo/Info.plist 
+  /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string processing" ios/rnfbdemo/Info.plist 
+  /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string remote-notification" ios/rnfbdemo/Info.plist 
+
+
+  echo "Installing pods and running iOS app in debug mode"
+  pod repo update
+  npm_config_yes=true npx pod-install
+
+  # Check iOS debug mode compile
+  npx react-native run-ios --mode Debug --simulator "iPhone 16"
+
+  # Check iOS release mode compile
+  echo "Installing pods and running iOS app in release mode"
+  npx react-native run-ios --mode Release --simulator "iPhone 16"
+
+  # New architecture disable: RCT_NEW_ARCH_ENABLED=0 env var then pod install
+
+  # Check catalyst build
 
   # Required for macCatalyst: Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
   sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
