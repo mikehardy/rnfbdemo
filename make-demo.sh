@@ -127,6 +127,7 @@ rm -f android/app/build.gradle??
 
 # Required: turn on static frameworks with static linkage, and tell react-native-firebase that is how we are linking
 sed -i -e $'s/config = use_native_modules!/config = use_native_modules!\\\n  use_frameworks! :linkage => :static\\\n  $RNFirebaseAsStaticFramework = true/' ios/Podfile
+rm -f ios/Podfile??
 
 # Required: copy your Firebase config files in - you must supply them, downloaded from firebase web console
 echo "For this demo to work, you must create an \`rnfbdemo\` project in your firebase console,"
@@ -313,6 +314,7 @@ if [ "$(uname)" == "Darwin" ]; then
 
   # Required for macCatalyst: Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
   sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
+  rm -f ios/Podfile??
 
   echo "Installing pods and running iOS app in macCatalyst mode"
   npm_config_yes=true npx pod-install
