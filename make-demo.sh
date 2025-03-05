@@ -256,6 +256,10 @@ rm -f ios/rnfbdemo/AppDelegate.swift-e
 # In that way you can install ccache or buildcache and get much faster compiles...
 sed -i -e $'s/# :ccache_enabled/:ccache_enabled/' ios/Podfile
 rm -f ios/Podfile??
+if [ -e ~/.ccache/ccache.conf ]; then
+  echo "Using local ccache.conf in preference to built-in react-native conf"
+  export CCACHE_CONFIGPATH=~/.ccache/ccache.conf
+fi
 
 # Optional: Cleaner build logs - libevent pulled in by react core items are ridiculously noisy otherwise
 sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end\\\n/' ios/Podfile
