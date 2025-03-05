@@ -189,7 +189,8 @@ yarn add \
   @react-native-firebase/messaging@${RNFB_VER} \
   @react-native-firebase/ml@${RNFB_VER} \
   @react-native-firebase/remote-config@${RNFB_VER} \
-  @react-native-firebase/storage@${RNFB_VER}
+  @react-native-firebase/storage@${RNFB_VER} \
+  @react-native-firebase/vertexai@${RNFB_VER}
 
 # Optional: Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"

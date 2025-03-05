@@ -50,6 +50,7 @@ import {
 import {getPerformance} from '@react-native-firebase/perf';
 import {getRemoteConfig} from '@react-native-firebase/remote-config';
 import {getStorage} from '@react-native-firebase/storage';
+import {getVertexAI} from '@react-native-firebase/vertexai';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -324,6 +325,9 @@ function App(): JSX.Element {
           )}
           {getStorage().native && (
             <Text style={dynStyles.colors}>storage()</Text>
+          )}
+          {getVertexAI() !== undefined && (
+            <Text style={dynStyles.colors}>vertexai()</Text>
           )}
         </View>
       </ScrollView>
