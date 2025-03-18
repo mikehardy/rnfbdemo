@@ -1,8 +1,8 @@
 diff --git a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/createRun.js b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/createRun.js
-index db9c342..a67bfd4 100644
+index e779900..a225f24 100644
 --- a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/createRun.js
 +++ b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/createRun.js
-@@ -176,9 +176,17 @@ const createRun = ({
+@@ -195,9 +195,17 @@ const createRun = ({
      return _cliTools().logger.error('The `device` and `udid` options are mutually exclusive.');
    }
    if (args.udid) {
@@ -22,16 +22,3 @@ index db9c342..a67bfd4 100644
      }
      if (device.type === 'simulator') {
        return (0, _runOnSimulator.runOnSimulator)(xcodeProject, platformName, mode, scheme, args, fallbackSimulator);
-diff --git a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/getBuildPath.js b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/getBuildPath.js
-index 88f497e..d6c414e 100644
---- a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/getBuildPath.js
-+++ b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/getBuildPath.js
-@@ -33,7 +33,7 @@ async function getBuildPath(buildSettings, platform = 'ios', isCatalyst = false)
-     throw new (_cliTools().CLIError)('Failed to get product name.');
-   }
-   if (isCatalyst) {
--    return _path().default.join(`${targetBuildDir}-maccatalyst`, executableFolderPath);
-+    return _path().default.join(`${targetBuildDir}`, executableFolderPath);
-   } else if (platform === 'macos') {
-     return _path().default.join(targetBuildDir, fullProductName);
-   } else {
