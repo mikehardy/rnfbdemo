@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.78.2
+RN_VER=0.79.1
 RNFB_VER=21.13.0
 FB_IOS_VER=11.11.0
 FB_ANDROID_VER=33.12.0
@@ -102,7 +102,7 @@ yarn add "@react-native-firebase/app@${RNFB_VER}"
 echo "Adding basic iOS integration - AppDelegate import and config call"
 sed -i -e $'s/import UIKit/import UIKit\\\nimport FirebaseCore/' ios/rnfbdemo/AppDelegate.swift
 rm -f ios/rnfbdemo/AppDelegate.swift-e
-sed -i -e $'s/self.moduleName/FirebaseApp.configure()\\\n    self.moduleName/' ios/rnfbdemo/AppDelegate.swift
+sed -i -e $'s/let delegate/FirebaseApp.configure()\\\n    let delegate/' ios/rnfbdemo/AppDelegate.swift
 rm -f ios/rnfbdemo/AppDelegate.swift-e
 echo "Adding basic java integration - gradle plugin dependency and call"
 sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.gms:google-services:${FB_GRADLE_SERVICES_VER}\"/" android/build.gradle
