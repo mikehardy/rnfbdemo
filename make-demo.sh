@@ -59,12 +59,11 @@ fi
 echo "Testing react-native ${RN_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
 if ! YARN_VERSION=$(yarn --version|cut -f1 -d'.') || ([ "$YARN_VERSION" != "3" ] && [ "$YARN_VERSION" != "4" ]); then
-  echo "This script uses yarn@^4+, please install yarn (for example \`corepack enable && corepack parepare yarn@^4 --activate\` and re-try"
+  echo "This script uses yarn@^4+, please install yarn (for example \`corepack enable && corepack prepare yarn@^4 --activate\` and re-try"
   exit 1
 fi
 #######################################################################################################
 #######################################################################################################
-
 
 
 
