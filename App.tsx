@@ -18,8 +18,6 @@ import {
   View,
 } from 'react-native';
 
-import {Colors, Header} from 'react-native/Libraries/NewAppScreen';
-
 import {getApp, getApps} from '@react-native-firebase/app';
 import {getAnalytics} from '@react-native-firebase/analytics';
 import appCheck, {initializeAppCheck} from '@react-native-firebase/app-check';
@@ -56,6 +54,28 @@ type SectionProps = PropsWithChildren<{
   title: string;
 }>;
 
+
+const COLORS = {
+  white: '#ffffff',
+  black: '#000000',
+  light: {
+    background: '#f3f3f3',
+    backgroundHighlight: '#cfe6ee',
+    cardBackground: '#fff',
+    cardOutline: '#dae1e7',
+    textPrimary: '#000',
+    textSecondary: '#404756',
+  },
+  dark: {
+    background: '#000',
+    backgroundHighlight: '#193c47',
+    cardBackground: '#222',
+    cardOutline: '#444',
+    textPrimary: '#fff',
+    textSecondary: '#c0c1c4',
+  },
+};
+
 function Section({children, title}: SectionProps): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   return (
@@ -64,7 +84,7 @@ function Section({children, title}: SectionProps): JSX.Element {
         style={[
           styles.sectionTitle,
           {
-            color: isDarkMode ? Colors.white : Colors.black,
+            color: isDarkMode ? COLORS.white : COLORS.black,
           },
         ]}>
         {title}
@@ -73,7 +93,7 @@ function Section({children, title}: SectionProps): JSX.Element {
         style={[
           styles.sectionDescription,
           {
-            color: isDarkMode ? Colors.light : Colors.dark,
+            color: isDarkMode ? COLORS.light : COLORS.dark,
           },
         ]}>
         {children}
@@ -139,12 +159,12 @@ function App(): JSX.Element {
   }, []);
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    backgroundColor: isDarkMode ? COLORS.dark : COLORS.light,
   };
 
   const dynStyles = StyleSheet.create({
     colors: {
-      color: isDarkMode ? Colors.white : Colors.black,
+      color: isDarkMode ? COLORS.white : COLORS.black,
     },
   });
 
@@ -271,7 +291,7 @@ function App(): JSX.Element {
 
         <View
           style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            backgroundColor: isDarkMode ? COLORS.black : COLORS.white,
             alignItems: 'center',
           }}>
           <Section title="RNFirebase Build Demo" />
