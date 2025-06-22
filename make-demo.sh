@@ -4,10 +4,10 @@ set -e
 RN_VER=0.79.2
 RNFB_VER=22.2.0
 FB_IOS_VER=11.14.0
-FB_ANDROID_VER=33.14.0
+FB_ANDROID_VER=33.15.0
 FB_GRADLE_SERVICES_VER=4.4.2 # Test 5.0.0 ?
 FB_GRADLE_PERF_VER=1.4.2
-FB_GRADLE_CRASH_VER=3.0.3
+FB_GRADLE_CRASH_VER=3.0.4
 FB_GRADLE_APP_DIST_VER=5.1.1
 
 # This should match what you have defined in firebase console, so that
