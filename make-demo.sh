@@ -328,10 +328,18 @@ if [ "$(uname)" == "Darwin" ]; then
   # For some reason, the device id returned if you use the computer name is wrong.
   # It is also wrong from ios-deploy or xcrun xctrace list devices
   # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
-  CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
+
+  ####################################################################################
+  # Temporarily disable macCatalyst build until this upstream issue is resolved:
+  # https://github.com/firebase/firebase-ios-sdk/issues/14995#issuecomment-3017883367
+  # Note that the comment there contains a manual workaround you could do, or we could
+  # adopt the workaround in this script if the issue persists for very long
+
+  # CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
 
   # FIXME This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
-  npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+  # npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+  ####################################################################################
 
   # Optional: workaround for poorly setup Android SDK environments on macs
   USER=$(whoami)
