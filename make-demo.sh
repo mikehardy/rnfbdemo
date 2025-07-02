@@ -322,23 +322,21 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Installing pods and running iOS app in macCatalyst mode"
   npm_config_yes=true npx pod-install
 
-  # Now run it with our mac device name as device target, that triggers catalyst build
-  # Need to check if the development team id is valid? error 70 indicates team not added as account / cert not present / xcode does not have access to keychain?
+  ####################################################################################
+  # macCatalyst requires a workaround to disable 'GoogleAdsOnDeviceConversion' Pod
+  # https://github.com/firebase/firebase-ios-sdk/issues/14995#issuecomment-3017883367
+  sed -e ':a' -e 'N' -e '$!ba' -e 's/ccache_enabled => true\n    )/ccache_enabled => true\n    )\n\n    # Exclude GoogleAdsOnDeviceConversion from macCatalyst builds\n    installer.pods_project.targets.each do |target|\n      libs = ["GoogleAdsOnDeviceConversion"]\n\n      target.build_configurations.each do |config|\n        xcconfig_path = config.base_configuration_reference.real_path\n        xcconfig = File.read(xcconfig_path)\n        values = ""\n\n        libs.each { |lib|\n          if xcconfig["-framework \\"#{lib}\\""]\n            puts "Found #{lib} on target #{target.name}"\n            xcconfig.sub!(" -framework \\"#{lib}\\"", "")\n            values += " -framework \\"#{lib}\\""\n          end\n        }\n\n        if values.length > 0\n          puts "Preparing #{target.name} for Catalyst\\n\\n"\n          new_xcconfig = xcconfig + "OTHER_LDFLAGS[sdk=iphone*] = $(inherited)" + values\n          File.open(xcconfig_path, "w") { |file| file << new_xcconfig }\n        end\n      end\n    end/g' ios/Podfile > ios/Podfile-e
+  mv -f ios/Podfile-e ios/Podfile
+
+  # Now run it with our mac device udid as device target, that triggers catalyst build
 
   # For some reason, the device id returned if you use the computer name is wrong.
   # It is also wrong from ios-deploy or xcrun xctrace list devices
   # The only way I have found to get the right ID is to provide the wrong one then parse out the available one
-
-  ####################################################################################
-  # Temporarily disable macCatalyst build until this upstream issue is resolved:
-  # https://github.com/firebase/firebase-ios-sdk/issues/14995#issuecomment-3017883367
-  # Note that the comment there contains a manual workaround you could do, or we could
-  # adopt the workaround in this script if the issue persists for very long
-
-  # CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
-
-  # FIXME This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
-  # npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+  # This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
+  # https://github.com/react-native-community/cli/pull/2642
+  CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
+  npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
   ####################################################################################
 
   # Optional: workaround for poorly setup Android SDK environments on macs
