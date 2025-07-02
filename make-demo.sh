@@ -319,14 +319,14 @@ if [ "$(uname)" == "Darwin" ]; then
   sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
   rm -f ios/Podfile??
 
-  echo "Installing pods and running iOS app in macCatalyst mode"
-  npm_config_yes=true npx pod-install
-
   ####################################################################################
   # macCatalyst requires a workaround to disable 'GoogleAdsOnDeviceConversion' Pod
   # https://github.com/firebase/firebase-ios-sdk/issues/14995#issuecomment-3017883367
   sed -e ':a' -e 'N' -e '$!ba' -e 's/ccache_enabled => true\n    )/ccache_enabled => true\n    )\n\n    # Exclude GoogleAdsOnDeviceConversion from macCatalyst builds\n    installer.pods_project.targets.each do |target|\n      libs = ["GoogleAdsOnDeviceConversion"]\n\n      target.build_configurations.each do |config|\n        xcconfig_path = config.base_configuration_reference.real_path\n        xcconfig = File.read(xcconfig_path)\n        values = ""\n\n        libs.each { |lib|\n          if xcconfig["-framework \\"#{lib}\\""]\n            puts "Found #{lib} on target #{target.name}"\n            xcconfig.sub!(" -framework \\"#{lib}\\"", "")\n            values += " -framework \\"#{lib}\\""\n          end\n        }\n\n        if values.length > 0\n          puts "Preparing #{target.name} for Catalyst\\n\\n"\n          new_xcconfig = xcconfig + "OTHER_LDFLAGS[sdk=iphone*] = $(inherited)" + values\n          File.open(xcconfig_path, "w") { |file| file << new_xcconfig }\n        end\n      end\n    end/g' ios/Podfile > ios/Podfile-e
   mv -f ios/Podfile-e ios/Podfile
+
+  echo "Installing pods and running iOS app in macCatalyst mode"
+  npm_config_yes=true npx pod-install
 
   # Now run it with our mac device udid as device target, that triggers catalyst build
 
