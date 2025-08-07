@@ -32,7 +32,6 @@ import {
 } from '@react-native-firebase/auth';
 import {getCrashlytics} from '@react-native-firebase/crashlytics';
 import {getDatabase} from '@react-native-firebase/database';
-import {getDynamicLinks} from '@react-native-firebase/dynamic-links';
 import {getFirestore} from '@react-native-firebase/firestore';
 import {getFunctions} from '@react-native-firebase/functions';
 import {getInAppMessaging} from '@react-native-firebase/in-app-messaging';
@@ -318,9 +317,6 @@ function App(): JSX.Element {
           )}
           {getDatabase().native && (
             <Text style={dynStyles.colors}>database()</Text>
-          )}
-          {getDynamicLinks().native && (
-            <Text style={dynStyles.colors}>dynamicLinks()</Text>
           )}
           {getFirestore().native && (
             <Text style={dynStyles.colors}>firestore()</Text>

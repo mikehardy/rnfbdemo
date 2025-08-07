@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.80.1
-RNFB_VER=22.2.1
-FB_IOS_VER=11.15.0
-FB_ANDROID_VER=33.16.0
+RN_VER=0.80.2
+RNFB_VER=23.0.0
+FB_IOS_VER=12.1.0
+FB_ANDROID_VER=34.0.0
 FB_GRADLE_SERVICES_VER=4.4.3
-FB_GRADLE_PERF_VER=1.4.2
-FB_GRADLE_CRASH_VER=3.0.4
+FB_GRADLE_PERF_VER=2.0.0
+FB_GRADLE_CRASH_VER=3.0.5
 FB_GRADLE_APP_DIST_VER=5.1.1
 
 # This should match what you have defined in firebase console, so that
@@ -181,7 +181,6 @@ yarn add \
   @react-native-firebase/app-check@${RNFB_VER} \
   @react-native-firebase/auth@${RNFB_VER} \
   @react-native-firebase/database@${RNFB_VER} \
-  @react-native-firebase/dynamic-links@${RNFB_VER} \
   @react-native-firebase/firestore@${RNFB_VER} \
   @react-native-firebase/functions@${RNFB_VER} \
   @react-native-firebase/in-app-messaging@${RNFB_VER} \
