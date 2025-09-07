@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.81.4
+RN_VER=0.82.0-rc.4
 RNFB_VER=23.4.0
 FB_IOS_VER=12.3.0
 FB_ANDROID_VER=34.3.0
@@ -304,6 +304,7 @@ if [ "$(uname)" == "Darwin" ]; then
   npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
+  npx react-native run-ios --mode Debug --simulator "iPhone 17" || true
   npx react-native run-ios --mode Debug --simulator "iPhone 17"
 
   # Check iOS release mode compile
