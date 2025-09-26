@@ -58,7 +58,7 @@ fi
 
 echo "Testing react-native ${RN_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
-if ! YARN_VERSION=$(yarn --version|cut -f1 -d'.') || ([ "$YARN_VERSION" != "3" ] && [ "$YARN_VERSION" != "4" ]); then
+if ! YARN_VERSION=$(yarn --version|cut -f1 -d'.') || { [ "$YARN_VERSION" != "3" ] && [ "$YARN_VERSION" != "4" ]; }; then
   echo "This script uses yarn@^4+, please install yarn (for example \`corepack enable && corepack prepare yarn@^4 --activate\` and re-try"
   exit 1
 fi
@@ -321,6 +321,7 @@ if [ "$(uname)" == "Darwin" ]; then
   ####################################################################################
   # macCatalyst requires a workaround to disable 'GoogleAdsOnDeviceConversion' Pod
   # https://github.com/firebase/firebase-ios-sdk/issues/14995#issuecomment-3017883367
+  # shellcheck disable=SC2016
   sed -e ':a' -e 'N' -e '$!ba' -e 's/ccache_enabled => true\n    )/ccache_enabled => true\n    )\n\n    # Exclude GoogleAdsOnDeviceConversion from macCatalyst builds\n    installer.pods_project.targets.each do |target|\n      libs = ["GoogleAdsOnDeviceConversion"]\n\n      target.build_configurations.each do |config|\n        xcconfig_path = config.base_configuration_reference.real_path\n        xcconfig = File.read(xcconfig_path)\n        values = ""\n\n        libs.each { |lib|\n          if xcconfig["-framework \\"#{lib}\\""]\n            puts "Found #{lib} on target #{target.name}"\n            xcconfig.sub!(" -framework \\"#{lib}\\"", "")\n            values += " -framework \\"#{lib}\\""\n          end\n        }\n\n        if values.length > 0\n          puts "Preparing #{target.name} for Catalyst\\n\\n"\n          new_xcconfig = xcconfig + "OTHER_LDFLAGS[sdk=iphone*] = $(inherited)" + values\n          File.open(xcconfig_path, "w") { |file| file << new_xcconfig }\n        end\n      end\n    end/g' ios/Podfile > ios/Podfile-e
   mv -f ios/Podfile-e ios/Podfile
 
