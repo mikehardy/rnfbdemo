@@ -2,10 +2,10 @@
 set -e 
 
 RN_VER=0.82.0
-RNFB_VER=23.4.0
-FB_IOS_VER=12.3.0
-FB_ANDROID_VER=34.3.0
-FB_GRADLE_SERVICES_VER=4.4.3
+RNFB_VER=23.4.1
+FB_IOS_VER=12.4.0
+FB_ANDROID_VER=34.4.0
+FB_GRADLE_SERVICES_VER=4.4.4
 FB_GRADLE_PERF_VER=2.0.1
 FB_GRADLE_CRASH_VER=3.0.6
 FB_GRADLE_APP_DIST_VER=5.1.1
@@ -175,8 +175,9 @@ fi
 
 # From this point on we are adding optional modules. We test them all so we add them all. You only need to add what you need.
 # First set up all the modules that need no further config for the demo 
-echo "Adding packages: Analytics, App Check, Auth, Database, Dynamic Links, Firestore, Functions, In App Messaging, Installations, Messaging, ML, Remote Config, Storage"
+echo "Adding packages: AI, Analytics, App Check, Auth, Database, Firestore, Functions, In App Messaging, Installations, Messaging, ML, Remote Config, Storage"
 yarn add \
+  @react-native-firebase/ai@${RNFB_VER} \
   @react-native-firebase/analytics@${RNFB_VER} \
   @react-native-firebase/app-check@${RNFB_VER} \
   @react-native-firebase/auth@${RNFB_VER} \
@@ -188,8 +189,7 @@ yarn add \
   @react-native-firebase/messaging@${RNFB_VER} \
   @react-native-firebase/ml@${RNFB_VER} \
   @react-native-firebase/remote-config@${RNFB_VER} \
-  @react-native-firebase/storage@${RNFB_VER} \
-  @react-native-firebase/vertexai@${RNFB_VER}
+  @react-native-firebase/storage@${RNFB_VER}
 
 # Optional: Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
