@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-RN_VER=0.82.1
+RN_VER=0.83.0
 RNFB_VER=23.7.0
 FB_IOS_VER=12.7.0
 FB_ANDROID_VER=34.6.0
@@ -91,7 +91,8 @@ if [ "$(uname)" == "Darwin" ]; then
   # The iOS name is trivial though, just a PRODUCT_BUNDLE_IDENTIFIER change in pbxproj
   sed -i -e "s/${FB_ANDROID_PACKAGE_NAME}/${FB_IOS_PACKAGE_NAME}/"g ios/rnfbdemo.xcodeproj/project.pbxproj
   rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
-  npm_config_yes=true npx pod-install
+  cd ios && RCT_USE_RN_DEP=0 RCT_USE_PREBUILT_RNCORE=0 bundle exec pod install && cd ..
+  #npm_config_yes=true npx pod-install
 fi
 
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
@@ -254,6 +255,8 @@ rm -f ios/rnfbdemo/AppDelegate.swift-e
 # In that way you can install ccache or buildcache and get much faster compiles...
 sed -i -e $'s/# :ccache_enabled/:ccache_enabled/' ios/Podfile
 rm -f ios/Podfile??
+# The built-in react-native ccache configuration does not work well, but
+# my local one works great - use it
 if [ -e ~/.ccache/ccache.conf ]; then
   echo "Using local ccache.conf in preference to built-in react-native conf"
   export CCACHE_CONFIGPATH=~/.ccache/ccache.conf
@@ -301,16 +304,28 @@ if [ "$(uname)" == "Darwin" ]; then
 
   echo "Installing pods and running iOS app in debug mode"
   pod repo update
+
+  # Let's do one round with non-prebuilts (a react-native 0.81+ feature)
+  export RCT_USE_RN_DEP=0
+  export RCT_USE_PREBUILT_RNCORE=0
   npm_config_yes=true npx pod-install
 
-  # Check iOS debug mode compile
+  # Check iOS debug mode compile then release mode
+  echo "Running iOS app in debug mode"
   npx react-native run-ios --mode Debug --simulator "iPhone 17"
-
-  # Check iOS release mode compile
-  echo "Installing pods and running iOS app in release mode"
+  echo "Running iOS app in release mode"
   npx react-native run-ios --mode Release --simulator "iPhone 17"
 
-  # New architecture disable: RCT_NEW_ARCH_ENABLED=0 env var then pod install
+  # # Now Let's do a round with prebuilts (a react-native 0.81+ feature)
+  # export RCT_USE_RN_DEP=1
+  # export RCT_USE_PREBUILT_RNCORE=1
+  # npm_config_yes=true npx pod-install
+
+  # # Check iOS debug mode compile then release mode
+  # echo "Running iOS app in debug mode"
+  # npx react-native run-ios --mode Debug --simulator "iPhone 17"
+  # echo "Running iOS app in release mode"
+  # npx react-native run-ios --mode Release --simulator "iPhone 17"
 
   # Check catalyst build
 
@@ -325,6 +340,9 @@ if [ "$(uname)" == "Darwin" ]; then
   sed -e ':a' -e 'N' -e '$!ba' -e 's/ccache_enabled => true\n    )/ccache_enabled => true\n    )\n\n    # Exclude GoogleAdsOnDeviceConversion from macCatalyst builds\n    installer.pods_project.targets.each do |target|\n      libs = ["GoogleAdsOnDeviceConversion"]\n\n      target.build_configurations.each do |config|\n        xcconfig_path = config.base_configuration_reference.real_path\n        xcconfig = File.read(xcconfig_path)\n        values = ""\n\n        libs.each { |lib|\n          if xcconfig["-framework \\"#{lib}\\""]\n            puts "Found #{lib} on target #{target.name}"\n            xcconfig.sub!(" -framework \\"#{lib}\\"", "")\n            values += " -framework \\"#{lib}\\""\n          end\n        }\n\n        if values.length > 0\n          puts "Preparing #{target.name} for Catalyst\\n\\n"\n          new_xcconfig = xcconfig + "OTHER_LDFLAGS[sdk=iphone*] = $(inherited)" + values\n          File.open(xcconfig_path, "w") { |file| file << new_xcconfig }\n        end\n      end\n    end/g' ios/Podfile > ios/Podfile-e
   mv -f ios/Podfile-e ios/Podfile
 
+  # Let's do one round with non-prebuilts (a react-native 0.81+ feature)
+  export RCT_USE_RN_DEP=0
+  export RCT_USE_PREBUILT_RNCORE=0
   echo "Installing pods and running iOS app in macCatalyst mode"
   npm_config_yes=true npx pod-install
 
@@ -337,6 +355,14 @@ if [ "$(uname)" == "Darwin" ]; then
   # https://github.com/react-native-community/cli/pull/2642
   CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
   npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+
+  # # Let's do one round with prebuilts (a react-native 0.81+ feature)
+  # export RCT_USE_RN_DEP=1
+  # export RCT_USE_PREBUILT_RNCORE=1
+  # echo "Installing pods and running iOS app in macCatalyst mode"
+  # npm_config_yes=true npx pod-install
+  # npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+
   ####################################################################################
 
   # Optional: workaround for poorly setup Android SDK environments on macs
