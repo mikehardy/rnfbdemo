@@ -2,13 +2,13 @@
 set -e 
 
 RN_VER=0.82.1
-RNFB_VER=23.4.1
+RNFB_VER=23.5.0
 FB_IOS_VER=12.5.0
-FB_ANDROID_VER=34.4.0
+FB_ANDROID_VER=34.5.0
 FB_GRADLE_SERVICES_VER=4.4.4
-FB_GRADLE_PERF_VER=2.0.1
+FB_GRADLE_PERF_VER=2.0.2
 FB_GRADLE_CRASH_VER=3.0.6
-FB_GRADLE_APP_DIST_VER=5.1.1
+FB_GRADLE_APP_DIST_VER=5.2.0
 
 # This should match what you have defined in firebase console, so that
 # it matches what is in your google-services.json and GoogleService-Info.plist
