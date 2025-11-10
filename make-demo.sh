@@ -91,7 +91,8 @@ if [ "$(uname)" == "Darwin" ]; then
   # The iOS name is trivial though, just a PRODUCT_BUNDLE_IDENTIFIER change in pbxproj
   sed -i -e "s/${FB_ANDROID_PACKAGE_NAME}/${FB_IOS_PACKAGE_NAME}/"g ios/rnfbdemo.xcodeproj/project.pbxproj
   rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
-  npm_config_yes=true npx pod-install
+  cd ios && RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install && cd ..
+  #npm_config_yes=true npx pod-install
 fi
 
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
@@ -252,12 +253,23 @@ rm -f ios/rnfbdemo/AppDelegate.swift-e
 # Optional: build performance optimization to use ccache - asks xcodebuild to use clang and clang++ without the fully-qualified path
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
 # In that way you can install ccache or buildcache and get much faster compiles...
-sed -i -e $'s/# :ccache_enabled/:ccache_enabled/' ios/Podfile
-rm -f ios/Podfile??
-if [ -e ~/.ccache/ccache.conf ]; then
-  echo "Using local ccache.conf in preference to built-in react-native conf"
-  export CCACHE_CONFIGPATH=~/.ccache/ccache.conf
-fi
+# sed -i -e $'s/# :ccache_enabled/:ccache_enabled/' ios/Podfile
+# rm -f ios/Podfile??
+# # The built-in react-native ccache configuration does not work well, but
+# # my local one works great - use it
+# if [ -e ~/.ccache/ccache.conf ]; then
+#   echo "Using local ccache.conf in preference to built-in react-native conf"
+#   export CCACHE_CONFIGPATH=~/.ccache/ccache.conf
+# fi
+
+# There is a new problem with ccache and Xcode 16.1+ https://github.com/ccache/ccache/issues/1497
+# To avoid this, we stop using the built-in react-native ccache and revert to local override
+# We just do that with environment variables though, it works well in combination with
+# symbolic links in our PATH that point to /opt/homebrew/bin/ccache
+# export CC=clang
+# export CPLUSPLUS=clang++
+# export LD=clang
+# export LDPLUSPLUS=clang++
 
 # Optional: Cleaner build logs - libevent pulled in by react core items are ridiculously noisy otherwise
 sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end\\\n/' ios/Podfile
@@ -301,7 +313,8 @@ if [ "$(uname)" == "Darwin" ]; then
 
   echo "Installing pods and running iOS app in debug mode"
   pod repo update
-  npm_config_yes=true npx pod-install
+  cd ios && RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install && cd ..
+  # npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile
   npx react-native run-ios --mode Debug --simulator "iPhone 17"
@@ -326,7 +339,8 @@ if [ "$(uname)" == "Darwin" ]; then
   mv -f ios/Podfile-e ios/Podfile
 
   echo "Installing pods and running iOS app in macCatalyst mode"
-  npm_config_yes=true npx pod-install
+  cd ios && RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install && cd ..
+  # npm_config_yes=true npx pod-install
 
   # Now run it with our mac device udid as device target, that triggers catalyst build
 
