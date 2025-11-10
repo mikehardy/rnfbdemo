@@ -253,23 +253,14 @@ rm -f ios/rnfbdemo/AppDelegate.swift-e
 # Optional: build performance optimization to use ccache - asks xcodebuild to use clang and clang++ without the fully-qualified path
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
 # In that way you can install ccache or buildcache and get much faster compiles...
-# sed -i -e $'s/# :ccache_enabled/:ccache_enabled/' ios/Podfile
-# rm -f ios/Podfile??
-# # The built-in react-native ccache configuration does not work well, but
-# # my local one works great - use it
-# if [ -e ~/.ccache/ccache.conf ]; then
-#   echo "Using local ccache.conf in preference to built-in react-native conf"
-#   export CCACHE_CONFIGPATH=~/.ccache/ccache.conf
-# fi
-
-# There is a new problem with ccache and Xcode 16.1+ https://github.com/ccache/ccache/issues/1497
-# To avoid this, we stop using the built-in react-native ccache and revert to local override
-# We just do that with environment variables though, it works well in combination with
-# symbolic links in our PATH that point to /opt/homebrew/bin/ccache
-# export CC=clang
-# export CPLUSPLUS=clang++
-# export LD=clang
-# export LDPLUSPLUS=clang++
+sed -i -e $'s/# :ccache_enabled/:ccache_enabled/' ios/Podfile
+rm -f ios/Podfile??
+# The built-in react-native ccache configuration does not work well, but
+# my local one works great - use it
+if [ -e ~/.ccache/ccache.conf ]; then
+  echo "Using local ccache.conf in preference to built-in react-native conf"
+  export CCACHE_CONFIGPATH=~/.ccache/ccache.conf
+fi
 
 # Optional: Cleaner build logs - libevent pulled in by react core items are ridiculously noisy otherwise
 sed -i -e $'s/post_install do |installer|/post_install do |installer|\\\n    installer.pods_project.targets.each do |target|\\\n      target.build_configurations.each do |config|\\\n        config.build_settings["GCC_WARN_INHIBIT_ALL_WARNINGS"] = "YES"\\\n      end\\\n    end\\\n/' ios/Podfile
@@ -313,17 +304,28 @@ if [ "$(uname)" == "Darwin" ]; then
 
   echo "Installing pods and running iOS app in debug mode"
   pod repo update
-  cd ios && RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install && cd ..
-  # npm_config_yes=true npx pod-install
 
-  # Check iOS debug mode compile
+  # Let's do one round with non-prebuilts (a react-native 0.81+ feature)
+  export RCT_USE_RN_DEP=0
+  export RCT_USE_PREBUILT_RNCORE=0
+  npm_config_yes=true npx pod-install
+
+  # Check iOS debug mode compile then release mode
+  echo "Running iOS app in debug mode"
   npx react-native run-ios --mode Debug --simulator "iPhone 17"
-
-  # Check iOS release mode compile
-  echo "Installing pods and running iOS app in release mode"
+  echo "Running iOS app in release mode"
   npx react-native run-ios --mode Release --simulator "iPhone 17"
 
-  # New architecture disable: RCT_NEW_ARCH_ENABLED=0 env var then pod install
+  # Now Let's do a round with prebuilts (a react-native 0.81+ feature)
+  export RCT_USE_RN_DEP=1
+  export RCT_USE_PREBUILT_RNCORE=1
+  npm_config_yes=true npx pod-install
+
+  # Check iOS debug mode compile then release mode
+  echo "Running iOS app in debug mode"
+  npx react-native run-ios --mode Debug --simulator "iPhone 17"
+  echo "Running iOS app in release mode"
+  npx react-native run-ios --mode Release --simulator "iPhone 17"
 
   # Check catalyst build
 
@@ -338,9 +340,11 @@ if [ "$(uname)" == "Darwin" ]; then
   sed -e ':a' -e 'N' -e '$!ba' -e 's/ccache_enabled => true\n    )/ccache_enabled => true\n    )\n\n    # Exclude GoogleAdsOnDeviceConversion from macCatalyst builds\n    installer.pods_project.targets.each do |target|\n      libs = ["GoogleAdsOnDeviceConversion"]\n\n      target.build_configurations.each do |config|\n        xcconfig_path = config.base_configuration_reference.real_path\n        xcconfig = File.read(xcconfig_path)\n        values = ""\n\n        libs.each { |lib|\n          if xcconfig["-framework \\"#{lib}\\""]\n            puts "Found #{lib} on target #{target.name}"\n            xcconfig.sub!(" -framework \\"#{lib}\\"", "")\n            values += " -framework \\"#{lib}\\""\n          end\n        }\n\n        if values.length > 0\n          puts "Preparing #{target.name} for Catalyst\\n\\n"\n          new_xcconfig = xcconfig + "OTHER_LDFLAGS[sdk=iphone*] = $(inherited)" + values\n          File.open(xcconfig_path, "w") { |file| file << new_xcconfig }\n        end\n      end\n    end/g' ios/Podfile > ios/Podfile-e
   mv -f ios/Podfile-e ios/Podfile
 
+  # Let's do one round with non-prebuilts (a react-native 0.81+ feature)
+  export RCT_USE_RN_DEP=0
+  export RCT_USE_PREBUILT_RNCORE=0
   echo "Installing pods and running iOS app in macCatalyst mode"
-  cd ios && RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install && cd ..
-  # npm_config_yes=true npx pod-install
+  npm_config_yes=true npx pod-install
 
   # Now run it with our mac device udid as device target, that triggers catalyst build
 
@@ -351,6 +355,14 @@ if [ "$(uname)" == "Darwin" ]; then
   # https://github.com/react-native-community/cli/pull/2642
   CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
   npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+
+  # Let's do one round with prebuilts (a react-native 0.81+ feature)
+  export RCT_USE_RN_DEP=1
+  export RCT_USE_PREBUILT_RNCORE=1
+  echo "Installing pods and running iOS app in macCatalyst mode"
+  npm_config_yes=true npx pod-install
+  npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+
   ####################################################################################
 
   # Optional: workaround for poorly setup Android SDK environments on macs
