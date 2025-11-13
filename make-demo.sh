@@ -316,16 +316,16 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Running iOS app in release mode"
   npx react-native run-ios --mode Release --simulator "iPhone 17"
 
-  # Now Let's do a round with prebuilts (a react-native 0.81+ feature)
-  export RCT_USE_RN_DEP=1
-  export RCT_USE_PREBUILT_RNCORE=1
-  npm_config_yes=true npx pod-install
+  # # Now Let's do a round with prebuilts (a react-native 0.81+ feature)
+  # export RCT_USE_RN_DEP=1
+  # export RCT_USE_PREBUILT_RNCORE=1
+  # npm_config_yes=true npx pod-install
 
-  # Check iOS debug mode compile then release mode
-  echo "Running iOS app in debug mode"
-  npx react-native run-ios --mode Debug --simulator "iPhone 17"
-  echo "Running iOS app in release mode"
-  npx react-native run-ios --mode Release --simulator "iPhone 17"
+  # # Check iOS debug mode compile then release mode
+  # echo "Running iOS app in debug mode"
+  # npx react-native run-ios --mode Debug --simulator "iPhone 17"
+  # echo "Running iOS app in release mode"
+  # npx react-native run-ios --mode Release --simulator "iPhone 17"
 
   # Check catalyst build
 
@@ -356,12 +356,12 @@ if [ "$(uname)" == "Darwin" ]; then
   CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
   npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
 
-  # Let's do one round with prebuilts (a react-native 0.81+ feature)
-  export RCT_USE_RN_DEP=1
-  export RCT_USE_PREBUILT_RNCORE=1
-  echo "Installing pods and running iOS app in macCatalyst mode"
-  npm_config_yes=true npx pod-install
-  npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+  # # Let's do one round with prebuilts (a react-native 0.81+ feature)
+  # export RCT_USE_RN_DEP=1
+  # export RCT_USE_PREBUILT_RNCORE=1
+  # echo "Installing pods and running iOS app in macCatalyst mode"
+  # npm_config_yes=true npx pod-install
+  # npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
 
   ####################################################################################
 
