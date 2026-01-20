@@ -3,9 +3,8 @@ set -e
 
 source ./common-functions.sh
 
-EXPO_VER=54.0.0
-RN_VER=0.81.5
-RNFB_VER=23.8.2
+EXPO_VER=53
+RNFB_VER=23.7
 FB_IOS_VER=12.8.0
 FB_ANDROID_VER=34.7.0
 FB_GRADLE_SERVICES_VER=4.4.4
@@ -37,7 +36,7 @@ verifyJqVersion
 \rm -fr rnfbexpodemo
 
 # Test: Basic template create, rnfb install, link
-echo "Testing expo ${RN_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
+echo "Testing expo ${EXPO_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
 #######################################################################################################
 #######################################################################################################
@@ -48,8 +47,6 @@ echo "Testing expo ${RN_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-
 
 
 # Initialize a fresh project.
-# We say "skip-install" because we control our ruby version and cocoapods (part of install) does not like it
-# echo Y | yarn dlx @react-native-community/cli init rnfbdemo --pm yarn --package-name ${FB_ANDROID_PACKAGE_NAME} --skip-install --skip-git-init --version=${RN_VER}
 echo rnfbexpodemo | yarn dlx create-expo-app@latest --template expo-template-default@${EXPO_VER}
 
 cd rnfbexpodemo
@@ -60,9 +57,17 @@ yarn
 
 # Fixes and workarounds:
 # 1- We need to update react-native-screens or it has an android compile error
-yarn add react-native-screens@~4.19.0
-# 2- We should use the most recent compatible react-native
-yarn add react-native@${RN_VER}
+# TEST - I don't think this is necessary with expo@~54 (current version), was just 54.0.0...
+# if [[ "$EXPO_VER" == *"54"* ]]; then
+#   echo "Explicitly adding react-native-screens updated version to Expo 54 for Android build to work..."
+#   npx expo add react-native-screens
+# fi
+
+# For Expo 53, we need to add react-native-edge-to-edge or android has a compile error
+if [[ "$EXPO_VER" == *"53"* ]]; then
+  echo "Explicitly adding react-native-edge-to-edge to Expo 53 for Android build to work..."
+  npx expo add react-native-edge-to-edge
+fi
 
 # Need to edit all the app.json stuff here
 cat app.json | jq --arg FB_IOS_PACKAGE_NAME "$FB_IOS_PACKAGE_NAME" '.expo.ios.bundleIdentifier |= $FB_IOS_PACKAGE_NAME' > app.json.tmp && mv -f app.json.tmp app.json
@@ -74,12 +79,12 @@ cat app.json | jq '.expo.android.googleServicesFile |= "./google-services.json"'
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
 
 # Required: This is the most basic part of the integration - all react-native-firebase apps require the app package
-echo "Adding react-native-firebase core app package"
-if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
-  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
-else
+# echo "Adding react-native-firebase core app package"
+# if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
+#   yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
+# else
  yarn add "@react-native-firebase/app@${RNFB_VER}"
-fi
+# fi
 
 
 #############################################################################################################
@@ -123,14 +128,14 @@ fi
 # First set up all the modules that need no further config for the demo 
 
 # TODO - temporarily ignoring app-check - the config plugin runs successfully but `import RNFBAppCheck` fails in AppDelegate.swift
-#for RNFBPKG in ai analytics app-check app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage; do
-for RNFBPKG in ai analytics app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage; do
+for RNFBPKG in ai analytics app-check app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage; do
+# for RNFBPKG in ai analytics app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage; do
   echo "Adding react-native-firebase package '${RNFBPKG}'..."
-  if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
-    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
-  else
+  # if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
+  #   yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
+  # else
    yarn add "@react-native-firebase/${RNFBPKG}@${RNFB_VER}"
-  fi
+  # fi
 
   # If this react-native-firebase package has an Expo plugin, add it to app.json
   if [ -e "./node_modules/@react-native-firebase/${RNFBPKG}/app.plugin.js" ]; then
@@ -170,6 +175,7 @@ echo "Running any patches necessary to compile successfully"
 # cp -rv ../patches .
 # npm_config_yes=true npx patch-package
 
+echo "Running expo prebuild..."
 npx expo prebuild
 
 # Android builds fail lintVitalRelease out of the box with OutOfMemory, increase it

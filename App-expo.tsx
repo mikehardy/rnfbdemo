@@ -20,7 +20,7 @@ import {
 
 import {getApp, getApps} from '@react-native-firebase/app';
 import {getAnalytics} from '@react-native-firebase/analytics';
-// import appCheck, {initializeAppCheck} from '@react-native-firebase/app-check';
+import appCheck, {initializeAppCheck} from '@react-native-firebase/app-check';
 import {getAppDistribution} from '@react-native-firebase/app-distribution';
 import {
   connectAuthEmulator,
@@ -118,26 +118,26 @@ function App(): JSX.Element {
   const [appCheckPresent, setAppCheckPresent] = useState(false);
 
   useEffect(() => {
-    // console.log('initializating AppCheck...');
-    // const rnfbProvider = appCheck().newReactNativeFirebaseAppCheckProvider();
-    // rnfbProvider.configure({
-    //   android: {
-    //     provider: __DEV__ ? 'debug' : 'playIntegrity',
-    //     debugToken: 'invalid debug token',
-    //   },
-    //   apple: {
-    //     provider: __DEV__ ? 'debug' : 'appAttestWithDeviceCheckFallback',
-    //     debugToken: 'invalid debug token',
-    //   },
-    //   web: {
-    //     provider: 'reCaptchaV3',
-    //     siteKey: 'unknown',
-    //   },
-    // });
-    // initializeAppCheck(getApp(), {provider: rnfbProvider}).then(() => {
-    //   console.log('AppCheck is initialized.');
-    //   setAppCheckPresent(true);
-    // });
+    console.log('initializating AppCheck...');
+    const rnfbProvider = appCheck().newReactNativeFirebaseAppCheckProvider();
+    rnfbProvider.configure({
+      android: {
+        provider: __DEV__ ? 'debug' : 'playIntegrity',
+        debugToken: 'invalid debug token',
+      },
+      apple: {
+        provider: __DEV__ ? 'debug' : 'appAttestWithDeviceCheckFallback',
+        debugToken: 'invalid debug token',
+      },
+      web: {
+        provider: 'reCaptchaV3',
+        siteKey: 'unknown',
+      },
+    });
+    initializeAppCheck(getApp(), {provider: rnfbProvider}).then(() => {
+      console.log('AppCheck is initialized.');
+      setAppCheckPresent(true);
+    });
 
     console.log('Requesting basic notification permission');
     requestPermission(getMessaging(), {alert: true, badge: true}).then(() =>
@@ -307,7 +307,7 @@ function App(): JSX.Element {
           {getAnalytics().native && (
             <Text style={dynStyles.colors}>analytics()</Text>
           )}
-          {/* {appCheckPresent && <Text style={dynStyles.colors}>appCheck()</Text>} */}
+          {appCheckPresent && <Text style={dynStyles.colors}>appCheck()</Text>}
           {getAppDistribution().native && (
             <Text style={dynStyles.colors}>appDistribution()</Text>
           )}
