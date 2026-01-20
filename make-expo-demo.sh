@@ -4,7 +4,7 @@ set -e
 source ./common-functions.sh
 
 EXPO_VER=53
-RNFB_VER=23.7
+RNFB_VER=23.8
 FB_IOS_VER=12.8.0
 FB_ANDROID_VER=34.7.0
 FB_GRADLE_SERVICES_VER=4.4.4
