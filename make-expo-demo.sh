@@ -79,12 +79,12 @@ cat app.json | jq '.expo.android.googleServicesFile |= "./google-services.json"'
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
 
 # Required: This is the most basic part of the integration - all react-native-firebase apps require the app package
-# echo "Adding react-native-firebase core app package"
-# if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
-#   yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
-# else
+echo "Adding react-native-firebase core app package"
+if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
+  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
+else
  yarn add "@react-native-firebase/app@${RNFB_VER}"
-# fi
+fi
 
 
 #############################################################################################################
@@ -131,11 +131,11 @@ fi
 for RNFBPKG in ai analytics app-check app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage; do
 # for RNFBPKG in ai analytics app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage; do
   echo "Adding react-native-firebase package '${RNFBPKG}'..."
-  # if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
-  #   yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
-  # else
+  if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
+    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
+  else
    yarn add "@react-native-firebase/${RNFBPKG}@${RNFB_VER}"
-  # fi
+  fi
 
   # If this react-native-firebase package has an Expo plugin, add it to app.json
   if [ -e "./node_modules/@react-native-firebase/${RNFBPKG}/app.plugin.js" ]; then
