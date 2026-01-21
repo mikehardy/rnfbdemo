@@ -127,9 +127,13 @@ fi
 # From this point on we are adding optional modules. We test them all so we add them all. You only need to add what you need.
 # First set up all the modules that need no further config for the demo 
 
-# TODO - temporarily ignoring app-check - the config plugin runs successfully but `import RNFBAppCheck` fails in AppDelegate.swift
-for RNFBPKG in ai analytics app-check app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage; do
-# for RNFBPKG in ai analytics app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage; do
+# TODO - temporarily ignoring app-check on Expo 54 - the config plugin runs successfully but `import RNFBAppCheck` fails in AppDelegate.swift
+NON_APP_PACKAGES="ai analytics app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage"
+if [[ "$EXPO_VER" == *"53"* ]]; then
+  NON_APP_PACKAGES="${NON_APP_PACKAGES} app-check"
+fi
+
+for RNFBPKG in $NON_APP_PACKAGES; do
   echo "Adding react-native-firebase package '${RNFBPKG}'..."
   if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
     yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
