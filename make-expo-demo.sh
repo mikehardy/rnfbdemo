@@ -81,6 +81,8 @@ cat app.json | jq '.expo.android.googleServicesFile |= "./google-services.json"'
 # Required: This is the most basic part of the integration - all react-native-firebase apps require the app package
 echo "Adding react-native-firebase core app package"
 if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
+  # Yarn add twice to avoid stale contents: https://github.com/yarnpkg/yarn/issues/6811
+  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
   yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
 else
  yarn add "@react-native-firebase/app@${RNFB_VER}"
@@ -136,6 +138,8 @@ fi
 for RNFBPKG in $NON_APP_PACKAGES; do
   echo "Adding react-native-firebase package '${RNFBPKG}'..."
   if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
+    # Yarn add twice to avoid stale contents: https://github.com/yarnpkg/yarn/issues/6811
+    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
     yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
   else
    yarn add "@react-native-firebase/${RNFBPKG}@${RNFB_VER}"
