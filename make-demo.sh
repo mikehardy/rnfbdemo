@@ -99,7 +99,14 @@ fi
 
 # Required: This is the most basic part of the integration - include google services plugin and call to firebase init on iOS
 echo "Adding react-native-firebase core app package"
-yarn add "@react-native-firebase/app@${RNFB_VER}"
+if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
+  # Yarn add twice to avoid stale contents: https://github.com/yarnpkg/yarn/issues/6811
+  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
+  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
+else
+ yarn add "@react-native-firebase/app@${RNFB_VER}"
+fi
+
 echo "Adding basic iOS integration - AppDelegate import and config call"
 sed -i -e $'s/import UIKit/import UIKit\\\nimport FirebaseCore/' ios/rnfbdemo/AppDelegate.swift
 rm -f ios/rnfbdemo/AppDelegate.swift-e
@@ -175,26 +182,22 @@ fi
 
 
 # From this point on we are adding optional modules. We test them all so we add them all. You only need to add what you need.
-# First set up all the modules that need no further config for the demo 
-echo "Adding packages: AI, Analytics, App Check, Auth, Database, Firestore, Functions, In App Messaging, Installations, Messaging, ML, Remote Config, Storage"
-yarn add \
-  @react-native-firebase/ai@${RNFB_VER} \
-  @react-native-firebase/analytics@${RNFB_VER} \
-  @react-native-firebase/app-check@${RNFB_VER} \
-  @react-native-firebase/auth@${RNFB_VER} \
-  @react-native-firebase/database@${RNFB_VER} \
-  @react-native-firebase/firestore@${RNFB_VER} \
-  @react-native-firebase/functions@${RNFB_VER} \
-  @react-native-firebase/in-app-messaging@${RNFB_VER} \
-  @react-native-firebase/installations@${RNFB_VER} \
-  @react-native-firebase/messaging@${RNFB_VER} \
-  @react-native-firebase/ml@${RNFB_VER} \
-  @react-native-firebase/remote-config@${RNFB_VER} \
-  @react-native-firebase/storage@${RNFB_VER}
+# First install all the modules. Modules that need more config will get that later in script
+NON_APP_PACKAGES="ai analytics app-check app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage"
+
+for RNFBPKG in $NON_APP_PACKAGES; do
+  echo "Adding react-native-firebase package '${RNFBPKG}'..."
+  if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
+    # Yarn add twice to avoid stale contents: https://github.com/yarnpkg/yarn/issues/6811
+    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
+    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
+  else
+   yarn add "@react-native-firebase/${RNFBPKG}@${RNFB_VER}"
+  fi
+done
 
 # Optional: Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
-yarn add "@react-native-firebase/crashlytics@${RNFB_VER}"
 sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:firebase-crashlytics-gradle:${FB_GRADLE_CRASH_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.crashlytics"/' android/app/build.gradle
@@ -204,7 +207,6 @@ rm -f android/app/build.gradle??
 
 # Optional: Performance - classpath, plugin, dependency, import, init
 echo "Setting up Performance - package, gradle plugin"
-yarn add "@react-native-firebase/perf@${RNFB_VER}"
 rm -f android/app/build.gradle??
 sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:perf-plugin:${FB_GRADLE_PERF_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
@@ -213,7 +215,6 @@ rm -f android/app/build.gradle??
 
 # Optional: App Distribution - classpath, plugin, dependency, import, init
 echo "Setting up App Distribution - package, gradle plugin"
-yarn add "@react-native-firebase/app-distribution@${RNFB_VER}"
 sed -i -e $"s/dependencies {/dependencies {\n        classpath \"com.google.firebase:firebase-appdistribution-gradle:${FB_GRADLE_APP_DIST_VER}\"/" android/build.gradle
 rm -f android/build.gradle??
 sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\\\napply plugin: "com.google.firebase.appdistribution"/' android/app/build.gradle
