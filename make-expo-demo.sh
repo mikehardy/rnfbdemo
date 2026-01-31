@@ -4,7 +4,7 @@ set -e
 source ./common-functions.sh
 
 EXPO_VER=54
-RNFB_VER=23.8
+RNFB_VER=23.8.5
 FB_IOS_VER=12.8.0
 FB_ANDROID_VER=34.7.0
 FB_GRADLE_SERVICES_VER=4.4.4
@@ -56,12 +56,6 @@ touch yarn.lock
 yarn
 
 # Fixes and workarounds:
-# 1- We need to update react-native-screens or it has an android compile error
-# TEST - I don't think this is necessary with expo@~54 (current version), was just 54.0.0...
-# if [[ "$EXPO_VER" == *"54"* ]]; then
-#   echo "Explicitly adding react-native-screens updated version to Expo 54 for Android build to work..."
-#   npx expo add react-native-screens
-# fi
 
 # For Expo 53, we need to add react-native-edge-to-edge or android has a compile error
 if [[ "$EXPO_VER" == *"53"* ]]; then
@@ -128,12 +122,7 @@ fi
 
 # From this point on we are adding optional modules. We test them all so we add them all. You only need to add what you need.
 # First set up all the modules that need no further config for the demo 
-
-# TODO - temporarily ignoring app-check on Expo 54 - the config plugin runs successfully but `import RNFBAppCheck` fails in AppDelegate.swift
-NON_APP_PACKAGES="ai analytics app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage"
-if [[ "$EXPO_VER" == *"53"* ]]; then
-  NON_APP_PACKAGES="${NON_APP_PACKAGES} app-check"
-fi
+NON_APP_PACKAGES="ai analytics app-check app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage"
 
 for RNFBPKG in $NON_APP_PACKAGES; do
   echo "Adding react-native-firebase package '${RNFBPKG}'..."
@@ -169,12 +158,13 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 # Optional: allow explicit SDK version control by specifying our iOS Pods and Android Firebase Bill of Materials
 
 # TODO - demonstrate firebase-ios-sdk version pin in Expo context
+# It uses an environment variable
 #echo "Adding upstream SDK overrides for precise version control"
 #echo "project.ext{set('react-native',[versions:[firebase:[bom:'${FB_ANDROID_VER}'],],])}" >> android/build.gradle
 #sed -i -e $"s/target 'rnfbdemo' do/\$FirebaseSDKVersion = '${FB_IOS_VER}'\ntarget 'rnfbdemo' do/" ios/Podfile
 #rm -f ios/Podfile??
 
-# Test: Copy in our demonstrator App.tsx
+# Test: Copy in our demonstrator App file (Expo drops it into first spot on a tabbed nav)
 echo "Copying demonstrator App.tsx..."
 rm -f './app/(tabs)/index.tsx' && cp ../App-expo.tsx './app/(tabs)/index.tsx'
 
@@ -201,7 +191,7 @@ open ./start-dev-server.command
 # Test: Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
 
-  # TODO, how to do these in Expo context?
+  # TODO, demonstrate adding entitlements using Expo app.json items
   # These are the background modes you need for push notifications and processing (just in case)
   # /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" ios/rnfbdemo/Info.plist 
   # /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string fetch" ios/rnfbdemo/Info.plist 
@@ -211,11 +201,11 @@ if [ "$(uname)" == "Darwin" ]; then
   echo "Running iOS app in debug mode"
   npm_config_yes=true npx expo run:ios --configuration Debug # --simulator "iPhone 17"
 
-  # Check iOS release mode compile
+  # TODO Check iOS release mode compile
   # echo "Installing pods and running iOS app in release mode"
   # npx react-native run-ios --mode Release --simulator "iPhone 17"
 
-  # Check catalyst build
+  # TODO Check catalyst build
 
   # Required for macCatalyst: Podfile workarounds for signing and library paths are built-in 0.70+ with a specific flag:
   # sed -i -e $'s/mac_catalyst_enabled => false/mac_catalyst_enabled => true/' ios/Podfile
