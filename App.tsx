@@ -173,7 +173,7 @@ function App(): JSX.Element {
     try {
       console.log('Getting our token for message send');
       const token = await getToken(getMessaging());
-      console.log('sending a visible notification now');
+      console.log(`sending silent notification to token ${token}`);
       const fcmRequest = await fetch(
         'https://us-central1-react-native-firebase-testing.cloudfunctions.net/sendFCM',
         {
@@ -206,8 +206,9 @@ function App(): JSX.Element {
         },
       );
       console.log('request sent, waiting for response');
-      const {result} = await fcmRequest.json();
-      console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
+      // const { result } = await fcmRequest.json();
+      // console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
+      console.log(`got response: ${JSON.stringify(await fcmRequest.text())}`);
     } catch (e) {
       console.error('something went wrong? ' + e);
     }
@@ -217,7 +218,7 @@ function App(): JSX.Element {
     try {
       console.log('Getting our token for message send');
       const token = await getToken(getMessaging());
-      console.log('sending a visible notification now');
+      console.log(`sending visible notification to token ${token}`);
       const fcmRequest = await fetch(
         'https://us-central1-react-native-firebase-testing.cloudfunctions.net/sendFCM',
         {
@@ -244,8 +245,9 @@ function App(): JSX.Element {
         },
       );
       console.log('request sent, waiting for response');
-      const {result} = await fcmRequest.json();
-      console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
+      // const { result } = await fcmRequest.json();
+      // console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
+      console.log(`got response: ${JSON.stringify(await fcmRequest.text())}`);
     } catch (e) {
       console.error('something went wrong? ' + e);
     }
