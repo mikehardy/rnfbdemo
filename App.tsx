@@ -5,8 +5,8 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useEffect, useState } from 'react';
+import type { PropsWithChildren } from 'react';
 import {
   Button,
   SafeAreaView,
@@ -18,10 +18,10 @@ import {
   View,
 } from 'react-native';
 
-import {getApp, getApps} from '@react-native-firebase/app';
-import {getAnalytics} from '@react-native-firebase/analytics';
-import appCheck, {initializeAppCheck} from '@react-native-firebase/app-check';
-import {getAppDistribution} from '@react-native-firebase/app-distribution';
+import { getApp, getApps } from '@react-native-firebase/app';
+import { getAnalytics } from '@react-native-firebase/analytics';
+import appCheck, { initializeAppCheck } from '@react-native-firebase/app-check';
+import { getAppDistribution } from '@react-native-firebase/app-distribution';
 import {
   connectAuthEmulator,
   FirebaseAuthTypes,
@@ -30,12 +30,12 @@ import {
   signInAnonymously,
   signOut,
 } from '@react-native-firebase/auth';
-import {getCrashlytics} from '@react-native-firebase/crashlytics';
-import {getDatabase} from '@react-native-firebase/database';
-import {getFirestore} from '@react-native-firebase/firestore';
-import {getFunctions} from '@react-native-firebase/functions';
-import {getInAppMessaging} from '@react-native-firebase/in-app-messaging';
-import {getInstallations} from '@react-native-firebase/installations';
+import { getCrashlytics } from '@react-native-firebase/crashlytics';
+import { getDatabase } from '@react-native-firebase/database';
+import { getFirestore } from '@react-native-firebase/firestore';
+import { getFunctions } from '@react-native-firebase/functions';
+import { getInAppMessaging } from '@react-native-firebase/in-app-messaging';
+import { getInstallations } from '@react-native-firebase/installations';
 import {
   getMessaging,
   getToken,
@@ -44,15 +44,14 @@ import {
   registerDeviceForRemoteMessages,
   requestPermission,
 } from '@react-native-firebase/messaging';
-import {getPerformance} from '@react-native-firebase/perf';
-import {getRemoteConfig} from '@react-native-firebase/remote-config';
-import {getStorage} from '@react-native-firebase/storage';
-import {getAI} from '@react-native-firebase/ai';
+import { getPerformance } from '@react-native-firebase/perf';
+import { getRemoteConfig } from '@react-native-firebase/remote-config';
+import { getStorage } from '@react-native-firebase/storage';
+import { getAI } from '@react-native-firebase/ai';
 
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
-
 
 const COLORS = {
   white: '#ffffff',
@@ -75,7 +74,7 @@ const COLORS = {
   },
 };
 
-function Section({children, title}: SectionProps): JSX.Element {
+function Section({ children, title }: SectionProps): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
@@ -85,7 +84,8 @@ function Section({children, title}: SectionProps): JSX.Element {
           {
             color: isDarkMode ? COLORS.white : COLORS.black,
           },
-        ]}>
+        ]}
+      >
         {title}
       </Text>
       <Text
@@ -94,7 +94,8 @@ function Section({children, title}: SectionProps): JSX.Element {
           {
             color: isDarkMode ? COLORS.light : COLORS.dark,
           },
-        ]}>
+        ]}
+      >
         {children}
       </Text>
     </View>
@@ -134,13 +135,13 @@ function App(): JSX.Element {
         siteKey: 'unknown',
       },
     });
-    initializeAppCheck(getApp(), {provider: rnfbProvider}).then(() => {
+    initializeAppCheck(getApp(), { provider: rnfbProvider }).then(() => {
       console.log('AppCheck is initialized.');
       setAppCheckPresent(true);
     });
 
     console.log('Requesting basic notification permission');
-    requestPermission(getMessaging(), {alert: true, badge: true}).then(() =>
+    requestPermission(getMessaging(), { alert: true, badge: true }).then(() =>
       console.log('Permission for notifications handled'),
     );
 
@@ -258,7 +259,8 @@ function App(): JSX.Element {
       />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
+        style={backgroundStyle}
+      >
         <Button
           title="sign in"
           onPress={async () => {
@@ -292,7 +294,8 @@ function App(): JSX.Element {
           style={{
             backgroundColor: isDarkMode ? COLORS.black : COLORS.white,
             alignItems: 'center',
-          }}>
+          }}
+        >
           <Section title="RNFirebase Build Demo" />
           <Text />
           <Text style={dynStyles.colors}>
@@ -342,9 +345,7 @@ function App(): JSX.Element {
           {getStorage().native && (
             <Text style={dynStyles.colors}>storage()</Text>
           )}
-          {getAI() !== undefined && (
-            <Text style={dynStyles.colors}>ai()</Text>
-          )}
+          {getAI() !== undefined && <Text style={dynStyles.colors}>ai()</Text>}
         </View>
       </ScrollView>
     </SafeAreaView>
