@@ -3,14 +3,14 @@ set -e
 
 source ./common-functions.sh
 
-EXPO_VER=54
-RNFB_VER=23.8.5
-FB_IOS_VER=12.8.0
-FB_ANDROID_VER=34.7.0
+EXPO_VER=55
+RNFB_VER=23.8.6
+FB_IOS_VER=12.10.0
+FB_ANDROID_VER=34.10.0
 FB_GRADLE_SERVICES_VER=4.4.4
 FB_GRADLE_PERF_VER=2.0.2
 FB_GRADLE_CRASH_VER=3.0.6
-FB_GRADLE_APP_DIST_VER=5.2.0
+FB_GRADLE_APP_DIST_VER=5.2.1
 
 # This should match what you have defined in firebase console, so that
 # it matches what is in your google-services.json and GoogleService-Info.plist
@@ -166,7 +166,7 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 
 # Test: Copy in our demonstrator App file (Expo drops it into first spot on a tabbed nav)
 echo "Copying demonstrator App.tsx..."
-rm -f './app/(tabs)/index.tsx' && cp ../App-expo.tsx './app/(tabs)/index.tsx'
+rm -f './src/app/index.tsx' && cp ../App-expo.tsx './src/app/index.tsx'
 
 # Test: You have to re-run patch-package after yarn since it is not integrated into postinstall
 echo "Running any patches necessary to compile successfully"
