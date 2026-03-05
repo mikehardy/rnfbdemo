@@ -38,6 +38,21 @@ verifyJqVersion
 # Test: Basic template create, rnfb install, link
 echo "Testing expo ${EXPO_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
+# A bit more setup for testing - we can use local packages, but we don't always want that
+if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
+  # Sometimes I forget / it is surprising that there are local packages.
+  # I still want this script to run fully-automatic though, so just inform
+  echo "#################################################################"
+  echo
+  echo "  Local packages in ~/packages - abort and delete if unwanted"
+  echo
+  echo "#################################################################"
+  sleep 5
+fi
+
+# End of test setup / environment verification section
+#######################################################################################################
+#######################################################################################################
 #######################################################################################################
 #######################################################################################################
 

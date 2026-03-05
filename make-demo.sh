@@ -62,12 +62,26 @@ if ! YARN_VERSION=$(yarn --version|cut -f1 -d'.') || { [ "$YARN_VERSION" != "3" 
   echo "This script uses yarn@^4+, please install yarn (for example \`corepack enable && corepack prepare yarn@^4 --activate\` and re-try"
   exit 1
 fi
+
+# A bit more setup for testing - we can use local packages, but we don't always want that
+if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
+  # Sometimes I forget / it is surprising that there are local packages.
+  # I still want this script to run fully-automatic though, so just inform
+  echo "#################################################################"
+  echo
+  echo "  Local packages in ~/packages - abort and delete if unwanted"
+  echo
+  echo "#################################################################"
+  sleep 5
+fi
+
+# End of test setup / environment verification section
+#######################################################################################################
+#######################################################################################################
 #######################################################################################################
 #######################################################################################################
 
-
-
-# Let's test react-native-firebase integration! Here is how you do it.
+# Okay! Let's test react-native-firebase integration! Here is how you do it.
 
 
 # Initialize a fresh project.
