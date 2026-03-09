@@ -5,8 +5,8 @@
  * @format
  */
 
-import React, { useEffect, useState } from 'react';
-import type { PropsWithChildren } from 'react';
+import React, { useEffect, useState } from "react";
+import type { PropsWithChildren } from "react";
 import {
   Button,
   SafeAreaView,
@@ -16,12 +16,12 @@ import {
   Text,
   useColorScheme,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { getApp, getApps } from '@react-native-firebase/app';
-import { getAnalytics } from '@react-native-firebase/analytics';
-import appCheck, { initializeAppCheck } from '@react-native-firebase/app-check';
-import { getAppDistribution } from '@react-native-firebase/app-distribution';
+import { getApp, getApps } from "@react-native-firebase/app";
+import { getAnalytics } from "@react-native-firebase/analytics";
+import appCheck, { initializeAppCheck } from "@react-native-firebase/app-check";
+import { getAppDistribution } from "@react-native-firebase/app-distribution";
 import {
   connectAuthEmulator,
   FirebaseAuthTypes,
@@ -29,13 +29,13 @@ import {
   onAuthStateChanged,
   signInAnonymously,
   signOut,
-} from '@react-native-firebase/auth';
-import { getCrashlytics } from '@react-native-firebase/crashlytics';
-import { getDatabase } from '@react-native-firebase/database';
-import { getFirestore } from '@react-native-firebase/firestore';
-import { getFunctions } from '@react-native-firebase/functions';
-import { getInAppMessaging } from '@react-native-firebase/in-app-messaging';
-import { getInstallations } from '@react-native-firebase/installations';
+} from "@react-native-firebase/auth";
+import { getCrashlytics } from "@react-native-firebase/crashlytics";
+import { getDatabase } from "@react-native-firebase/database";
+import { getFirestore } from "@react-native-firebase/firestore";
+import { getFunctions } from "@react-native-firebase/functions";
+import { getInAppMessaging } from "@react-native-firebase/in-app-messaging";
+import { getInstallations } from "@react-native-firebase/installations";
 import {
   getMessaging,
   getToken,
@@ -43,39 +43,39 @@ import {
   onMessage,
   registerDeviceForRemoteMessages,
   requestPermission,
-} from '@react-native-firebase/messaging';
-import { getPerformance } from '@react-native-firebase/perf';
-import { getRemoteConfig } from '@react-native-firebase/remote-config';
-import { getStorage } from '@react-native-firebase/storage';
-import { getAI } from '@react-native-firebase/ai';
+} from "@react-native-firebase/messaging";
+import { getPerformance } from "@react-native-firebase/perf";
+import { getRemoteConfig } from "@react-native-firebase/remote-config";
+import { getStorage } from "@react-native-firebase/storage";
+import { getAI } from "@react-native-firebase/ai";
 
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
 
 const COLORS = {
-  white: '#ffffff',
-  black: '#000000',
+  white: "#ffffff",
+  black: "#000000",
   light: {
-    background: '#f3f3f3',
-    backgroundHighlight: '#cfe6ee',
-    cardBackground: '#fff',
-    cardOutline: '#dae1e7',
-    textPrimary: '#000',
-    textSecondary: '#404756',
+    background: "#f3f3f3",
+    backgroundHighlight: "#cfe6ee",
+    cardBackground: "#fff",
+    cardOutline: "#dae1e7",
+    textPrimary: "#000",
+    textSecondary: "#404756",
   },
   dark: {
-    background: '#000',
-    backgroundHighlight: '#193c47',
-    cardBackground: '#222',
-    cardOutline: '#444',
-    textPrimary: '#fff',
-    textSecondary: '#c0c1c4',
+    background: "#000",
+    backgroundHighlight: "#193c47",
+    cardBackground: "#222",
+    cardOutline: "#444",
+    textPrimary: "#fff",
+    textSecondary: "#c0c1c4",
   },
 };
 
 function Section({ children, title }: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
   return (
     <View style={styles.sectionContainer}>
       <Text
@@ -102,59 +102,59 @@ function Section({ children, title }: SectionProps): JSX.Element {
   );
 }
 
-onMessage(getMessaging(), message => {
-  console.log('messaging.onMessage received: ' + JSON.stringify(message));
+onMessage(getMessaging(), (message) => {
+  console.log("messaging.onMessage received: " + JSON.stringify(message));
 });
 
-connectAuthEmulator(getAuth(), 'http://localhost:9099');
+connectAuthEmulator(getAuth(), "http://localhost:9099");
 
 onAuthStateChanged(getAuth(), (user: FirebaseAuthTypes.User) => {
   console.log(
-    'onAuthStateChanged was called with user uid ' + (user?.uid ?? '(no user)'),
+    "onAuthStateChanged was called with user uid " + (user?.uid ?? "(no user)"),
   );
 });
 
 function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
   const [appCheckPresent, setAppCheckPresent] = useState(false);
 
   useEffect(() => {
-    console.log('initializating AppCheck...');
+    console.log("initializating AppCheck...");
     const rnfbProvider = appCheck().newReactNativeFirebaseAppCheckProvider();
     rnfbProvider.configure({
       android: {
-        provider: __DEV__ ? 'debug' : 'playIntegrity',
-        debugToken: 'invalid debug token',
+        provider: __DEV__ ? "debug" : "playIntegrity",
+        debugToken: "invalid debug token",
       },
       apple: {
-        provider: __DEV__ ? 'debug' : 'appAttestWithDeviceCheckFallback',
-        debugToken: 'invalid debug token',
+        provider: __DEV__ ? "debug" : "appAttestWithDeviceCheckFallback",
+        debugToken: "invalid debug token",
       },
       web: {
-        provider: 'reCaptchaV3',
-        siteKey: 'unknown',
+        provider: "reCaptchaV3",
+        siteKey: "unknown",
       },
     });
     initializeAppCheck(getApp(), { provider: rnfbProvider }).then(() => {
-      console.log('AppCheck is initialized.');
+      console.log("AppCheck is initialized.");
       setAppCheckPresent(true);
     });
 
-    console.log('Requesting basic notification permission');
+    console.log("Requesting basic notification permission");
     requestPermission(getMessaging(), { alert: true, badge: true }).then(() =>
-      console.log('Permission for notifications handled'),
+      console.log("Permission for notifications handled"),
     );
 
-    console.log('Initializing messaging for notifications...');
+    console.log("Initializing messaging for notifications...");
     registerDeviceForRemoteMessages(getMessaging())
       .then(() =>
         console.log(
-          'Registered for remote messages: ' +
+          "Registered for remote messages: " +
             isDeviceRegisteredForRemoteMessages(getMessaging()),
         ),
       )
-      .catch(e =>
-        console.error('could not register for remote notifications: ' + e),
+      .catch((e) =>
+        console.error("could not register for remote notifications: " + e),
       );
   }, []);
 
@@ -169,17 +169,17 @@ function App(): JSX.Element {
   });
 
   const sendSilent = async () => {
-    console.log('sending a silent notification now');
+    console.log("sending a silent notification now");
     try {
-      console.log('Getting our token for message send');
+      console.log("Getting our token for message send");
       const token = await getToken(getMessaging());
       console.log(`sending silent notification to token ${token}`);
       const fcmRequest = await fetch(
-        'https://us-central1-react-native-firebase-testing.cloudfunctions.net/sendFCM',
+        "https://us-central1-react-native-firebase-testing.cloudfunctions.net/sendFCM",
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             data: {
@@ -187,44 +187,44 @@ function App(): JSX.Element {
               message: {
                 token,
                 data: {
-                  message: 'hello from data block',
+                  message: "hello from data block",
                 },
                 apns: {
                   payload: {
                     aps: {
-                      'content-available': 1,
+                      "content-available": 1,
                     },
                   },
                 },
                 android: {
-                  priority: 'high',
+                  priority: "high",
                 },
               },
             },
           }),
-          redirect: 'follow',
+          redirect: "follow",
         },
       );
-      console.log('request sent, waiting for response');
+      console.log("request sent, waiting for response");
       const { result } = await fcmRequest.json();
-      console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
+      console.log("got sendFCM result: " + JSON.stringify(result, null, 2));
       console.log(`got response: ${JSON.stringify(await fcmRequest.text())}`);
     } catch (e) {
-      console.error('something went wrong? ' + e);
+      console.error("something went wrong? " + e);
     }
   };
 
   const sendVisible = async () => {
     try {
-      console.log('Getting our token for message send');
+      console.log("Getting our token for message send");
       const token = await getToken(getMessaging());
       console.log(`sending visible notification to token ${token}`);
       const fcmRequest = await fetch(
-        'https://us-central1-react-native-firebase-testing.cloudfunctions.net/sendFCM',
+        "https://us-central1-react-native-firebase-testing.cloudfunctions.net/sendFCM",
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             data: {
@@ -232,31 +232,31 @@ function App(): JSX.Element {
               message: {
                 token,
                 notification: {
-                  title: 'hello world title',
-                  body: 'hello world body',
+                  title: "hello world title",
+                  body: "hello world body",
                 },
                 data: {
-                  message: 'hello from data block',
+                  message: "hello from data block",
                 },
               },
             },
           }),
-          redirect: 'follow',
+          redirect: "follow",
         },
       );
-      console.log('request sent, waiting for response');
+      console.log("request sent, waiting for response");
       // const { result } = await fcmRequest.json();
       // console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
       console.log(`got response: ${JSON.stringify(await fcmRequest.text())}`);
     } catch (e) {
-      console.error('something went wrong? ' + e);
+      console.error("something went wrong? " + e);
     }
   };
 
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView
@@ -266,28 +266,28 @@ function App(): JSX.Element {
         <Button
           title="sign in"
           onPress={async () => {
-            console.log('anonymous sign in ');
+            console.log("anonymous sign in ");
             await signInAnonymously(getAuth());
           }}
         />
         <Button
           title="sign out"
           onPress={async () => {
-            console.log('signing out');
+            console.log("signing out");
             await signOut(getAuth());
           }}
         />
         <Button
           title="Send Silent Notification to Device"
           onPress={async () => {
-            console.log('silent notification');
+            console.log("silent notification");
             await sendSilent();
           }}
         />
         <Button
           title="Send Visible Notification to Device"
           onPress={async () => {
-            console.log('visible notification');
+            console.log("visible notification");
             await sendVisible();
           }}
         />
@@ -295,7 +295,7 @@ function App(): JSX.Element {
         <View
           style={{
             backgroundColor: isDarkMode ? COLORS.black : COLORS.white,
-            alignItems: 'center',
+            alignItems: "center",
           }}
         >
           <Section title="RNFirebase Build Demo" />
@@ -361,15 +361,15 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   sectionDescription: {
     marginTop: 8,
     fontSize: 18,
-    fontWeight: '400',
+    fontWeight: "400",
   },
   highlight: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
 
