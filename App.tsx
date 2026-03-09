@@ -206,8 +206,8 @@ function App(): JSX.Element {
         },
       );
       console.log('request sent, waiting for response');
-      // const { result } = await fcmRequest.json();
-      // console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
+      const { result } = await fcmRequest.json();
+      console.log('got sendFCM result: ' + JSON.stringify(result, null, 2));
       console.log(`got response: ${JSON.stringify(await fcmRequest.text())}`);
     } catch (e) {
       console.error('something went wrong? ' + e);

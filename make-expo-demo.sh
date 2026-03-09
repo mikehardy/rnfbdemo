@@ -166,7 +166,7 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 
 # Test: Copy in our demonstrator App file (Expo drops it into first spot on a tabbed nav)
 echo "Copying demonstrator App.tsx..."
-rm -f './src/app/index.tsx' && cp ../App-expo.tsx './src/app/index.tsx'
+rm -f './src/app/index.tsx' && cp ../App.tsx './src/app/index.tsx'
 
 # Test: You have to re-run patch-package after yarn since it is not integrated into postinstall
 echo "Running any patches necessary to compile successfully"
