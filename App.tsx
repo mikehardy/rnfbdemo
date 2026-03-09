@@ -9,6 +9,7 @@ import React, { useEffect, useState } from "react";
 import type { PropsWithChildren } from "react";
 import {
   Button,
+  Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -18,7 +19,7 @@ import {
   View,
 } from "react-native";
 
-import { getApp, getApps } from "@react-native-firebase/app";
+import { getApp, getApps, initializeApp } from "@react-native-firebase/app";
 import { getAnalytics } from "@react-native-firebase/analytics";
 import appCheck, { initializeAppCheck } from "@react-native-firebase/app-check";
 import { getAppDistribution } from "@react-native-firebase/app-distribution";
@@ -52,6 +53,32 @@ import { getAI } from "@react-native-firebase/ai";
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
+
+const webTestConfig = {
+  clientId:
+    "448618578101-pdjje2lkv3p941e03hkrhfa7459cr2v8.apps.googleusercontent.com",
+  appId: "1:448618578101:android:cc6c1dc7a65cc83c",
+  apiKey: "AIzaSyCuu4tbv9CwwTudNOweMNstzZHIDBhgJxA",
+  authDomain: "react-native-firebase-testing.firebaseapp.com",
+  databaseURL: "https://react-native-firebase-testing.firebaseio.com",
+  projectId: "react-native-firebase-testing",
+  storageBucket: "react-native-firebase-testing.appspot.com",
+  messagingSenderId: "448618578101",
+  measurementId: "G-HX0JQKHZEB",
+};
+
+if (Platform.OS === "web") {
+  // Native platforms init default Firebase app from native files,
+  // but on web platform you have to initialize it programmatically before use
+  if (getApps().length === 0) {
+    initializeApp(webTestConfig);
+  }
+
+  // setImmediate sometimes missing on web platform, shim it in
+  if (!globalThis.setImmediate) {
+    globalThis.setImmediate = requestAnimationFrame;
+  }
+}
 
 const COLORS = {
   white: "#ffffff",
@@ -102,9 +129,11 @@ function Section({ children, title }: SectionProps): JSX.Element {
   );
 }
 
-onMessage(getMessaging(), (message) => {
-  console.log("messaging.onMessage received: " + JSON.stringify(message));
-});
+if (Platform.OS !== "web") {
+  onMessage(getMessaging(), (message) => {
+    console.log("messaging.onMessage received: " + JSON.stringify(message));
+  });
+}
 
 connectAuthEmulator(getAuth(), "http://localhost:9099");
 
@@ -140,22 +169,24 @@ function App(): JSX.Element {
       setAppCheckPresent(true);
     });
 
-    console.log("Requesting basic notification permission");
-    requestPermission(getMessaging(), { alert: true, badge: true }).then(() =>
-      console.log("Permission for notifications handled"),
-    );
-
-    console.log("Initializing messaging for notifications...");
-    registerDeviceForRemoteMessages(getMessaging())
-      .then(() =>
-        console.log(
-          "Registered for remote messages: " +
-            isDeviceRegisteredForRemoteMessages(getMessaging()),
-        ),
-      )
-      .catch((e) =>
-        console.error("could not register for remote notifications: " + e),
+    if (Platform.OS !== "web") {
+      console.log("Requesting basic notification permission");
+      requestPermission(getMessaging(), { alert: true, badge: true }).then(() =>
+        console.log("Permission for notifications handled"),
       );
+
+      console.log("Initializing messaging for notifications...");
+      registerDeviceForRemoteMessages(getMessaging())
+        .then(() =>
+          console.log(
+            "Registered for remote messages: " +
+              isDeviceRegisteredForRemoteMessages(getMessaging()),
+          ),
+        )
+        .catch((e) =>
+          console.error("could not register for remote notifications: " + e),
+        );
+    }
   }, []);
 
   const backgroundStyle = {
@@ -277,20 +308,24 @@ function App(): JSX.Element {
             await signOut(getAuth());
           }}
         />
-        <Button
-          title="Send Silent Notification to Device"
-          onPress={async () => {
-            console.log("silent notification");
-            await sendSilent();
-          }}
-        />
-        <Button
-          title="Send Visible Notification to Device"
-          onPress={async () => {
-            console.log("visible notification");
-            await sendVisible();
-          }}
-        />
+        {Platform.OS !== "web" && (
+          <>
+            <Button
+              title="Send Silent Notification to Device"
+              onPress={async () => {
+                console.log("silent notification");
+                await sendSilent();
+              }}
+            />
+            <Button
+              title="Send Visible Notification to Device"
+              onPress={async () => {
+                console.log("visible notification");
+                await sendVisible();
+              }}
+            />
+          </>
+        )}
 
         <View
           style={{
@@ -301,7 +336,7 @@ function App(): JSX.Element {
           <Section title="RNFirebase Build Demo" />
           <Text />
           <Text style={dynStyles.colors}>
-            JSI Executor: {global.__jsiExecutorDescription}
+            JSI Executor: {globalThis.__jsiExecutorDescription}
           </Text>
           <Text />
           <Text style={dynStyles.colors}>
@@ -313,13 +348,7 @@ function App(): JSX.Element {
             <Text style={dynStyles.colors}>analytics()</Text>
           )}
           {appCheckPresent && <Text style={dynStyles.colors}>appCheck()</Text>}
-          {getAppDistribution().native && (
-            <Text style={dynStyles.colors}>appDistribution()</Text>
-          )}
           {getAuth().native && <Text style={dynStyles.colors}>auth()</Text>}
-          {getCrashlytics().native && (
-            <Text style={dynStyles.colors}>crashlytics()</Text>
-          )}
           {getDatabase().native && (
             <Text style={dynStyles.colors}>database()</Text>
           )}
@@ -329,25 +358,37 @@ function App(): JSX.Element {
           {getFunctions().native && (
             <Text style={dynStyles.colors}>functions()</Text>
           )}
-          {getInAppMessaging().native && (
-            <Text style={dynStyles.colors}>inAppMessaging()</Text>
-          )}
-          {getInstallations().native && (
-            <Text style={dynStyles.colors}>installations()</Text>
-          )}
-          {getMessaging().native && (
-            <Text style={dynStyles.colors}>messaging()</Text>
-          )}
-          {getPerformance().native && (
-            <Text style={dynStyles.colors}>perf()</Text>
-          )}
           {getRemoteConfig().native && (
             <Text style={dynStyles.colors}>remoteConfig()</Text>
           )}
           {getStorage().native && (
             <Text style={dynStyles.colors}>storage()</Text>
           )}
-          {getAI() !== undefined && <Text style={dynStyles.colors}>ai()</Text>}
+          {Platform.OS !== "web" && (
+            <>
+              {getAI() !== undefined && (
+                <Text style={dynStyles.colors}>ai()</Text>
+              )}
+              {getAppDistribution().native && (
+                <Text style={dynStyles.colors}>appDistribution()</Text>
+              )}
+              {getCrashlytics().native && (
+                <Text style={dynStyles.colors}>crashlytics()</Text>
+              )}
+              {getInAppMessaging().native && (
+                <Text style={dynStyles.colors}>inAppMessaging()</Text>
+              )}
+              {getInstallations().native && (
+                <Text style={dynStyles.colors}>installations()</Text>
+              )}
+              {getMessaging().native && (
+                <Text style={dynStyles.colors}>messaging()</Text>
+              )}
+              {getPerformance().native && (
+                <Text style={dynStyles.colors}>perf()</Text>
+              )}
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -188,6 +188,29 @@ echo "npm_config_yes=true npx expo start" >> ./start-dev-server.command
 chmod 755 ./start-dev-server.command
 open ./start-dev-server.command
 
+# Test: Run on web (macOS-specific URL open command, PRs welcome for other platforms)
+if [ "$(uname)" == "Darwin" ]; then
+  # If AI is imported on web currently, you get "Cannot access 'Backend' before initialization"
+  # This seems to be a bundling error where Backend is indeed referenced in the metro bundle prior to its definition.
+  sed -i -e $'s|import { getAI |//import { getAI |' src/app/index.tsx
+  rm -f src/app/index.tsx??
+
+  # The bundler won't be ready quite yet
+  echo "Sleeping for a moment to let bundler settle..."
+  sleep 5
+
+  echo "Opening web app..."
+  open http://localhost:8081
+
+  # The web app will blow up once we re-configure it for native, allow time for a look
+  sleep 10
+
+  # Re-enable AI for other platforms
+  sed -i -e $'s|//import { getAI |import { getAI |' src/app/index.tsx
+  rm -f src/app/index.tsx??
+
+fi
+
 # Test: Run the thing for iOS
 if [ "$(uname)" == "Darwin" ]; then
 
