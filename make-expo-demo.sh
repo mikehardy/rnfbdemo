@@ -4,12 +4,12 @@ set -e
 source ./common-functions.sh
 
 EXPO_VER=55
-RNFB_VER=23.8.8
-FB_IOS_VER=12.10.0
-FB_ANDROID_VER=34.10.0
+RNFB_VER=24.0.0
+FB_IOS_VER=12.12.1
+FB_ANDROID_VER=34.12.0
 FB_GRADLE_SERVICES_VER=4.4.4
 FB_GRADLE_PERF_VER=2.0.2
-FB_GRADLE_CRASH_VER=3.0.6
+FB_GRADLE_CRASH_VER=3.0.7
 FB_GRADLE_APP_DIST_VER=5.2.1
 
 # This should match what you have defined in firebase console, so that
