@@ -105,7 +105,8 @@ if [ "$(uname)" == "Darwin" ]; then
   # The iOS name is trivial though, just a PRODUCT_BUNDLE_IDENTIFIER change in pbxproj
   sed -i -e "s/${FB_ANDROID_PACKAGE_NAME}/${FB_IOS_PACKAGE_NAME}/"g ios/rnfbdemo.xcodeproj/project.pbxproj
   rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
-  cd ios && RCT_USE_RN_DEP=0 RCT_USE_PREBUILT_RNCORE=0 bundle exec pod install && cd ..
+  cd ios && RCT_USE_RN_DEP=0 RCT_USE_PREBUILT_RNCORE=0 bundle exec pod install
+  cd ..
   #npm_config_yes=true npx pod-install
 fi
 
