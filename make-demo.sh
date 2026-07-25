@@ -1,14 +1,18 @@
 #!/bin/bash
-set -e 
+set -e
 
-RN_VER=0.85.2
-RNFB_VER=24.0.0
-FB_IOS_VER=12.12.1
-FB_ANDROID_VER=34.12.0
-FB_GRADLE_SERVICES_VER=4.4.4
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/common-functions.sh"
+
+RN_VER=0.86.0
+RNFB_VER=25.1.0
+FB_IOS_VER=12.15.0
+FB_ANDROID_VER=34.15.0
+FB_GRADLE_SERVICES_VER=4.5.0
 FB_GRADLE_PERF_VER=2.0.2
 FB_GRADLE_CRASH_VER=3.0.7
-FB_GRADLE_APP_DIST_VER=5.2.1
+FB_GRADLE_APP_DIST_VER=5.3.0
 
 # This should match what you have defined in firebase console, so that
 # it matches what is in your google-services.json and GoogleService-Info.plist
@@ -25,30 +29,7 @@ FB_IOS_PACKAGE_NAME="io.invertase.testing"
 #######################################################################################################
 # This whole section is test setup, and environment verification, it does not represent integration yet
 # Test: We need to verify our environment first, so we fail fast for easily detectable things
-if [ "$(uname)" == "Darwin" ]; then
-  # If the keychain is unlocked then this fails in the middle, let's check that now and fail fast
-  if ! security show-keychain-info login.keychain > /dev/null 2>&1; then
-    echo "Login keychain is not unlocked, codesigning will fail so macCatalyst build wll fail."
-    echo "run 'security unlock-keychain login.keychain' to unlock the login keychain then re-run"
-    exit 1
-  fi
-
-  # We do not want to run under Rosetta 2, brew doesn't work and compiles might not work after
-  arch_name="$(uname -m)"
-  if [ "${arch_name}" = "x86_64" ]; then
-    if [ "$(sysctl -in sysctl.proc_translated)" = "1" ]; then
-      echo "Running on Rosetta 2"
-      echo "This is not supported. Run \`env /usr/bin/arch -arm64 /bin/bash --login\` then try again"
-      exit 1
-    else
-      echo "Running on native Intel"
-    fi
-  elif [ "${arch_name}" = "arm64" ]; then
-    echo "Running on ARM"
-  else
-    echo "Unknown architecture: ${arch_name}"
-  fi
-fi
+verifyDarwinPrequisites
 
 # Test: Previous compiles may confound future compiles, erase...
 \rm -fr "$HOME/Library/Developer/Xcode/DerivedData/rnfbdemo*"
@@ -58,22 +39,8 @@ fi
 
 echo "Testing react-native ${RN_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
-if ! YARN_VERSION=$(yarn --version|cut -f1 -d'.') || { [ "$YARN_VERSION" != "3" ] && [ "$YARN_VERSION" != "4" ]; }; then
-  echo "This script uses yarn@^4+, please install yarn (for example \`corepack enable && corepack prepare yarn@^4 --activate\` and re-try"
-  exit 1
-fi
-
-# A bit more setup for testing - we can use local packages, but we don't always want that
-if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
-  # Sometimes I forget / it is surprising that there are local packages.
-  # I still want this script to run fully-automatic though, so just inform
-  echo "#################################################################"
-  echo
-  echo "  Local packages in ~/packages - abort and delete if unwanted"
-  echo
-  echo "#################################################################"
-  sleep 5
-fi
+verifyLocalYarnVersion
+warnIfLocalRnfbPackagesPresent
 
 # End of test setup / environment verification section
 #######################################################################################################
@@ -95,6 +62,10 @@ if [ -f Gemfile ]; then
   rm -f Gemfile* .ruby*
 fi
 
+# RN templates pin Yarn 3.x via packageManager; Yarn 3 file: tarball installs can be stale.
+# Force Yarn 4 before the first install / any local @file: adds.
+ensureProjectYarnBerry4
+
 # Now run our initial dependency install
 touch yarn.lock
 yarn
@@ -113,13 +84,7 @@ fi
 
 # Required: This is the most basic part of the integration - include google services plugin and call to firebase init on iOS
 echo "Adding react-native-firebase core app package"
-if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
-  # Yarn add twice to avoid stale contents: https://github.com/yarnpkg/yarn/issues/6811
-  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
-  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
-else
- yarn add "@react-native-firebase/app@${RNFB_VER}"
-fi
+installRnfbPackage app
 
 echo "Adding basic iOS integration - AppDelegate import and config call"
 sed -i -e $'s/import UIKit/import UIKit\\\nimport FirebaseCore/' ios/rnfbdemo/AppDelegate.swift
@@ -201,14 +166,11 @@ NON_APP_PACKAGES="ai analytics app-check app-distribution auth crashlytics datab
 
 for RNFBPKG in $NON_APP_PACKAGES; do
   echo "Adding react-native-firebase package '${RNFBPKG}'..."
-  if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
-    # Yarn add twice to avoid stale contents: https://github.com/yarnpkg/yarn/issues/6811
-    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
-    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
-  else
-   yarn add "@react-native-firebase/${RNFBPKG}@${RNFB_VER}"
-  fi
+  installRnfbPackage "${RNFBPKG}"
 done
+
+# Blocking: prove local tarball contents (not just semver) landed in node_modules
+finalizeLocalRnfbInstalls
 
 # Optional: Crashlytics - repo, classpath, plugin, dependency, import, init
 echo "Setting up Crashlytics - package, gradle plugin"
@@ -326,10 +288,12 @@ if [ "$(uname)" == "Darwin" ]; then
   npm_config_yes=true npx pod-install
 
   # Check iOS debug mode compile then release mode
+  # Non-TTY agents cannot spawn Metro in a new window; ensure packager is up first.
+  ensureMetroPackagerRunning
   echo "Running iOS app in debug mode"
-  npx react-native run-ios --mode Debug --simulator "iPhone 17"
+  npx react-native run-ios --mode Debug --simulator "iPhone 17" --no-packager
   echo "Running iOS app in release mode"
-  npx react-native run-ios --mode Release --simulator "iPhone 17"
+  npx react-native run-ios --mode Release --simulator "iPhone 17" --no-packager
 
   # # Now Let's do a round with prebuilts (a react-native 0.81+ feature)
   # export RCT_USE_RN_DEP=1
@@ -369,7 +333,7 @@ if [ "$(uname)" == "Darwin" ]; then
   # This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
   # https://github.com/react-native-community/cli/pull/2642
   CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
-  npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug
+  npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug --no-packager
 
   # # Let's do one round with prebuilts (a react-native 0.81+ feature)
   # export RCT_USE_RN_DEP=1

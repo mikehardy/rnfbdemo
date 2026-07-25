@@ -1,16 +1,18 @@
 #!/bin/bash
-set -e 
+set -e
 
-source ./common-functions.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/common-functions.sh"
 
 EXPO_VER=55
-RNFB_VER=24.0.0
-FB_IOS_VER=12.12.1
-FB_ANDROID_VER=34.12.0
-FB_GRADLE_SERVICES_VER=4.4.4
+RNFB_VER=25.1.0
+FB_IOS_VER=12.15.0
+FB_ANDROID_VER=34.15.0
+FB_GRADLE_SERVICES_VER=4.5.0
 FB_GRADLE_PERF_VER=2.0.2
 FB_GRADLE_CRASH_VER=3.0.7
-FB_GRADLE_APP_DIST_VER=5.2.1
+FB_GRADLE_APP_DIST_VER=5.3.0
 
 # This should match what you have defined in firebase console, so that
 # it matches what is in your google-services.json and GoogleService-Info.plist
@@ -38,17 +40,7 @@ verifyJqVersion
 # Test: Basic template create, rnfb install, link
 echo "Testing expo ${EXPO_VER} + react-native-firebase ${RNFB_VER} + firebase-ios-sdk ${FB_IOS_VER} + firebase-android-sdk ${FB_ANDROID_VER}"
 
-# A bit more setup for testing - we can use local packages, but we don't always want that
-if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
-  # Sometimes I forget / it is surprising that there are local packages.
-  # I still want this script to run fully-automatic though, so just inform
-  echo "#################################################################"
-  echo
-  echo "  Local packages in ~/packages - abort and delete if unwanted"
-  echo
-  echo "#################################################################"
-  sleep 5
-fi
+warnIfLocalRnfbPackagesPresent
 
 # End of test setup / environment verification section
 #######################################################################################################
@@ -65,6 +57,9 @@ fi
 echo rnfbexpodemo | yarn dlx create-expo-app@latest --template expo-template-default@${EXPO_VER}
 
 cd rnfbexpodemo
+
+# Templates may pin Yarn 3.x; force Yarn 4 before file: installs (content-hashed).
+ensureProjectYarnBerry4
 
 # Now run our initial dependency install
 touch yarn.lock
@@ -89,13 +84,7 @@ cat app.json | jq '.expo.android.googleServicesFile |= "./google-services.json"'
 
 # Required: This is the most basic part of the integration - all react-native-firebase apps require the app package
 echo "Adding react-native-firebase core app package"
-if [ -e $HOME/packages/react-native-firebase-app.tgz ]; then
-  # Yarn add twice to avoid stale contents: https://github.com/yarnpkg/yarn/issues/6811
-  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
-  yarn add @react-native-firebase/app@file:$HOME/packages/react-native-firebase-app.tgz
-else
- yarn add "@react-native-firebase/app@${RNFB_VER}"
-fi
+installRnfbPackage app
 
 
 #############################################################################################################
@@ -141,13 +130,7 @@ NON_APP_PACKAGES="ai analytics app-check app-distribution auth crashlytics datab
 
 for RNFBPKG in $NON_APP_PACKAGES; do
   echo "Adding react-native-firebase package '${RNFBPKG}'..."
-  if [ -e $HOME/packages/react-native-firebase-${RNFBPKG}.tgz ]; then
-    # Yarn add twice to avoid stale contents: https://github.com/yarnpkg/yarn/issues/6811
-    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
-    yarn add @react-native-firebase/${RNFBPKG}@file:$HOME/packages/react-native-firebase-${RNFBPKG}.tgz
-  else
-   yarn add "@react-native-firebase/${RNFBPKG}@${RNFB_VER}"
-  fi
+  installRnfbPackage "${RNFBPKG}"
 
   # If this react-native-firebase package has an Expo plugin, add it to app.json
   if [ -e "./node_modules/@react-native-firebase/${RNFBPKG}/app.plugin.js" ]; then
@@ -165,6 +148,9 @@ for RNFBPKG in $NON_APP_PACKAGES; do
   fi
 
 done
+
+# Blocking: prove local tarball contents (not just semver) landed in node_modules
+finalizeLocalRnfbInstalls
 
 # Optional: do you want to configure firebase behavior via firebase.json?
 echo "Creating default firebase.json (with settings that allow iOS crashlytics to report crashes even in debug mode)"
@@ -197,11 +183,9 @@ npx expo prebuild
 echo "Increasing memory available to gradle for android java build"
 echo "org.gradle.jvmargs=-Xmx4092m -Dfile.encoding=UTF-8" >> android/gradle.properties
 
-# Run the Expo dev server, but in a new Terminal so it does not hang up the script
-echo "cd $PWD" > ./start-dev-server.command
-echo "npm_config_yes=true npx expo start" >> ./start-dev-server.command
-chmod 755 ./start-dev-server.command
-open ./start-dev-server.command
+# Non-TTY agents cannot spawn Metro via open/new Terminal; ensure packager is up first.
+# expo run:* --no-bundler is the Expo equivalent of react-native --no-packager.
+ensureMetroPackagerRunning
 
 # Test: Run on web (macOS-specific URL open command, PRs welcome for other platforms)
 if [ "$(uname)" == "Darwin" ]; then
@@ -209,10 +193,6 @@ if [ "$(uname)" == "Darwin" ]; then
   # This seems to be a bundling error where Backend is indeed referenced in the metro bundle prior to its definition.
   sed -i -e $'s|import { getAI |//import { getAI |' src/app/index.tsx
   rm -f src/app/index.tsx??
-
-  # The bundler won't be ready quite yet
-  echo "Sleeping for a moment to let bundler settle..."
-  sleep 5
 
   echo "Opening web app..."
   open http://localhost:8081
@@ -237,7 +217,7 @@ if [ "$(uname)" == "Darwin" ]; then
   # /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string remote-notification" ios/rnfbdemo/Info.plist 
 
   echo "Running iOS app in debug mode"
-  npm_config_yes=true npx expo run:ios --configuration Debug # --simulator "iPhone 17"
+  npm_config_yes=true npx expo run:ios --configuration Debug --no-bundler # --device "iPhone 17"
 
   # TODO Check iOS release mode compile
   # echo "Installing pods and running iOS app in release mode"
@@ -295,7 +275,7 @@ if [ "$(uname -a | grep Linux | grep -c microsoft)" == "1" ]; then
   \rm -fr node_modules
   echo "To run the app use Windows Powershell in the rnfbdemo directory with these commands:"
   echo "npm i"
-  echo "npx expo run:android --variant debug"
+  echo "npx expo run:android --variant debug --no-bundler"
   exit
 fi
 
@@ -317,4 +297,4 @@ fi
 # Test: may or may not be commented out, depending on if have an emulator available
 # I run it manually in testing when I have one, comment if you like
 echo "Running android app in debug mode"
-npx expo run:android --variant debug
+npx expo run:android --variant debug --no-bundler
