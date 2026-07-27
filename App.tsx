@@ -176,7 +176,23 @@ function App(): JSX.Element {
       );
 
       console.log("Initializing messaging for notifications...");
-      registerDeviceForRemoteMessages(getMessaging())
+      // Belt-and-suspenders for matrix survival: native messaging APNs registration
+      // timeout (U3) is primary; keep a bounded JS race so a stall still fails fast.
+      const REGISTRATION_TIMEOUT_MS = 15000;
+      Promise.race([
+        registerDeviceForRemoteMessages(getMessaging()),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(
+                  `registerDeviceForRemoteMessages timed out after ${REGISTRATION_TIMEOUT_MS}ms`,
+                ),
+              ),
+            REGISTRATION_TIMEOUT_MS,
+          ),
+        ),
+      ])
         .then(() =>
           console.log(
             "Registered for remote messages: " +

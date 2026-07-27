@@ -139,7 +139,11 @@ def member_interesting(name: str) -> bool:
     return False
 
 git_sha = None
-if os.path.isdir(os.path.join(source_checkout, ".git")):
+# Regular clones have .git as a directory; linked worktrees use a .git *file*
+# pointing at the main repo's worktrees/<name> metadata. Either is enough for
+# `git -C … rev-parse HEAD`.
+git_marker = os.path.join(source_checkout, ".git")
+if os.path.isdir(git_marker) or os.path.isfile(git_marker):
     try:
         git_sha = subprocess.check_output(
             ["git", "-C", source_checkout, "rev-parse", "HEAD"],

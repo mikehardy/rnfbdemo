@@ -76,8 +76,11 @@ if [ "$(uname)" == "Darwin" ]; then
   # The iOS name is trivial though, just a PRODUCT_BUNDLE_IDENTIFIER change in pbxproj
   sed -i -e "s/${FB_ANDROID_PACKAGE_NAME}/${FB_IOS_PACKAGE_NAME}/"g ios/rnfbdemo.xcodeproj/project.pbxproj
   rm -f ios/rnfbdemo.xcodeproj/project.pbxproj-e
-  cd ios && RCT_USE_RN_DEP=0 RCT_USE_PREBUILT_RNCORE=0 bundle exec pod install && cd ..
-  #npm_config_yes=true npx pod-install
+  # Gemfile was removed above (RN Ruby pins). Use npx pod-install, and always in a
+  # subshell — `cd ios && bundle … && cd ..` left cwd in ios/ on failure (set -e does
+  # not abort mid &&-list), which broke later relative AppDelegate paths.
+  (cd ios && RCT_USE_RN_DEP=0 RCT_USE_PREBUILT_RNCORE=0 npm_config_yes=true npx pod-install) || \
+    echo "Early template pod install skipped; will install after RNFB packages are added"
 fi
 
 # At this point we have a clean react-native project. Absolutely stock from the upstream template.
@@ -220,12 +223,34 @@ rm -f ios/Podfile??
 #sed -i -e $'s/target \'rnfbdemo\' do/target \'rnfbdemo\' do\\\n  $FirebaseFirestoreExcludeLeveldb = true\\\n  pod \'FirebaseFirestore\', :git => \'https:\\/\\/github.com\\/invertase\\/firestore-ios-sdk-frameworks.git\', :tag => $FirebaseSDKVersion\\\n/' ios/Podfile
 #rm -f ios/Podfile??
 
-# Required for AppCheck on iOS - need to add the initializer into the AppDelegate
-echo "Adding basic iOS integration - AppDelegate import and config call"
-sed -i -e $'s/import UIKit/import UIKit\\\nimport RNFBAppCheck/' ios/rnfbdemo/AppDelegate.swift
+# Required for AppCheck on iOS (docs-faithful): bridging header + sharedInstance before FirebaseApp.configure().
+# Do NOT add `import RNFBAppCheck` in Swift — the pod is Obj-C only and does not produce a Swift module.
+# Match: docs/app-check/usage (RN >= 0.77) and packages/app-check Expo plugin bridging-header flow.
+echo "Adding AppCheck iOS integration - bridging header and AppDelegate sharedInstance()"
+BRIDGING_HEADER="ios/rnfbdemo/rnfbdemo-Bridging-Header.h"
+if [ ! -f "${BRIDGING_HEADER}" ]; then
+  cat > "${BRIDGING_HEADER}" <<'EOF'
+//
+// Use this file to import your target's public headers that you would like to expose to Swift.
+//
+EOF
+fi
+if ! grep -q 'RNFBAppCheckModule.h' "${BRIDGING_HEADER}"; then
+  printf '\n#import "RNFBAppCheckModule.h"\n' >> "${BRIDGING_HEADER}"
+fi
+if [ "$(uname)" == "Darwin" ]; then
+  # Stock RN 0.86 template has no bridging header / SWIFT_OBJC_BRIDGING_HEADER — set both.
+  if ! grep -q 'SWIFT_OBJC_BRIDGING_HEADER' ios/rnfbdemo.xcodeproj/project.pbxproj; then
+    pbxproj flag ios/rnfbdemo.xcodeproj --target rnfbdemo SWIFT_OBJC_BRIDGING_HEADER "rnfbdemo/rnfbdemo-Bridging-Header.h"
+  fi
+fi
+# Insert sharedInstance before existing FirebaseApp.configure(); never `import RNFBAppCheck`
+sed -i -e '/^import RNFBAppCheck$/d' ios/rnfbdemo/AppDelegate.swift
 rm -f ios/rnfbdemo/AppDelegate.swift-e
-sed -i -e $'s/FirebaseApp.configure/RNFBAppCheckModule.sharedInstance()\\\n    FirebaseApp.configure/' ios/rnfbdemo/AppDelegate.swift
-rm -f ios/rnfbdemo/AppDelegate.swift-e
+if ! grep -q 'RNFBAppCheckModule.sharedInstance' ios/rnfbdemo/AppDelegate.swift; then
+  sed -i -e $'s/FirebaseApp.configure/RNFBAppCheckModule.sharedInstance()\\\n    FirebaseApp.configure/' ios/rnfbdemo/AppDelegate.swift
+  rm -f ios/rnfbdemo/AppDelegate.swift-e
+fi
 
 # Optional: build performance optimization to use ccache - asks xcodebuild to use clang and clang++ without the fully-qualified path
 # That means that you can then make a symlink in your path with clang or clang++ and have it use a different binary
