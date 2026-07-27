@@ -21,7 +21,10 @@ import {
 
 import { getApp, getApps, initializeApp } from "@react-native-firebase/app";
 import { getAnalytics } from "@react-native-firebase/analytics";
-import appCheck, { initializeAppCheck } from "@react-native-firebase/app-check";
+import {
+  initializeAppCheck,
+  ReactNativeFirebaseAppCheckProvider,
+} from "@react-native-firebase/app-check";
 import { getAppDistribution } from "@react-native-firebase/app-distribution";
 import {
   connectAuthEmulator,
@@ -149,7 +152,7 @@ function App(): JSX.Element {
 
   useEffect(() => {
     console.log("initializating AppCheck...");
-    const rnfbProvider = appCheck().newReactNativeFirebaseAppCheckProvider();
+    const rnfbProvider = new ReactNativeFirebaseAppCheckProvider();
     rnfbProvider.configure({
       android: {
         provider: __DEV__ ? "debug" : "playIntegrity",
@@ -164,10 +167,10 @@ function App(): JSX.Element {
         siteKey: "unknown",
       },
     });
-    initializeAppCheck(getApp(), { provider: rnfbProvider }).then(() => {
-      console.log("AppCheck is initialized.");
-      setAppCheckPresent(true);
-    });
+    // Modular initializeAppCheck returns AppCheck sync; native setup continues in background.
+    initializeAppCheck(getApp(), { provider: rnfbProvider });
+    console.log("AppCheck is initialized.");
+    setAppCheckPresent(true);
 
     if (Platform.OS !== "web") {
       console.log("Requesting basic notification permission");
