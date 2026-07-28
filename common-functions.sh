@@ -312,6 +312,119 @@ finalizeLocalRnfbInstalls() {
   verifyRnfbLocalPackagesInstalled "${1:-node_modules}"
 }
 
+# Xcode 26 / Apple Clang 21 fails consteval builds against fmt 11.0.2.
+# Documented floor is fmt ≥ 12.1.0 (same rationale as RNFB OKF install/patch/fmt
+# gate — bump the RN third-party pin; do not invent FMT_USE_CONSTEVAL / Podfile /
+# base.h / c++17-for-fmt-only workarounds). Some RN / Expo templates still ship
+# 11.0.2; call this after yarn and before any pod-install / expo prebuild.
+# Idempotent: no-op when fmt.podspec is already ≥ the floor.
+ensureReactNativeFmtAtLeast() {
+  local rn_root="${1:-node_modules/react-native}"
+  local min_ver="${2:-12.1.0}"
+  local fmt_podspec="${rn_root}/third-party-podspecs/fmt.podspec"
+
+  if [ ! -f "${fmt_podspec}" ]; then
+    echo "ensureReactNativeFmtAtLeast: no ${fmt_podspec} (skipping; RN may be absent)"
+    return 0
+  fi
+
+  python3 - "$rn_root" "$min_ver" <<'PY'
+import os, re, sys
+
+rn_root, min_ver = sys.argv[1:3]
+
+def parse_ver(s: str):
+    parts = []
+    for p in s.split("."):
+        try:
+            parts.append(int(p))
+        except ValueError:
+            parts.append(0)
+    while len(parts) < 3:
+        parts.append(0)
+    return tuple(parts[:3])
+
+def ver_lt(a: str, b: str) -> bool:
+    return parse_ver(a) < parse_ver(b)
+
+fmt_podspec = os.path.join(rn_root, "third-party-podspecs", "fmt.podspec")
+with open(fmt_podspec, encoding="utf-8") as f:
+    text = f.read()
+
+m = re.search(r'spec\.version\s*=\s*"([^"]+)"', text)
+if not m:
+    print(f"ERROR: could not parse spec.version in {fmt_podspec}", file=sys.stderr)
+    sys.exit(1)
+current = m.group(1)
+if not ver_lt(current, min_ver):
+    print(f"React Native fmt pin already {current} (>= {min_ver}); leaving podspecs unchanged")
+    sys.exit(0)
+
+print(
+    f"React Native ships fmt {current} (< {min_ver}); bumping third-party pin to {min_ver} "
+    f"for Xcode 26 / Apple Clang 21 (documented floor)"
+)
+
+# Mirror RNFB tests/patches/react-native+*.patch: fmt.podspec version+tag, and every
+# CocoaPods dependency pin on fmt under node_modules/react-native.
+updated_files = []
+
+new_text, n_ver = re.subn(
+    r'(spec\.version\s*=\s*")[^"]+(")',
+    rf"\g<1>{min_ver}\2",
+    text,
+    count=1,
+)
+new_text, n_tag = re.subn(
+    r'(:tag\s*=>\s*")[^"]+(")',
+    rf"\g<1>{min_ver}\2",
+    new_text,
+    count=1,
+)
+if n_ver != 1 or n_tag != 1:
+    print(
+        f"ERROR: expected to rewrite version+tag once in {fmt_podspec} "
+        f"(version={n_ver}, tag={n_tag})",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+with open(fmt_podspec, "w", encoding="utf-8") as f:
+    f.write(new_text)
+updated_files.append(os.path.relpath(fmt_podspec))
+
+dep_re = re.compile(
+    r'''((?:s|ss|spec)\.dependency\s+["']fmt["']\s*,\s*["'])([^"']+)(["'])'''
+)
+for dirpath, _dirnames, filenames in os.walk(rn_root):
+    for name in filenames:
+        if not name.endswith(".podspec"):
+            continue
+        path = os.path.join(dirpath, name)
+        if os.path.samefile(path, fmt_podspec):
+            continue
+        with open(path, encoding="utf-8") as f:
+            body = f.read()
+        if "fmt" not in body:
+            continue
+
+        def repl(match: re.Match) -> str:
+            old = match.group(2)
+            if ver_lt(old, min_ver):
+                return f"{match.group(1)}{min_ver}{match.group(3)}"
+            return match.group(0)
+
+        new_body, n = dep_re.subn(repl, body)
+        if n and new_body != body:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(new_body)
+            updated_files.append(os.path.relpath(path))
+
+print(f"Updated {len(updated_files)} podspec(s) to fmt {min_ver}:")
+for p in updated_files:
+    print(f"  - {p}")
+PY
+}
+
 # Secondary: non-TTY `run-ios` will not spawn Metro in a new window.
 # Start Metro in the background if port 8081 is not already serving.
 ensureMetroPackagerRunning() {
