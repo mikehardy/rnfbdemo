@@ -45,11 +45,28 @@ set -e
 # Write evidence (e.g. /tmp/rnfbdemo-<cell>-layerb.log). Do not mark a cell
 # green on build exit alone. Dual RNCore: only if the Expo/RN template surfaces
 # RCT_USE_PREBUILT_RNCORE; otherwise document n/a and run stock path once.
+#
+# === Host cleanup (no demo) ===
+#
+#   ./make-expo-demo.sh --cleanup
+#   (also honored when --cleanup appears among other args)
+#
+# Kills whatever is listening on TCP 8081 (Metro). Does not kill Android
+# emulator, iOS Simulator, or xcodebuild. Exits 0 after cleanup.
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/common-functions.sh"
+
+# Early exit: host Metro cleanup only (see header).
+for __demo_arg in "$@"; do
+  if [ "${__demo_arg}" = "--cleanup" ]; then
+    cleanupDemoHostMetro
+    exit $?
+  fi
+done
+unset __demo_arg
 
 EXPO_VER=${EXPO_VER:-55}
 RNFB_VER=25.1.0
@@ -184,8 +201,11 @@ else
 fi
 
 # From this point on we are adding optional modules. We test them all so we add them all. You only need to add what you need.
-# First set up all the modules that need no further config for the demo 
-NON_APP_PACKAGES="ai analytics app-check app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf remote-config storage"
+# First set up all the modules that need no further config for the demo
+# phone-number-verification: install+autolink only — Android-only APIs, no modular
+# getter/.native surface for App.tsx module list (local tarball:
+# ~/packages/react-native-firebase-phone-number-verification.tgz).
+NON_APP_PACKAGES="ai analytics app-check app-distribution auth crashlytics database firestore functions in-app-messaging installations messaging ml perf phone-number-verification remote-config storage"
 
 for RNFBPKG in $NON_APP_PACKAGES; do
   echo "Adding react-native-firebase package '${RNFBPKG}'..."

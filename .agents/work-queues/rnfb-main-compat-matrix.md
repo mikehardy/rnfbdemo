@@ -1,9 +1,9 @@
 # RNFB main compatibility matrix (ephemeral) — restructured
 
-**Status:** DONE — Matrix C1+C2+C3 + E1+E2+E3 GREEN; **L1-meta** committed.
-**Goal:** Verify `invertase/react-native-firebase` **origin/main** (+ packed worktree fixes) boots via this repo’s self-contained demos on currently supported React Native CLI and Expo (current + previous 2 each).
+**Status:** IN PROGRESS — follow-on after matrix GREEN. Pickup: **U3-break** (RNFB) → **U2-nits** → **D-pnv** + **D-cleanup** (rnfbdemo) → extended matrix **C4/C5/C-rc** + **E4/E5**.
+**Goal:** Verify `invertase/react-native-firebase` **origin/main** (+ packed worktree fixes) boots via this repo’s self-contained demos on currently supported React Native CLI and Expo (**current + previous 4** each) **plus** RN prerelease `0.87.0-rc.3`.
 **Demo repo:** `/Users/mike/work/invertase/rnfbdemo`
-**RNFB worktree (all upstream product fixes):** `/Users/mike/work/invertase/RNFB-worktrees/v26-validation-fixes` · branch `v26-validation-fixes` ← `origin/main` @ `2aec61fff`
+**RNFB worktree (all upstream product fixes):** `/Users/mike/work/invertase/RNFB-worktrees/v26-validation-fixes` · branch `v26-validation-fixes` ← `origin/main` @ `2aec61fff` (local tip ahead with U1–U2-src)
 **Primary RNFB clone:** admin only (fetch / worktree add|remove|prune) — do not implement there
 **Local packages dir:** `~/packages` via worktree `.github/workflows/scripts/create_npm_packages.sh` (re-pack after each upstream fix before matrix)
 
@@ -256,7 +256,8 @@ FB_GRADLE_CRASH_VER=3.0.7
 FB_GRADLE_APP_DIST_VER=5.3.0
 ```
 
-RN matrix: **0.86.0**, **0.85.3**, **0.84.1** · Expo: **57**, **56**, **55**
+RN matrix: **0.87.0-rc.3** (prerelease), **0.86.0**, **0.85.3**, **0.84.1**, **0.83.10**, **0.82.1** · Expo: **57**, **56**, **55**, **54**, **53**
+(current + 4 previous stable each, plus one RN prerelease cell)
 
 ### Pre-flight before each demo
 
@@ -285,7 +286,16 @@ Never overlap two demo scripts on one host.
 | **OKF-Nx-patch** | **Nx must not cache-skip `patch-package`** | — | `area-focused` | nx/okf | closed | closed | closed | `commit_subject`: `fix(tooling): never Nx-cache-skip patch-package prepare`. MonoTool-AD-12; tests prepare `cache:false`; fmt verify 12.1.0. |
 | **U2** | **Xcode 26 react/debug + explicit modules** | — | `area-focused` | ios (RNFB) | closed | closed | closed | **Committed** subject `fix(ios): private codegen headers and bridging-safe AppCheck module`. Residual tracked as **U2-src**. |
 | **U2-src** | **From-source RNCore still hits react/debug** | — | `area-focused` | ios (RNFB) | closed | closed | closed | **Committed** `fix(storage, ios): preserve RN framework HEADER_SEARCH_PATHS in podspec` (amended: OKF row 9 Example → Firestore). Review `/tmp/rnfbdemo-U2-src-review.log`. |
-| **U3** | **Messaging APNs timeout (main stall)** | — | `area-focused` | ios (RNFB messaging) | closed | closed | closed | `commit_subject`: `fix(messaging, ios): make APNs registration timeout independent of main queue`. Evidence: iOS 67 pass, Android 85 pass, `.agents/reports/U3/coverage-evidence.md`. |
+| **U3** | **Messaging APNs timeout (main stall)** | `implementation` | `area-focused` | ios (RNFB messaging) | open | open | open | Reopen as **U3-break**: scrub ephemeral doc language; retitle `fix(messaging, ios)!`; add `docs/migrating-to-v26.mdx` APNs section (ARM64 Sim skip + new rejects). Amend into existing messaging commit. Prior subject was non-`!`. |
+| **U3-break** | **U3 breaking-change polish + migration** | `implementation` | `unit-focused` | ios (RNFB messaging) | open | open | open | **Implementer in flight** — [U3-break](f83ff30c-36f6-4e17-bf5f-a12864043f88). Ephemeral scrub + `!` + v26 migration APNs section; amend later. |
+| **U2-nits** | **U2 deferred nits (messaging public header / bridging import)** | `implementation` | `unit-focused` | ios (RNFB) | open | open | open | Blocked until U3-break leaves worktree quiet. Then amend into U2 commit. |
+| **D-pnv** | **Add phone-number-verification to CLI + Expo demos** | — | — | scripts | closed | closed | closed | **Committed** (shared). Review GREEN ([review](55ed7cde-1933-416e-9443-6b703f3e766c)). |
+| **D-cleanup** | **`--cleanup` kills Metro on 8081** | — | — | scripts | closed | closed | closed | **Committed** `test(demo): add phone-number-verification and --cleanup host mode`. Review GREEN ([review](55ed7cde-1933-416e-9443-6b703f3e766c)). |
+| **C-rc** | CLI RN **0.87.0-rc.3** — both RNCore if applicable | `pre-merge-validation` | `full` | ios+android | open | open | n/a | After U3-break packed + D-* green. |
+| **C4** | CLI RN **0.83.10** — both RNCore | `pre-merge-validation` | `full` | ios+android | open | open | n/a | After C-rc or parallel policy once packs ready. |
+| **C5** | CLI RN **0.82.1** — both RNCore | `pre-merge-validation` | `full` | ios+android | open | open | n/a | After C4. |
+| **E4** | Expo SDK **54** | `pre-merge-validation` | `full` | ios+android | open | open | n/a | After E3; after D-*. |
+| **E5** | Expo SDK **53** | `pre-merge-validation` | `full` | ios+android | open | open | n/a | After E4 (script already has edge-to-edge branch for 53). |
 | **D1** | **Demo fail-fast + remove non-doc hacks** | — | `unit-focused` | scripts | closed | closed | closed | **Committed** `fix(demo): use AppCheck bridging header instead of Swift module import` |
 | **D1-RNCore** | **Enable both RNCore modes in make-demo** | — | `area-focused` | scripts | closed | closed | closed | **Committed** `test(demo): exercise from-source and prebuilt RNCore iOS rounds` (+ `RN_VER=${RN_VER:-0.86.0}` for matrix). Exercised green in C1b. |
 | **D2** | **AppCheck TypeError** | — | `area-focused` | demo | closed | closed | closed | **Committed** `fix(demo): use modular AppCheck provider construction`. Review PASS ([D2 review](bfccdd1b-97e3-474c-9415-fc36163360b0)): Android Layer B `/tmp/rnfbdemo-D2-review-logcat.log`. Minors: metro version skew hygiene; UI label nit; upstream docs await wording. |
@@ -305,7 +315,7 @@ Never overlap two demo scripts on one host.
 
 ## Current gates
 
-- **Pickup order:** Queue drained for demo-matrix scope (C*/E* + L1-meta). Remaining upstream items (e.g. U1 review) live on RNFB worktree, not this demo queue.
+- **Pickup order:** **U3-break** [U3-break](f83ff30c-36f6-4e17-bf5f-a12864043f88) + **D-pnv/D-cleanup** [D-pnv-cleanup](d0a2225d-3f18-4017-bc2c-fa701b2032bd) in flight (parallel repos). Then **U2-nits** → re-pack → extended matrix cells.
 - **Pass bar:** build/install exit 0 **and** Metro/device-log runtime-clean (see script header comments + § Matrix pass bar). Build-only cell greens are provisional until requalified.
 - **C\*/E\* rule:** each `make-demo.sh` / `make-expo-demo.sh` invocation is validation/review. Failures reopen implementation, then fresh review.
 - **Dual RNCore:** C\* green only when **from-source (`PREBUILT=0`) and prebuilt (`PREBUILT=1`)** both succeed **and** runtime-clean.

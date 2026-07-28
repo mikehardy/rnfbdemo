@@ -579,6 +579,61 @@ ensureGradleJvmArgs() {
   echo "Set ${jvmargs_line} in ${props}"
 }
 
+# Kill whatever is listening on TCP 8081 (typical Metro packager port).
+# Operator-opt-in host cleanup only — does NOT touch Android emulator, iOS
+# Simulator, or xcodebuild. Used by `./make-demo.sh --cleanup` /
+# `./make-expo-demo.sh --cleanup` (also when --cleanup appears among args).
+cleanupDemoHostMetro() {
+  echo "cleanupDemoHostMetro: scanning TCP 8081 (Metro) listeners..."
+  local listen_table
+  listen_table="$(lsof -nP -iTCP:8081 -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -z "${listen_table}" ]; then
+    echo "cleanupDemoHostMetro: nothing listening on 8081 — done"
+    return 0
+  fi
+  echo "cleanupDemoHostMetro: found listener(s):"
+  echo "${listen_table}"
+
+  local pids pid cmd remaining
+  pids="$(lsof -nP -t -iTCP:8081 -sTCP:LISTEN 2>/dev/null | sort -u || true)"
+  if [ -z "${pids}" ]; then
+    echo "cleanupDemoHostMetro: lsof listed listeners but returned no PIDs — done"
+    return 0
+  fi
+
+  for pid in ${pids}; do
+    cmd="$(ps -p "${pid}" -o command= 2>/dev/null || echo '(gone)')"
+    echo "cleanupDemoHostMetro: sending SIGTERM to PID ${pid} — ${cmd}"
+    if ! kill "${pid}" 2>/dev/null; then
+      echo "ERROR: cleanupDemoHostMetro: kill(SIGTERM) failed for PID ${pid}"
+      return 1
+    fi
+  done
+
+  sleep 1
+  remaining="$(lsof -nP -t -iTCP:8081 -sTCP:LISTEN 2>/dev/null | sort -u || true)"
+  if [ -n "${remaining}" ]; then
+    for pid in ${remaining}; do
+      cmd="$(ps -p "${pid}" -o command= 2>/dev/null || echo '(gone)')"
+      echo "cleanupDemoHostMetro: still listening; sending SIGKILL to PID ${pid} — ${cmd}"
+      if ! kill -9 "${pid}" 2>/dev/null; then
+        echo "ERROR: cleanupDemoHostMetro: kill(SIGKILL) failed for PID ${pid}"
+        return 1
+      fi
+    done
+    sleep 0.5
+  fi
+
+  remaining="$(lsof -nP -t -iTCP:8081 -sTCP:LISTEN 2>/dev/null | sort -u || true)"
+  if [ -n "${remaining}" ]; then
+    echo "ERROR: cleanupDemoHostMetro: TCP 8081 still has listener PID(s): ${remaining}"
+    lsof -nP -iTCP:8081 -sTCP:LISTEN 2>/dev/null || true
+    return 1
+  fi
+  echo "cleanupDemoHostMetro: TCP 8081 is free"
+  return 0
+}
+
 # Secondary: non-TTY `run-ios` will not spawn Metro in a new window.
 # Start Metro in the background if port 8081 is not already serving.
 ensureMetroPackagerRunning() {
