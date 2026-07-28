@@ -118,7 +118,11 @@ usingLocalRnfbPackages() {
 }
 
 # Write ~/packages/.rnfb-local-pack-meta.json from current tarballs.
-# Optional arg: RNFB git checkout path for gitSha (else tries common default).
+# Call explicitly after packing/refreshing tarballs — not from verify/finalize.
+# Optional arg / RNFB_SOURCE_CHECKOUT: git checkout whose HEAD becomes gitSha.
+# For the main-compat matrix packs, use the worktree that ran create_npm_packages.sh
+# (e.g. $HOME/work/invertase/RNFB-worktrees/v26-validation-fixes). Default falls
+# back to the primary clone path when unset.
 writeRnfbLocalPackMeta() {
   local source_checkout="${1:-${RNFB_SOURCE_CHECKOUT:-$HOME/work/invertase/react-native-firebase}}"
   local packages_dir="${RNFB_LOCAL_PACKAGES_DIR}"
@@ -246,7 +250,11 @@ verifyRnfbLocalPackagesInstalled() {
 
   if [ ! -f "${meta_path}" ]; then
     echo "ERROR: missing local pack meta at ${meta_path}"
-    echo "Run writeRnfbLocalPackMeta (or pack via create_npm_packages.sh) before verifying."
+    echo "Local RNFB tarballs are in use but pack meta was not written."
+    echo "Do not invent meta at verify time — run ./write-local-pack-meta.sh (or"
+    echo "writeRnfbLocalPackMeta) with the checkout that packed the tarballs"
+    echo "(set RNFB_SOURCE_CHECKOUT or pass the path), or pack via"
+    echo "create_npm_packages.sh then write meta, then re-verify."
     exit 1
   fi
 
@@ -323,13 +331,14 @@ print(
 PY
 }
 
-# Prepare local-pack meta then verify after installs (no-op if not using local packs).
+# Verify installed local packs against existing pack meta (no-op if not using local packs).
+# Does NOT rewrite ~/packages/.rnfb-local-pack-meta.json — provenance (gitSha/createdAt)
+# is owned by writeRnfbLocalPackMeta / the pack workflow.
 finalizeLocalRnfbInstalls() {
   if ! usingLocalRnfbPackages; then
     echo "No local RNFB tarballs at ${RNFB_LOCAL_PACKAGES_DIR}; skipping content verification"
     return 0
   fi
-  writeRnfbLocalPackMeta
   verifyRnfbLocalPackagesInstalled "${1:-node_modules}"
 }
 
