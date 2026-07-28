@@ -10,6 +10,8 @@
 # Yarn 4 embeds `::hash=<content>` in file: resolutions and refreshes correctly.
 # Demo scripts must force Yarn 4 in the project before any local file: installs,
 # then verify installed member digests against the packed tarballs.
+# Yarn Berry defaults to PnP; Expo CLI (and typical RN tooling) expect classic
+# node_modules — ensureYarnNodeModulesLinker before the first yarn install.
 
 RNFB_LOCAL_PACKAGES_DIR="${RNFB_LOCAL_PACKAGES_DIR:-$HOME/packages}"
 RNFB_LOCAL_PACK_META="${RNFB_LOCAL_PACK_META:-$RNFB_LOCAL_PACKAGES_DIR/.rnfb-local-pack-meta.json}"
@@ -90,6 +92,25 @@ ensureProjectYarnBerry4() {
     exit 1
   fi
   echo "Project Yarn is now ${current}"
+}
+
+# Expo CLI (and typical RN tooling) expect classic node_modules, not Yarn PnP.
+# Call after ensureProjectYarnBerry4 and before the first yarn install. Idempotent.
+ensureYarnNodeModulesLinker() {
+  local current
+  current="$(yarn config get nodeLinker 2>/dev/null || true)"
+  if [ "$current" = "node-modules" ]; then
+    echo "Yarn nodeLinker already node-modules (classic installs)"
+    return 0
+  fi
+  echo "Setting Yarn nodeLinker to node-modules (Expo CLI expects node_modules, not PnP)..."
+  yarn config set nodeLinker node-modules
+  current="$(yarn config get nodeLinker 2>/dev/null || true)"
+  if [ "$current" != "node-modules" ]; then
+    echo "ERROR: failed to set Yarn nodeLinker to node-modules (now '${current}')"
+    exit 1
+  fi
+  echo "Yarn nodeLinker is now node-modules"
 }
 
 usingLocalRnfbPackages() {
@@ -423,6 +444,130 @@ print(f"Updated {len(updated_files)} podspec(s) to fmt {min_ver}:")
 for p in updated_files:
     print(f"  - {p}")
 PY
+}
+
+# Boot preferred iOS Simulator via simctl + Launch Services (`open -a Simulator`).
+# Does NOT use System Events / osascript — agents often correctly deny Automation TCC
+# (-1743). RN CLI (`react-native run-ios`) never needed System Events; keep Expo Layer A
+# on the same footing.
+ensureIosSimulatorReady() {
+  local device_name="${1:-iPhone 17}"
+  local line udid
+  echo "Ensuring iOS Simulator '${device_name}' is booted (simctl + open -a Simulator; no System Events)..."
+  # Prefer an exact name match; avoid "iPhone 17 Pro" when asking for "iPhone 17".
+  line="$(xcrun simctl list devices available | grep -E "^[[:space:]]*${device_name} \\(" | head -1)"
+  if [ -z "$line" ]; then
+    echo "ERROR: No available simulator named '${device_name}'"
+    xcrun simctl list devices available
+    exit 1
+  fi
+  udid="$(echo "$line" | sed -E 's/.*\(([A-F0-9-]{36})\).*/\1/')"
+  if ! echo "$line" | grep -q '(Booted)'; then
+    xcrun simctl boot "$udid" 2>/dev/null || true
+  fi
+  open -a Simulator --args -CurrentDeviceUDID "$udid"
+  local i
+  for i in $(seq 1 60); do
+    if xcrun simctl list devices | grep -F "$udid" | grep -q '(Booted)'; then
+      echo "Simulator '${device_name}' ($udid) is Booted"
+      return 0
+    fi
+    sleep 1
+  done
+  echo "ERROR: Simulator '${device_name}' ($udid) did not reach Booted"
+  exit 1
+}
+
+# Expo CLI post-install calls activateWindowAsync → ensureSimulatorAppRunningAsync, which
+# probes Simulator via osascript→System Events. With Automation TCC denied that throws
+# even when Simulator.app is already running and the app is already installed.
+# If expo run:ios fails only on that path after Build Succeeded / install, complete Layer A
+# with `xcrun simctl launch` (no Apple Events). Prefer this over patching node_modules/@expo/cli.
+runExpoIosDebugWithoutSystemEventsTcc() {
+  local bundle_id="${1:-io.invertase.testing}"
+  local device_name="${2:-iPhone 17}"
+  local log_file expo_exit
+  log_file="$(mktemp /tmp/rnfbdemo-expo-ios.XXXXXX.log)"
+
+  ensureIosSimulatorReady "$device_name"
+
+  set +e
+  npm_config_yes=true npx expo run:ios --configuration Debug --no-bundler --device "$device_name" 2>&1 | tee "$log_file"
+  expo_exit=${PIPESTATUS[0]}
+  set -e
+
+  if [ "$expo_exit" -eq 0 ]; then
+    rm -f "$log_file"
+    return 0
+  fi
+
+  if grep -qE 'System Events|ensureSimulatorAppRunning|activateWindowAsync' "$log_file" \
+    && grep -qE 'Build Succeeded|Installing on' "$log_file" \
+    && xcrun simctl get_app_container booted "$bundle_id" >/dev/null 2>&1; then
+    echo "Expo run:ios failed on System Events activate-window (Automation TCC). App is installed; completing Layer A launch via simctl (no System Events)..."
+    xcrun simctl launch booted "$bundle_id"
+    echo "simctl launch succeeded for ${bundle_id}"
+    rm -f "$log_file"
+    return 0
+  fi
+
+  echo "ERROR: expo run:ios failed (exit ${expo_exit}); log retained at ${log_file}"
+  return "$expo_exit"
+}
+
+# Set org.gradle.jvmargs in android/gradle.properties without gluing onto a last
+# line that lacks a trailing newline (Expo prebuild can emit that). Raw
+# `echo … >>` then produces `…=[]org.gradle.jvmargs=…`, which breaks
+# ExpoAutolinkingPlugin JSON.parse. Idempotent: skip when the desired line is
+# already present as its own line and no glued mid-line copy remains. Otherwise
+# replace any existing `^org.gradle.jvmargs=` (Expo templates ship one), un-glue
+# mid-line copies from a prior bad append, and append only if the key was absent.
+ensureGradleJvmArgs() {
+  local props="${1:-android/gradle.properties}"
+  local jvmargs_line="${2:-org.gradle.jvmargs=-Xmx4092m -Dfile.encoding=UTF-8}"
+  local tmp line prefix wrote
+
+  if [ ! -f "$props" ]; then
+    echo "ERROR: ensureGradleJvmArgs: ${props} not found"
+    exit 1
+  fi
+
+  # Ensure the file ends with a newline so line-oriented rewrite sees the last line.
+  if [ -s "$props" ] && [ "$(tail -c1 "$props" | wc -l | tr -d ' ')" -eq 0 ]; then
+    printf '\n' >> "$props"
+  fi
+
+  if grep -qxF "$jvmargs_line" "$props" && ! grep -qE '.+org\.gradle\.jvmargs=' "$props"; then
+    echo "gradle.properties already has desired org.gradle.jvmargs (${props})"
+    return 0
+  fi
+
+  tmp="$(mktemp)"
+  wrote=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      org.gradle.jvmargs=*)
+        if [ "$wrote" -eq 0 ]; then
+          printf '%s\n' "$jvmargs_line" >> "$tmp"
+          wrote=1
+        fi
+        ;;
+      *org.gradle.jvmargs=*)
+        # Prior bad append glued onto this line — keep the prefix only.
+        prefix="${line%%org.gradle.jvmargs=*}"
+        printf '%s\n' "$prefix" >> "$tmp"
+        ;;
+      *)
+        printf '%s\n' "$line" >> "$tmp"
+        ;;
+    esac
+  done < "$props"
+
+  if [ "$wrote" -eq 0 ]; then
+    printf '%s\n' "$jvmargs_line" >> "$tmp"
+  fi
+  command mv -f "$tmp" "$props"
+  echo "Set ${jvmargs_line} in ${props}"
 }
 
 # Secondary: non-TTY `run-ios` will not spawn Metro in a new window.

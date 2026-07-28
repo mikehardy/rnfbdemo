@@ -100,12 +100,21 @@ warnIfLocalRnfbPackagesPresent
 
 
 # Initialize a fresh project.
-echo rnfbexpodemo | yarn dlx create-expo-app@latest --template expo-template-default@${EXPO_VER}
+# Docs: https://docs.expo.dev/more/create-expo — during the SDK 57 transition use
+# `--template default@sdk-N` (not bare create / not expo-template-default@N alone).
+# Pass the app name as argv; --yes + CI=1 accept defaults and skip the nested-git
+# prompt when run inside this repo. Prefer npx over `yarn dlx`: create-expo-app@4.0.0
+# template extract via yarn dlx fails on Node 24 with ERR_INVALID_ARG_TYPE
+# (ReadableStream vs Buffer/string). --no-install avoids npm install/package-lock;
+# we force Yarn 4 and install below.
+CI=1 npm_config_yes=true npx create-expo-app@latest rnfbexpodemo --template "default@sdk-${EXPO_VER}" --yes --no-install
 
 cd rnfbexpodemo
 
 # Templates may pin Yarn 3.x; force Yarn 4 before file: installs (content-hashed).
 ensureProjectYarnBerry4
+# Expo CLI expects node_modules (not PnP); set before first yarn.
+ensureYarnNodeModulesLinker
 
 # Now run our initial dependency install
 touch yarn.lock
@@ -232,9 +241,11 @@ npx expo prebuild
 
 # Android builds fail lintVitalRelease out of the box with OutOfMemory, increase it
 # There are a few ways to configure gradle, including modifying your global ~/.gradle/gradle.properties file
-# This script should be self-contained though so we modify things internally
+# This script should be self-contained though so we modify things internally.
+# Use ensureGradleJvmArgs: Expo prebuild may omit a trailing newline on the last
+# gradle.properties line; raw `echo >>` would glue jvmargs onto that line.
 echo "Increasing memory available to gradle for android java build"
-echo "org.gradle.jvmargs=-Xmx4092m -Dfile.encoding=UTF-8" >> android/gradle.properties
+ensureGradleJvmArgs android/gradle.properties "org.gradle.jvmargs=-Xmx4092m -Dfile.encoding=UTF-8"
 
 # Non-TTY agents cannot spawn Metro via open/new Terminal; ensure packager is up first.
 # expo run:* --no-bundler is the Expo equivalent of react-native --no-packager.
@@ -269,8 +280,11 @@ if [ "$(uname)" == "Darwin" ]; then
   # /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string processing" ios/rnfbdemo/Info.plist 
   # /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string remote-notification" ios/rnfbdemo/Info.plist 
 
+  # Expo CLI activate-window uses System Events; agents denying Automation TCC get -1743
+  # after a successful build/install. Boot via simctl + open -a Simulator, then fall back
+  # to simctl launch if Expo still trips on that activate path (see common-functions.sh).
   echo "Running iOS app in debug mode"
-  npm_config_yes=true npx expo run:ios --configuration Debug --no-bundler # --device "iPhone 17"
+  runExpoIosDebugWithoutSystemEventsTcc "${FB_IOS_PACKAGE_NAME}" "iPhone 17"
 
   # TODO Check iOS release mode compile
   # echo "Installing pods and running iOS app in release mode"

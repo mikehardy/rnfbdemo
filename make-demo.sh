@@ -118,6 +118,8 @@ fi
 # RN templates pin Yarn 3.x via packageManager; Yarn 3 file: tarball installs can be stale.
 # Force Yarn 4 before the first install / any local @file: adds.
 ensureProjectYarnBerry4
+# Classic node_modules (not PnP) — same helper as Expo; RN tooling expects node_modules.
+ensureYarnNodeModulesLinker
 
 # Now run our initial dependency install
 touch yarn.lock
@@ -257,8 +259,9 @@ sed -i -e $'s/"com.google.gms.google-services"/"com.google.gms.google-services"\
 rm -f android/app/build.gradle??
 
 # Required for Firestore - android build tweak - or gradle runs out of memory during the build
+# ensureGradleJvmArgs: avoid gluing onto a last line that lacks a trailing newline
 echo "Increasing memory available to gradle for android java build"
-echo "org.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8" >> android/gradle.properties
+ensureGradleJvmArgs android/gradle.properties "org.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8"
 
 # I'm not going to demonstrate messaging and notifications. Everyone gets it wrong because it's hard. 
 # You've got to read the docs and test *EVERYTHING* one feature at a time.

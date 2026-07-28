@@ -1,6 +1,6 @@
 # RNFB main compatibility matrix (ephemeral) — restructured
 
-**Status:** IN PROGRESS — **C3 GREEN** ([C3c](24aaf9a3-d788-4491-8077-8288f10fbb83)); **C3-fmt** committing. Next: **E1** (Expo 57) → E2 → E3. C1+C2+C3 green.
+**Status:** IN PROGRESS — **E1 GREEN** ([E1g](de26bc15-b094-4c10-9038-c89a1d3c1862)). Committing E1-* expo-demo fixes; next **E2** (SDK 56). CLI C1+C2+C3 green.
 **Goal:** Verify `invertase/react-native-firebase` **origin/main** (+ packed worktree fixes) boots via this repo’s self-contained demos on currently supported React Native CLI and Expo (current + previous 2 each).
 **Demo repo:** `/Users/mike/work/invertase/rnfbdemo`
 **RNFB worktree (all upstream product fixes):** `/Users/mike/work/invertase/RNFB-worktrees/v26-validation-fixes` · branch `v26-validation-fixes` ← `origin/main` @ `2aec61fff`
@@ -294,14 +294,18 @@ Never overlap two demo scripts on one host.
 | **C1** | CLI RN **0.86.0** — **both RNCore modes** | — | `full` | ios+android | closed | closed | n/a | **GREEN** ([C1e](5151e7c9-63cf-46e6-aa52-8f9e61987877)): Layer A `MAKE_DEMO_EXIT=0` (~81m, both RNCore); Layer B AppCheck init iOS+Android, no fatal JS. Logs `/tmp/rnfbdemo-C1e.log`, `/tmp/rnfbdemo-C1e-layerb.log`. |
 | **C2** | CLI RN **0.85.3** — **both RNCore modes** | — | `full` | ios+android | closed | closed | n/a | **GREEN** ([C2c](bab8fd75-7bbf-46c9-bd12-b793ba261b52)): Layer A `MAKE_DEMO_EXIT=0`; Layer B AppCheck init iOS+Android. Logs `/tmp/rnfbdemo-C2c.log`, `/tmp/rnfbdemo-C2c-layerb.log`. |
 | **C3** | CLI RN **0.84.1** — **both RNCore modes** | — | `full` | ios+android | closed | closed | n/a | **GREEN** ([C3c](24aaf9a3-d788-4491-8077-8288f10fbb83)): Layer A `MAKE_DEMO_EXIT=0` (~23m, both RNCore); fmt 12.1.0; Layer B AppCheck Android + iOS OK. Logs `/tmp/rnfbdemo-C3c.log`, `/tmp/rnfbdemo-C3c-layerb.log`. Prior: C3a fmt FAIL; C3b env AVD dropout. |
-| **C3-fmt** | **Bump RN fmt≥12.1.0 in demo scripts (Xcode 26)** | `commit` | — | scripts | closed | closed | closed | **Committed** with C3c evidence. `commit_subject`: `fix(demo): bump RN fmt pin to 12.1.0 for Xcode 26`. Helper `ensureReactNativeFmtAtLeast` in `common-functions.sh`; wired in make-demo + make-expo-demo. |
-| **E1** | Expo SDK **57** | `pre-merge-validation` | `full` | ios+android | open | open | n/a | **E1a dispatching** after C3 green. Log `/tmp/rnfbdemo-E1a.log`. Dual RNCore n/a unless surfaced. |
-| **E2** | Expo SDK **56** | `pre-merge-validation` | `full` | ios+android | open | open | n/a | After E1 |
+| **C3-fmt** | **Bump RN fmt≥12.1.0 in demo scripts (Xcode 26)** | — | — | scripts | closed | closed | closed | **Committed** `fix(demo): bump RN fmt pin to 12.1.0 for Xcode 26`. Helper `ensureReactNativeFmtAtLeast`; wired in make-demo + make-expo-demo. Proven by [C3c](24aaf9a3-d788-4491-8077-8288f10fbb83). |
+| **E1** | Expo SDK **57** | — | `full` | ios+android | closed | closed | n/a | **GREEN** ([E1g](de26bc15-b094-4c10-9038-c89a1d3c1862)): Layer A `MAKE_DEMO_EXIT=0`; Layer B AppCheck iOS+Android. Logs `/tmp/rnfbdemo-E1g.log`, `/tmp/rnfbdemo-E1g-layerb.log`. Dual RNCore n/a. |
+| **E1-create** | **Fix Expo template create (Node 24 / create-expo-app)** | — | — | scripts | closed | closed | closed | Shipped in combined commit. Confirmed E1g. |
+| **E1-yarn** | **Force Yarn node-modules linker for Expo** | — | — | scripts | closed | closed | closed | Shipped in combined commit. Confirmed E1g. |
+| **E1-sim** | **Expo iOS launch without System Events TCC** | — | — | scripts | closed | closed | closed | Shipped in combined commit. Confirmed E1g (simctl fallback). |
+| **E1-gradle** | **Safe gradle.properties jvmargs append** | — | — | scripts | closed | closed | closed | Shipped in combined commit. Confirmed E1g. `commit_subject` (shared): `fix(expo-demo): make Expo SDK matrix bootstrap agent-safe`. |
+| **E2** | Expo SDK **56** | `pre-merge-validation` | `full` | ios+android | open | open | n/a | **E2a dispatching** after E1 green. Log `/tmp/rnfbdemo-E2a.log`. |
 | **E3** | Expo SDK **55** | `pre-merge-validation` | `full` | ios+android | open | open | n/a | After E2 |
 
 ## Current gates
 
-- **Pickup order:** **E1** next (`shell` + `make-expo-demo.sh`) → E2 → E3. CLI matrix C1+C2+C3 green. C3-fmt committed.
+- **Pickup order:** **E2** next → E3. E1 + CLI C1+C2+C3 green.
 - **Pass bar:** build/install exit 0 **and** Metro/device-log runtime-clean (see script header comments + § Matrix pass bar). Build-only cell greens are provisional until requalified.
 - **C\*/E\* rule:** each `make-demo.sh` / `make-expo-demo.sh` invocation is validation/review. Failures reopen implementation, then fresh review.
 - **Dual RNCore:** C\* green only when **from-source (`PREBUILT=0`) and prebuilt (`PREBUILT=1`)** both succeed **and** runtime-clean.
