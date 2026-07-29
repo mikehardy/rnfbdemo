@@ -399,8 +399,17 @@ if [ "$(uname)" == "Darwin" ]; then
   # Non-TTY agents cannot spawn Metro in a new window; ensure packager is up first.
   ensureMetroPackagerRunning
   echo "Running iOS app in debug mode"
+  ensureHermesEngineConfiguration Debug
+  ensurePrebuiltRncoreConfiguration Debug
   npx react-native run-ios --mode Debug --simulator "iPhone 17" --no-packager
   echo "Running iOS app in release mode"
+  # Prebuilt Hermes Debug→Release (and back) must swap outside xcodebuild so
+  # Debug reacthermes (HERMES_ENABLE_DEBUGGER) never links Release hermesvm
+  # (no facebook::hermes::cdp::*). Same serial pattern as RNCore below.
+  # Prebuilt RNCore Debug→Release must swap tarballs outside xcodebuild (RN 0.87+
+  # race: in-Xcode replace deletes Headers/module.modulemap while other pods compile).
+  ensureHermesEngineConfiguration Release
+  ensurePrebuiltRncoreConfiguration Release
   npx react-native run-ios --mode Release --simulator "iPhone 17" --no-packager
 
   # Now Let's do a round with prebuilts (a react-native 0.81+ feature)
@@ -411,8 +420,12 @@ if [ "$(uname)" == "Darwin" ]; then
   # Check iOS debug mode compile then release mode
   ensureMetroPackagerRunning
   echo "Running iOS app in debug mode"
+  ensureHermesEngineConfiguration Debug
+  ensurePrebuiltRncoreConfiguration Debug
   npx react-native run-ios --mode Debug --simulator "iPhone 17" --no-packager
   echo "Running iOS app in release mode"
+  ensureHermesEngineConfiguration Release
+  ensurePrebuiltRncoreConfiguration Release
   npx react-native run-ios --mode Release --simulator "iPhone 17" --no-packager
 
   # Check catalyst build
@@ -442,6 +455,9 @@ if [ "$(uname)" == "Darwin" ]; then
   # This requires a CLI patch to the iOS platform to accept a UDID it cannot probe, and to set type to catalyst
   # https://github.com/react-native-community/cli/pull/2642
   CATALYST_DESTINATION=$(xcodebuild -workspace ios/rnfbdemo.xcworkspace -configuration Debug -scheme rnfbdemo -destination id=7153382A-C92B-5798-BEA3-D82D195F25F8 2>&1|grep macOS|grep Catalyst|head -1 |cut -d':' -f5 |cut -d' ' -f1 |cut -d',' -f1)
+  # After prior Release iOS, hermes-engine destroot is Release (no CDP). Catalyst
+  # Debug must serially restore Debug Hermes before xcodebuild or app link fails.
+  ensureHermesEngineConfiguration Debug
   npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug --no-packager
 
   # Let's do one round with prebuilts (a react-native 0.81+ feature)
@@ -449,6 +465,8 @@ if [ "$(uname)" == "Darwin" ]; then
   export RCT_USE_PREBUILT_RNCORE=1
   echo "Installing pods and running iOS app in macCatalyst mode"
   npm_config_yes=true npx pod-install
+  ensureHermesEngineConfiguration Debug
+  ensurePrebuiltRncoreConfiguration Debug
   npx react-native run-ios --udid "$CATALYST_DESTINATION" --mode Debug --no-packager
 
   ####################################################################################

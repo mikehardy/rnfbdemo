@@ -455,6 +455,126 @@ for p in updated_files:
 PY
 }
 
+# RN 0.87+ prebuilt RNCore: CocoaPods injects
+#   -fmodule-map-file=$(PODS_ROOT)/React-Core-prebuilt/Headers/module.modulemap
+# into every pod xcconfig. The Xcode script-phase "[RNCore] Replace React Native
+# Core…" swaps Debug/Release tarballs by deleting that Headers/ tree while OTHER
+# targets compile in parallel — Release after Debug then fails with
+# "module map file '.../Headers/module.modulemap' not found". Serially run RN's
+# replace-rncore-version.js BEFORE the Release (or Debug) xcodebuild so the
+# in-Xcode phase is a no-op (.last_build_configuration already matches).
+# No-op when prebuilt RNCore is off, or when React-Core-prebuilt is absent.
+# Call from the app project root (cwd with ios/ + node_modules/react-native).
+ensurePrebuiltRncoreConfiguration() {
+  local configuration="${1:?ensurePrebuiltRncoreConfiguration: Debug or Release required}"
+  local pods_root script rn_version
+
+  case "$configuration" in
+    Debug|Release) ;;
+    *)
+      echo "ERROR: ensurePrebuiltRncoreConfiguration: invalid configuration '${configuration}' (want Debug|Release)"
+      return 1
+      ;;
+  esac
+
+  if [ "${RCT_USE_PREBUILT_RNCORE:-0}" != "1" ]; then
+    echo "ensurePrebuiltRncoreConfiguration: RCT_USE_PREBUILT_RNCORE!=1 — skip"
+    return 0
+  fi
+
+  pods_root="$(pwd)/ios/Pods"
+  if [ ! -d "${pods_root}/React-Core-prebuilt" ]; then
+    echo "ensurePrebuiltRncoreConfiguration: no React-Core-prebuilt under ios/Pods — skip"
+    return 0
+  fi
+
+  script="$(pwd)/node_modules/react-native/scripts/replace-rncore-version.js"
+  if [ ! -f "$script" ]; then
+    echo "ensurePrebuiltRncoreConfiguration: ${script} missing — skip"
+    return 0
+  fi
+
+  rn_version="$(node -p "require('./node_modules/react-native/package.json').version")"
+  echo "ensurePrebuiltRncoreConfiguration: serially syncing React-Core-prebuilt to ${configuration} (RN ${rn_version})"
+  # replace-rncore-version.js resolves paths relative to cwd = Pods root.
+  (cd "$pods_root" && node "$script" -c "$configuration" -r "$rn_version" -p "$pods_root")
+}
+
+# Prebuilt Hermes tarballs (Maven debug vs release) differ: Debug exports
+# facebook::hermes::cdp::* / debugger APIs; Release strips them. React-hermes
+# Debug sets HERMES_ENABLE_DEBUGGER=1 and needs those symbols at final link.
+# RN's in-Xcode "[Hermes] Replace Hermes…" phase picks Debug vs Release by
+# grepping GCC_PREPROCESSOR_DEFINITIONS for DEBUG=1; after a Release iOS pass
+# (or when that probe misfires, e.g. macCatalyst), destroot can remain Release
+# while Debug reacthermes still references CDP → undefined symbols at app link.
+# Serially run replace_hermes_version.js BEFORE Debug/Release xcodebuild so the
+# in-Xcode phase is a no-op. No-op when artifacts/script/hermes-engine absent.
+# Call from the app project root (cwd with ios/ + node_modules/react-native).
+ensureHermesEngineConfiguration() {
+  local configuration="${1:?ensureHermesEngineConfiguration: Debug or Release required}"
+  local pods_root script version_file hermes_version tarball marker hermes_bin cdp_count
+
+  case "$configuration" in
+    Debug|Release) ;;
+    *)
+      echo "ERROR: ensureHermesEngineConfiguration: invalid configuration '${configuration}' (want Debug|Release)"
+      return 1
+      ;;
+  esac
+
+  pods_root="$(pwd)/ios/Pods"
+  if [ ! -d "${pods_root}/hermes-engine" ]; then
+    echo "ensureHermesEngineConfiguration: no hermes-engine under ios/Pods — skip"
+    return 0
+  fi
+
+  script="$(pwd)/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js"
+  if [ ! -f "$script" ]; then
+    echo "ensureHermesEngineConfiguration: ${script} missing — skip"
+    return 0
+  fi
+
+  version_file="$(pwd)/node_modules/react-native/sdks/hermes-engine/version.properties"
+  if [ ! -f "$version_file" ]; then
+    echo "ensureHermesEngineConfiguration: ${version_file} missing — skip"
+    return 0
+  fi
+
+  hermes_version="$(sed -n 's/^HERMES_VERSION_NAME=//p' "$version_file" | tr -d '[:space:]')"
+  if [ -z "$hermes_version" ]; then
+    echo "ERROR: ensureHermesEngineConfiguration: HERMES_VERSION_NAME empty in ${version_file}"
+    return 1
+  fi
+
+  tarball="${pods_root}/hermes-engine-artifacts/hermes-ios-${hermes_version}-$(echo "$configuration" | tr '[:upper:]' '[:lower:]').tar.gz"
+  if [ ! -f "$tarball" ]; then
+    echo "ensureHermesEngineConfiguration: ${tarball} missing — skip (source-built Hermes?)"
+    return 0
+  fi
+
+  marker="${pods_root}/hermes-engine/.last_build_configuration"
+  # replace_hermes_version.js assumes "no marker ⇒ destroot is already Debug".
+  # That is false when a prior Release build left Release binaries and the marker
+  # was lost (pod install / partial cleanup). Probe CDP exports and force a
+  # marker mismatch so Debug actually re-extracts the debug tarball.
+  hermes_bin="$(find "${pods_root}/hermes-engine/destroot" -type f -name hermesvm 2>/dev/null | head -1)"
+  cdp_count=0
+  if [ -n "$hermes_bin" ]; then
+    cdp_count="$(nm -arch arm64 "$hermes_bin" 2>/dev/null | c++filt | grep -c 'CDPDebugAPI' || true)"
+  fi
+  if [ "$configuration" = Debug ] && [ "${cdp_count:-0}" -eq 0 ]; then
+    echo "ensureHermesEngineConfiguration: destroot lacks CDP symbols (Release Hermes?) — forcing Debug extract"
+    printf '%s' Release >"$marker"
+  elif [ "$configuration" = Release ] && [ "${cdp_count:-0}" -gt 0 ]; then
+    echo "ensureHermesEngineConfiguration: destroot still has CDP symbols (Debug Hermes?) — forcing Release extract"
+    printf '%s' Debug >"$marker"
+  fi
+
+  echo "ensureHermesEngineConfiguration: serially syncing hermes-engine to ${configuration} (Hermes ${hermes_version})"
+  # replace_hermes_version.js resolves paths relative to cwd = Pods root.
+  (cd "$pods_root" && node "$script" -c "$configuration" -r "$hermes_version" -p "$pods_root")
+}
+
 # Boot preferred iOS Simulator via simctl + Launch Services (`open -a Simulator`).
 # Does NOT use System Events / osascript — agents often correctly deny Automation TCC
 # (-1743). RN CLI (`react-native run-ios`) never needed System Events; keep Expo Layer A
