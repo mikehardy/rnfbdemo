@@ -1,6 +1,6 @@
 # RNFB main compatibility matrix (ephemeral) — restructured
 
-**Status:** IN PROGRESS — extended matrix. Pickup: **E5**. CLI + E4 GREEN; P1 packed `eee66ac01`.
+**Status:** DONE — extended matrix GREEN. C-rc (0.87.0-rc.3), C4 (0.83.10), C5 (0.82.1), E4 (54), E5 (53) + prior C1–C3/E1–E3. P1 packed `eee66ac01`.
 **Goal:** Verify `invertase/react-native-firebase` **origin/main** (+ packed worktree fixes) boots via this repo’s self-contained demos on currently supported React Native CLI and Expo (**current + previous 4** each) **plus** RN prerelease `0.87.0-rc.3`.
 **Demo repo:** `/Users/mike/work/invertase/rnfbdemo`
 **RNFB worktree (all upstream product fixes):** `/Users/mike/work/invertase/RNFB-worktrees/v26-validation-fixes` · branch `v26-validation-fixes` ← `origin/main` @ `2aec61fff` (local tip ahead with U1–U2-src)
@@ -295,7 +295,7 @@ Never overlap two demo scripts on one host.
 | **C4** | CLI RN **0.83.10** — both RNCore | — | `full` | ios+android | closed | closed | n/a | **GREEN** ([C4b](f6369832-c77d-4840-8e48-79f21d9f7ea4)): Layer A `MAKE_DEMO_EXIT=0` (~25m, both RNCore); Layer B AppCheck Android+iOS. Logs `/tmp/rnfbdemo-C4b.log`, `/tmp/rnfbdemo-C4b-layerb.log`. Prior [C4](7ea572b0-380a-46df-ad23-a94d7a3b36b9) incomplete (keychain). |
 | **C5** | CLI RN **0.82.1** — both RNCore | — | `full` | ios+android | closed | closed | n/a | **GREEN** ([C5b](c7381986-bebd-4cd6-b1e8-9c99a57239f0)): Layer A `MAKE_DEMO_EXIT=0` (~15m, both RNCore); Layer B AppCheck Android+iOS. Hermes V1 fallback ([C5-fix](cec1a3cc-0f12-4d30-9b1a-9ceb468be844)). Logs `/tmp/rnfbdemo-C5b.log`, `/tmp/rnfbdemo-C5b-layerb.log`. |
 | **E4** | Expo SDK **54** | — | `full` | ios+android | closed | closed | n/a | **GREEN** ([E4b](50aded3c-b8de-4678-b607-7d6d42a4bc13)): Layer A `MAKE_DEMO_EXIT=0` (~7m); Layer B AppCheck iOS+Android. Router path fix ([E4-fix](73484bce-2ab6-408d-84df-35c770a5ec64)). Logs `/tmp/rnfbdemo-E4b.log`, `/tmp/rnfbdemo-E4b-layerb.log`. |
-| **E5** | Expo SDK **53** | `pre-merge-validation` | `full` | ios+android | open | open | n/a | **Layer A in flight** — [E5](PENDING). |
+| **E5** | Expo SDK **53** | — | `full` | ios+android | closed | closed | n/a | **GREEN** ([E5](b920bad1-e243-4637-bdca-ea272c80745a)): Layer A `MAKE_DEMO_EXIT=0` (~10m); Layer B AppCheck iOS+Android. Logs `/tmp/rnfbdemo-E5.log`, `/tmp/rnfbdemo-E5-layerb.log`. |
 | **D1** | **Demo fail-fast + remove non-doc hacks** | — | `unit-focused` | scripts | closed | closed | closed | **Committed** `fix(demo): use AppCheck bridging header instead of Swift module import` |
 | **D1-RNCore** | **Enable both RNCore modes in make-demo** | — | `area-focused` | scripts | closed | closed | closed | **Committed** `test(demo): exercise from-source and prebuilt RNCore iOS rounds` (+ `RN_VER=${RN_VER:-0.86.0}` for matrix). Exercised green in C1b. |
 | **D2** | **AppCheck TypeError** | — | `area-focused` | demo | closed | closed | closed | **Committed** `fix(demo): use modular AppCheck provider construction`. Review PASS ([D2 review](bfccdd1b-97e3-474c-9415-fc36163360b0)): Android Layer B `/tmp/rnfbdemo-D2-review-logcat.log`. Minors: metro version skew hygiene; UI label nit; upstream docs await wording. |
@@ -315,7 +315,7 @@ Never overlap two demo scripts on one host.
 
 ## Current gates
 
-- **Pickup order:** **E5** in flight. Extended matrix nearly done (C-rc/C4/C5/E4 GREEN).
+- **Pickup order:** Extended matrix **DONE**. No further C*/E* cells queued.
 - **Pass bar:** build/install exit 0 **and** Metro/device-log runtime-clean (see script header comments + § Matrix pass bar). Build-only cell greens are provisional until requalified.
 - **C\*/E\* rule:** each `make-demo.sh` / `make-expo-demo.sh` invocation is validation/review. Failures reopen implementation, then fresh review.
 - **Dual RNCore:** C\* green only when **from-source (`PREBUILT=0`) and prebuilt (`PREBUILT=1`)** both succeed **and** runtime-clean.
