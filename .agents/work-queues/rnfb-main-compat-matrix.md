@@ -1,5 +1,65 @@
 # RNFB main compatibility matrix (ephemeral) — restructured
 
+## ELI5 (read this first)
+
+**Goal:** Prove current React Native Firebase (`origin/main` + the packed worktree fixes below) boots a real app through this repo’s demos on supported **RN CLI** and **Expo** versions (current + 4 previous each, plus one RN prerelease).
+
+**Two repos:**
+
+| Repo | Path | Role |
+|------|------|------|
+| **react-native-firebase** | `/Users/mike/work/invertase/RNFB-worktrees/v26-validation-fixes` | Upstream library fixes (packed to `~/packages`) |
+| **rnfbdemo** | `/Users/mike/work/invertase/rnfbdemo` | Docs-faithful CLI + Expo demo scripts that exercise those packages |
+
+### Qualified matrix
+
+| Version / style | Platforms probed | RNCore | Result |
+|-----------------|------------------|--------|--------|
+| RN CLI 0.87.0-rc.3 | iOS debug, iOS release, Android debug, Android release, macCatalyst | prebuilt and source | ✅ |
+| RN CLI 0.86.0 | iOS debug, iOS release, Android debug, Android release, macCatalyst | prebuilt and source | ✅ |
+| RN CLI 0.85.3 | iOS debug, iOS release, Android debug, Android release, macCatalyst | prebuilt and source | ✅ |
+| RN CLI 0.84.1 | iOS debug, iOS release, Android debug, Android release, macCatalyst | prebuilt and source | ✅ |
+| RN CLI 0.83.10 | iOS debug, iOS release, Android debug, Android release, macCatalyst | prebuilt and source | ✅ |
+| RN CLI 0.82.1 | iOS debug, iOS release, Android debug, Android release, macCatalyst | prebuilt and source | ✅ |
+| Expo 57 | iOS debug, Android debug | n/a (Expo prebuild) | ✅ |
+| Expo 56 | iOS debug, Android debug | n/a (Expo prebuild) | ✅ |
+| Expo 55 | iOS debug, Android debug | n/a (Expo prebuild) | ✅ |
+| Expo 54 | iOS debug, Android debug | n/a (Expo prebuild) | ✅ |
+| Expo 53 | iOS debug, Android debug | n/a (Expo prebuild) | ✅ |
+
+Expo cells do **not** run iOS release, Android release, or macCatalyst (those paths are still commented in `make-expo-demo.sh`).
+
+### Commits required in react-native-firebase
+
+| Commit | What it fixed |
+|--------|----------------|
+| `fix: add ResultT codegen type alias` | RN 0.86+ codegen `ResultT` missing from generated TurboModule headers |
+| `fix(ios): private codegen headers and bridging-safe AppCheck module` | Xcode 26 / explicit modules: private codegen headers; AppCheck public header safe for bridging; Expo plugin quote-style import |
+| `docs(okf): require yarn and fmt≥12.1.0 before native build` | Document install + fmt gate before iOS native builds |
+| `fix(tooling): never Nx-cache-skip patch-package prepare` | Ensure `patch-package` always runs in prepare (Nx cache skip bug) |
+| `fix(messaging, ios)!: make APNs registration timeout independent of main queue` | APNs register no longer hangs forever; ARM64 Sim skip; new timeout/supersede rejects + migration docs |
+| `fix(storage, ios): preserve RN framework HEADER_SEARCH_PATHS in podspec` | From-source RNCore still needs framework header search paths in storage podspec |
+
+### Commits required in rnfbdemo
+
+| Commit | What it fixed |
+|--------|----------------|
+| `fix: make local packages work` | Install/verify unpublished RNFB tarballs from `~/packages` |
+| `fix(demo): use AppCheck bridging header instead of Swift module import` | Stop `import RNFBAppCheck` (C++/modules blow-up); use bridging header |
+| `test(demo): exercise from-source and prebuilt RNCore iOS rounds` | CLI matrix runs both RNCore modes |
+| `fix(demo): use modular AppCheck provider construction` | AppCheck `TypeError: undefined is not a function` in demo bootstrap |
+| `fix(demo): bump RN fmt pin to 12.1.0 for Xcode 26` | Apple Clang 21 `consteval` / fmt build break on older pins |
+| `fix(expo-demo): make Expo SDK matrix bootstrap agent-safe` | create-expo-app, Yarn node-modules linker, simctl iOS launch, gradle jvmargs |
+| `fix(demo): stop rewriting local RNFB pack meta on verify` | Verify-only pack meta (no rewrite of gitSha provenance) |
+| `test(demo): add phone-number-verification and --cleanup host mode` | Install PNV package; `--cleanup` frees Metro :8081 |
+| `fix(demo): serialize RNCore and Hermes prebuilt config swaps` | RN 0.87 Debug→Release modulemap / Hermes CDP link races |
+| `fix(demo): fall back to HERMES_V1_VERSION_NAME for RN 0.82` | Hermes version key rename on RN 0.82 packaging |
+| `fix(expo-demo): detect Expo Router entry across SDK layouts` | SDK 54 `app/(tabs)` vs 55+ `src/app` App.tsx copy path |
+
+---
+
+## Detail / orchestration notes (archive)
+
 **Status:** DONE — extended matrix GREEN. C-rc (0.87.0-rc.3), C4 (0.83.10), C5 (0.82.1), E4 (54), E5 (53) + prior C1–C3/E1–E3. P1 packed `eee66ac01`.
 **Goal:** Verify `invertase/react-native-firebase` **origin/main** (+ packed worktree fixes) boots via this repo’s self-contained demos on currently supported React Native CLI and Expo (**current + previous 4** each) **plus** RN prerelease `0.87.0-rc.3`.
 **Demo repo:** `/Users/mike/work/invertase/rnfbdemo`
