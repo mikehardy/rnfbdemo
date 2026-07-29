@@ -244,9 +244,28 @@ printf "{\n  \"react-native\": {\n    \"crashlytics_disable_auto_disabler\": tru
 #sed -i -e $"s/target 'rnfbdemo' do/\$FirebaseSDKVersion = '${FB_IOS_VER}'\ntarget 'rnfbdemo' do/" ios/Podfile
 #rm -f ios/Podfile??
 
-# Test: Copy in our demonstrator App file (Expo drops it into first spot on a tabbed nav)
-echo "Copying demonstrator App.tsx..."
-rm -f './src/app/index.tsx' && cp ../App.tsx './src/app/index.tsx'
+# Test: Copy in our demonstrator App file (Expo drops it into first spot on a tabbed nav).
+# Router roots differ by SDK: 55+ default template uses src/app/; 53–54 use app/
+# (often app/(tabs)/index.tsx). Detect rather than hardcoding.
+if [ ! -f src/app/_layout.tsx ] && [ ! -f app/_layout.tsx ]; then
+  echo "ERROR: Expo Router layout not found (expected src/app/_layout.tsx or app/_layout.tsx for SDK ${EXPO_VER})"
+  exit 1
+fi
+EXPO_ROUTER_INDEX=""
+if [ -f src/app/index.tsx ]; then
+  EXPO_ROUTER_INDEX="src/app/index.tsx"
+elif [ -f app/index.tsx ]; then
+  EXPO_ROUTER_INDEX="app/index.tsx"
+elif [ -f 'app/(tabs)/index.tsx' ]; then
+  EXPO_ROUTER_INDEX='app/(tabs)/index.tsx'
+elif [ -f 'src/app/(tabs)/index.tsx' ]; then
+  EXPO_ROUTER_INDEX='src/app/(tabs)/index.tsx'
+else
+  echo "ERROR: Expo Router index route not found (tried src/app/index.tsx, app/index.tsx, app/(tabs)/index.tsx, src/app/(tabs)/index.tsx for SDK ${EXPO_VER})"
+  exit 1
+fi
+echo "Copying demonstrator App.tsx into ${EXPO_ROUTER_INDEX}..."
+rm -f "./${EXPO_ROUTER_INDEX}" && cp ../App.tsx "./${EXPO_ROUTER_INDEX}"
 
 # Test: You have to re-run patch-package after yarn since it is not integrated into postinstall
 echo "Running any patches necessary to compile successfully"
@@ -275,8 +294,8 @@ ensureMetroPackagerRunning
 if [ "$(uname)" == "Darwin" ]; then
   # If AI is imported on web currently, you get "Cannot access 'Backend' before initialization"
   # This seems to be a bundling error where Backend is indeed referenced in the metro bundle prior to its definition.
-  sed -i -e $'s|import { getAI |//import { getAI |' src/app/index.tsx
-  rm -f src/app/index.tsx??
+  sed -i -e $'s|import { getAI |//import { getAI |' "${EXPO_ROUTER_INDEX}"
+  rm -f "${EXPO_ROUTER_INDEX}"??
 
   echo "Opening web app..."
   open http://localhost:8081
@@ -285,8 +304,8 @@ if [ "$(uname)" == "Darwin" ]; then
   sleep 10
 
   # Re-enable AI for other platforms
-  sed -i -e $'s|//import { getAI |import { getAI |' src/app/index.tsx
-  rm -f src/app/index.tsx??
+  sed -i -e $'s|//import { getAI |import { getAI |' "${EXPO_ROUTER_INDEX}"
+  rm -f "${EXPO_ROUTER_INDEX}"??
 
 fi
 
