@@ -540,9 +540,13 @@ ensureHermesEngineConfiguration() {
     return 0
   fi
 
+  # RN ≤0.81: HERMES_VERSION_NAME. RN 0.82+ hermes-v1 packaging: HERMES_V1_VERSION_NAME only.
   hermes_version="$(sed -n 's/^HERMES_VERSION_NAME=//p' "$version_file" | tr -d '[:space:]')"
   if [ -z "$hermes_version" ]; then
-    echo "ERROR: ensureHermesEngineConfiguration: HERMES_VERSION_NAME empty in ${version_file}"
+    hermes_version="$(sed -n 's/^HERMES_V1_VERSION_NAME=//p' "$version_file" | tr -d '[:space:]')"
+  fi
+  if [ -z "$hermes_version" ]; then
+    echo "ERROR: ensureHermesEngineConfiguration: HERMES_VERSION_NAME and HERMES_V1_VERSION_NAME empty in ${version_file}"
     return 1
   fi
 
